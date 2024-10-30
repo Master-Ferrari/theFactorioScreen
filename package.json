@@ -1,0 +1,20 @@
+{
+  "name": "thefactorioscreen",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "copy": "copy source\\*.html dist & copy source\\*.css dist  & copy source\\*.js dist",
+    "build": "npx rimraf ./dist && npx tsc && npm run copy"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/pako": "^2.0.3",
+    "rimraf": "^6.0.1",
+    "source-map-support": "^0.5.21"
+  },
+  "dependencies": {
+    "pako": "^2.1.0"
+  }
+}

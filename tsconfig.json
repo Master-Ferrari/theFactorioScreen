@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "rootDir": "./source",
+    "strict": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "sourceMap": true
+  },
+  "include": [
+    "./source",
+    "./source/**/*.json",
+    "./source/**/*.js",
+    "./source/map.js",
+    "gmk.js"
+  ],
+  "exclude": [
+    "./node_modules"
+  ]
+}
