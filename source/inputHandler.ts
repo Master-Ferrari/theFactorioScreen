@@ -1,4 +1,4 @@
-import CanvasManager from "./gifDecoder.js";
+import CanvasManager from "./fileDecoder.js";
 
 // Обработчики событий
 const gifInput = document.getElementById("gifInput") as HTMLInputElement;
@@ -58,6 +58,9 @@ gifInput.addEventListener('change', function (event: Event) {
         };
         reader.readAsArrayBuffer(file);
         hide();
+    } else if (file && file.type === 'image/png') {
+        
+        alert('КЛАСС');
     } else {
         alert('Пожалуйста, выберите файл GIF.');
     }
@@ -78,7 +81,7 @@ rotateCounterClockwiseButton.addEventListener('click', function () {
 });
 
 // Кнопка масштабирования канваса
-function cropIcon(crop: boolean){
+function cropIcon(crop: boolean) {
     if (crop) {
         scalePlusSVG.style.display = 'none';
         scaleMinusSVG.style.display = 'block';

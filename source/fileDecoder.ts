@@ -9,7 +9,7 @@ interface CanvasWithCtx extends HTMLCanvasElement {
     ctx: CanvasRenderingContext2D;
 }
 
-interface GIFFrame {
+interface GifFrame {
     disposalMethod: number;
     time: number;
     delay: number;
@@ -24,18 +24,18 @@ interface GIFFrame {
     image: CanvasWithCtx;
 }
 
-interface GIFType {
+interface GifType {
     onload: (() => void) | null;
     onerror: ((type: string) => void) | null;
     loading: boolean;
     width: number;
     height: number;
-    frames: GIFFrame[];
+    frames: GifFrame[];
     comment: string;
     length: number;
     currentFrame: number;
     frameCount: number;
-    lastFrame: GIFFrame | null;
+    lastFrame: GifFrame | null;
     image: HTMLCanvasElement | null;
     loadFromArrayBuffer: (arrayBuffer: ArrayBuffer) => void;
     [key: string]: any; // Для дополнительных свойств
@@ -59,7 +59,7 @@ export default class CanvasManager {
     private originalImageWidth: number = 1;
     private originalImageHeight: number = 1;
 
-    private myGif: GIFType = this.GIF();
+    private myGif: GifType = this.parseGif();
 
     // this.myGif = GIF();
     private autoPlayInterval: number = 1;
@@ -107,7 +107,7 @@ export default class CanvasManager {
     }
 
     public loadGif(arrayBuffer: ArrayBuffer): void {
-        this.myGif = this.GIF();
+        this.myGif = this.parseGif();
         const self = this;
         this.myGif.onload = function () {
 
@@ -175,7 +175,7 @@ export default class CanvasManager {
         this.myGif.loadFromArrayBuffer(arrayBuffer);
     }
 
-    private GIF(): GIFType {
+    private parseGif(): GifType {
         // Весь код функции GIF без изменений, только с добавлением типов
 
         let st: any;
@@ -340,7 +340,7 @@ export default class CanvasManager {
         }
 
         function parseImg(): void {
-            let frame: GIFFrame;
+            let frame: GifFrame;
             let bitField: number;
             const deinterlace = function (width: number) {
                 let lines: number, fromLine: number, pass: number, toLine: number;
@@ -357,7 +357,7 @@ export default class CanvasManager {
                     }
                 }
             };
-            frame = {} as GIFFrame;
+            frame = {} as GifFrame;
             gif.frames.push(frame);
             frame.disposalMethod = gif.disposalMethod;
             frame.time = gif.length;
@@ -391,7 +391,7 @@ export default class CanvasManager {
             processFrame(frame);
         }
 
-        function processFrame(frame: GIFFrame): void {
+        function processFrame(frame: GifFrame): void {
             // Создаем canvas и приводим его к типу CanvasWithCtx
             const canvas = document.createElement('canvas') as CanvasWithCtx;
             canvas.width = gif.width;
@@ -514,7 +514,7 @@ export default class CanvasManager {
             dataLoaded(arrayBuffer);
         }
 
-        const gif: GIFType = {
+        const gif: GifType = {
             onload: null,
             onerror: null,
             loading: false,
@@ -584,7 +584,7 @@ export default class CanvasManager {
             this.currentFrame = frameIndex;
             this.applyFrameTransforms(frameIndex);
         } else {
-            alert('GIF не загружен или не содержит кадров.');
+            alert('Gif не загружен или не содержит кадров.');
         }
     }
 
@@ -828,3 +828,6 @@ export default class CanvasManager {
         }
     }
 }
+
+
+
