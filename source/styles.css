@@ -37,6 +37,7 @@
     --PlayBold: Play-Bold;
     --Play: Play-Regular;
     --PtMono: PtMono;
+    --Signika: Signika;
 }
 
 @font-face {
@@ -52,6 +53,11 @@
 @font-face {
     font-family: 'PtMono';
     src: url('misc/PtMono-Regular.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Signika';
+    src: url('misc/Signika.ttf') format('truetype');
 }
 
 body {
@@ -404,16 +410,24 @@ canvas {
 
 #alert {
     position: relative;
-    margin: auto 0;
+    margin-top: auto;
     color: white;
-    background: red;
+    background: #da3324;
     width: 100%;
     /* font-weight: bold; */
     text-align: center;
     border-radius: var(--small-radius);
     padding: 3px 2px;
+    height: 35px;
+    box-sizing: border-box;
 }
 
+#fileNameLabel {
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 .canvas-controls {
     gap: 15px;
@@ -458,6 +472,9 @@ canvas {
 
     border: var(--container-bg) var(--border-size) solid;
     transform: translate(calc(-1* var(--border-size)), 0px);
+
+    display: flex;
+    flex-direction: column;
 }
 
 .dropdown-option,
@@ -467,6 +484,10 @@ canvas {
     background-color: var(--button-bg);
     user-select: none;
     border: 0px;
+
+
+    border-radius: var(--large-radius);
+    width: 100%;
 }
 
 .dropdown-option-deactivated {
@@ -491,6 +512,12 @@ canvas {
 }
 
 
+.rainbow-text {
+    font-size: 48px;
+    font-weight: bold;
+    font-family: var(--Signika);
+}
+
 .custom-button,
 .custom-file-upload,
 .icon-button,
@@ -498,9 +525,4 @@ canvas {
 body {
     font-size: 14px;
     font-family: var(--PtMono);
-}
-.rainbow-text {
-    font-size: 48px;
-    font-weight: bold;
-    font-family: var(--PlayBold);
 }

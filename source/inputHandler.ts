@@ -3,6 +3,7 @@ import CanvasManager from "./imageProcessor.js";
 
 // Обработчики событий
 const gifInput = document.getElementById("gifInput") as HTMLInputElement;
+const fileNameLabel = document.getElementById("fileNameLabel") as HTMLInputElement;
 const frameInput = document.getElementById("frameInput") as HTMLInputElement;
 const widthInput = document.getElementById("widthInput") as HTMLInputElement;
 const heightInput = document.getElementById("heightInput") as HTMLInputElement;
@@ -70,6 +71,15 @@ function onLoad() {
 const canvasManager = CanvasManager.init();
 canvasManager.setOnLoadCallback(onLoad);
 
+function shortLabel(text: string, max: number) {
+    if (text.length <= max) {
+        return text;
+    }
+
+    const start = text.slice(0, max - 1); // первые max - 1 символов
+    const end = text.slice(- (max - 2)); // последние max - 2 символов
+    return `${start}...${end}`; // соединяем с троеточием
+}
 // Обработчик выбора файла
 gifInput.addEventListener('change', function (event: Event) {
     const target = event.target as HTMLInputElement;
@@ -79,6 +89,9 @@ gifInput.addEventListener('change', function (event: Event) {
         alert('Пожалуйста, выберите файл.');
         return;
     }
+
+    console.log(file);
+    fileNameLabel.textContent = shortLabel(file.name, 20);
 
     // Определяем режим (gif или png) и проверяем тип файла
     const mode = file.type === 'image/gif' ? 'gif' : file.type === 'image/png' ? 'png' : null;
@@ -90,7 +103,6 @@ gifInput.addEventListener('change', function (event: Event) {
 
     const reader = new FileReader();
     reader.onload = function (e: ProgressEvent<FileReader>) {
-        gifInput.textContent = file.name;
         const arrayBuffer = e.target?.result as ArrayBuffer;
         canvasManager.loader({ mode, arrayBuffer });
     };
