@@ -75,11 +75,11 @@ gifInput.addEventListener('change', function (event: Event) {
 
     const reader = new FileReader();
     reader.onload = function (e: ProgressEvent<FileReader>) {
-        reader.readAsArrayBuffer(file);
         const arrayBuffer = e.target?.result as ArrayBuffer;
         canvasManager.loader({ mode, arrayBuffer });
         hide();
     };
+    reader.readAsArrayBuffer(file);
 });
 
 // Кнопка зеркального отображения

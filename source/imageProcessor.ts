@@ -132,10 +132,10 @@ export default class CanvasManager {
         this._mode = options.mode;
         if (options.mode === "gif") {
             this.loadGif(options.arrayBuffer);
-            this.myGif = this.parseGif();
+            // this.myGif = this.parseGif();
         } else if (options.mode === "png") {
             this.loadPng(options.arrayBuffer);
-            this.myPng = this.parsePng();
+            // this.myPng = this.parsePng();
         }
         this.onLoadCallback?.(options.mode);
     }
@@ -685,13 +685,13 @@ export default class CanvasManager {
     // Применяет трансформации кадра на канвасе
     public applyFrameTransforms(frameNumber: number): void {
 
-        let frame: Frame | HTMLCanvasElement | null = null;
+        // let frame: Frame | HTMLCanvasElement | null = null;
         let image: CanvasWithCtx | HTMLCanvasElement;
         if (this.mode == "gif") {
-            frame = this.myGif.frames[frameNumber];
-            image = frame.image!;
+            // frame = this.myGif.frames[frameNumber];
+            image = this.myGif.frames[frameNumber].image;
         } else {
-            frame = this.myPng.image;
+            // frame = this.myPng.image;
             image = this.myPng.image!;
         }
 
