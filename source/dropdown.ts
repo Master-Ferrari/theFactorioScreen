@@ -14,13 +14,15 @@ class Dropdown {
     private isOpen: boolean;
     private selectedOption: number | null;
     private onSelectCallback: OptionSelectCallback;
+    private defaultText: string;
 
-    constructor(dropdown: HTMLElement, optionsList: DropdownOption[], onSelectCallback: OptionSelectCallback) {
-        this.dropdown = dropdown;
-        this.optionsList = optionsList;
+    constructor(opt: options) {
+        this.dropdown = opt.dropdownElement;
+        this.optionsList = opt.optionsList;
         this.isOpen = false;
         this.selectedOption = null;
-        this.onSelectCallback = onSelectCallback;
+        this.onSelectCallback = opt.onSelectCallback;
+        this.defaultText = opt.defaultText;
 
         // Инициализация и создание элементов
         this.dropdownTrigger = this.createDropdownTrigger();
@@ -55,7 +57,7 @@ class Dropdown {
         trigger.classList.add('custom-button');
 
         // trigger.classList.add('dropdown-select-trigger');
-        trigger.innerText = 'Выберите опцию';
+        trigger.innerText = this.defaultText;
         return trigger;
     }
 
@@ -116,9 +118,13 @@ class Dropdown {
     }
 }
 
+type options = {
+    dropdownElement: HTMLElement, optionsList: DropdownOption[], onSelectCallback: OptionSelectCallback, defaultText: string
+}
+
 // Функция инициализации компонента
-export function initializeDropdown(dropdownElement: HTMLElement, optionsList: DropdownOption[], onSelectCallback: OptionSelectCallback): void {
-    new Dropdown(dropdownElement, optionsList, onSelectCallback);
+export function initializeDropdown({ dropdownElement, optionsList, onSelectCallback, defaultText }: options): void {
+    new Dropdown({ dropdownElement, optionsList, onSelectCallback, defaultText });
 }
 
 // // Пример вызова

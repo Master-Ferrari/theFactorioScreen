@@ -39,7 +39,12 @@ const methods: DropdownOption[] = [
 
 const onMethodSelect = (index: number | null) => { }
 
-initializeDropdown(methodSelect, methods, onMethodSelect);
+initializeDropdown({
+    dropdownElement: methodSelect,
+    optionsList: methods,
+    onSelectCallback: onMethodSelect,
+    defaultText: "Выбор метода"
+});
 
 
 function visability(hide: boolean = false) {
