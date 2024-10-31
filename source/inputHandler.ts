@@ -26,7 +26,7 @@ const copyButton = document.getElementById('copyButton') as HTMLButtonElement;
 const scalePlusSVG = document.getElementById('scalePlusSVG') as HTMLButtonElement;
 const scaleMinusSVG = document.getElementById('scaleMinusSVG') as HTMLButtonElement;
 
-function hide(hide: boolean = false) {
+function visability(hide: boolean = false) {
     if (hide) {
         mainControls.style.display = 'none';
         canvasControls.style.display = 'none';
@@ -45,10 +45,7 @@ function hide(hide: boolean = false) {
 
 
 function onLoad() {
-    // const arrayBuffer = e.target?.result as ArrayBuffer;
-    // canvasManager.loader({ mode, arrayBuffer });
-    // alert(mode.toUpperCase() + ' загружен!');
-    hide();
+    visability(false);
 };
 
 const canvasManager = CanvasManager.init();
@@ -77,7 +74,6 @@ gifInput.addEventListener('change', function (event: Event) {
     reader.onload = function (e: ProgressEvent<FileReader>) {
         const arrayBuffer = e.target?.result as ArrayBuffer;
         canvasManager.loader({ mode, arrayBuffer });
-        hide();
     };
     reader.readAsArrayBuffer(file);
 });

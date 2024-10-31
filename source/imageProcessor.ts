@@ -61,7 +61,7 @@ type LoaderTypes = {
     arrayBuffer: ArrayBuffer
 }
 
-type OnLoadCallback = (mode: "gif" | "png") => void
+type OnLoadCallback = (mode: "gif" | "png" | null) => void
 
 // Синглтон-класс для управления канвасом
 export default class CanvasManager {
@@ -137,7 +137,7 @@ export default class CanvasManager {
             this.loadPng(options.arrayBuffer);
             // this.myPng = this.parsePng();
         }
-        this.onLoadCallback?.(options.mode);
+        // this.onLoadCallback?.(options.mode);
     }
 
     public setOnLoadCallback(callback: OnLoadCallback): void {
@@ -187,6 +187,7 @@ export default class CanvasManager {
                 const ctx = self.canvas.getContext("2d")!;
                 ctx.drawImage(self.myPng.frame.image, 0, 0, newWidth, newHeight);
             }
+            self.onLoadCallback?.(self._mode);
         };
 
         this.myPng.loadFromArrayBuffer(arrayBuffer);
@@ -320,6 +321,7 @@ export default class CanvasManager {
                 self.startAutoPlay();
             }
 
+            self.onLoadCallback?.(self._mode);
             self.checkAlert();
         };
         this.myGif.loadFromArrayBuffer(arrayBuffer);
