@@ -9,7 +9,7 @@ interface CanvasWithCtx extends HTMLCanvasElement {
     ctx: CanvasRenderingContext2D;
 }
 
-interface GifFrame {
+interface Frame {
     disposalMethod: number;
     time: number;
     delay: number;
@@ -30,17 +30,36 @@ interface GifType {
     loading: boolean;
     width: number;
     height: number;
-    frames: GifFrame[];
+    frames: Frame[];
     comment: string;
     length: number;
     currentFrame: number;
     frameCount: number;
-    lastFrame: GifFrame | null;
+    lastFrame: Frame | null;
     image: HTMLCanvasElement | null;
     loadFromArrayBuffer: (arrayBuffer: ArrayBuffer) => void;
     [key: string]: any; // Для дополнительных свойств
 }
 
+interface PngType {
+    onload: (() => void) | null;
+    onerror: ((type: string) => void) | null;
+    loading: boolean;
+    width: number;
+    height: number;
+    image: HTMLCanvasElement | null;
+    frame: Frame | null;
+    loadFromArrayBuffer: (arrayBuffer: ArrayBuffer) => void;
+}
+
+
+type LoaderTypes = {
+    mode: "gif",
+    arrayBuffer: ArrayBuffer
+} | {
+    mode: "png",
+    arrayBuffer: ArrayBuffer
+}
 
 // Синглтон-класс для управления канвасом
 export default class CanvasManager {
@@ -48,6 +67,8 @@ export default class CanvasManager {
 
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
+
+    private _mode: "gif" | "png" | null = null;
 
     private rotationAngle: number = 0;
     private verticalScale: number = 1;
@@ -60,6 +81,7 @@ export default class CanvasManager {
     private originalImageHeight: number = 1;
 
     private myGif: GifType = this.parseGif();
+    private myPng: PngType = this.parsePng();
 
     // this.myGif = GIF();
     private autoPlayInterval: number = 1;
@@ -76,11 +98,13 @@ export default class CanvasManager {
     private preserveAspectCheckbox: HTMLInputElement;
     private alertBox: HTMLElement;
 
+    get mode() { return this._mode; }
+
     private constructor() {
         // Инициализация канваса и контекста
         this.canvas = document.getElementById("canvas") as HTMLCanvasElement;
         this.ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
-
+        
         // Отключение сглаживания изображения
         this.ctx.imageSmoothingEnabled = false;
         (this.ctx as any).mozImageSmoothingEnabled = false;
@@ -99,6 +123,16 @@ export default class CanvasManager {
         this.alertBox = document.getElementById("alert") as HTMLElement;
     }
 
+    public loader(options: LoaderTypes): void {
+        this._mode = options.mode;
+        if (options.mode === "gif") {
+            this.loadGif(options.arrayBuffer);
+            // this.myGif = this.parseGif();
+        } else if (options.mode === "png") {
+            this.loadPng(options.arrayBuffer);
+        }
+    }
+
     public static getInstance(): CanvasManager {
         if (!CanvasManager.instance) {
             CanvasManager.instance = new CanvasManager();
@@ -106,7 +140,112 @@ export default class CanvasManager {
         return CanvasManager.instance;
     }
 
-    public loadGif(arrayBuffer: ArrayBuffer): void {
+    private loadPng(arrayBuffer: ArrayBuffer): void {
+        this.myPng = this.parsePng();
+        const self = this;
+
+        // Устанавливаем метод onload
+        this.myPng.onload = function () {
+            if (!self.myPng) return;
+
+            // Инициализация параметров после загрузки PNG
+            self.originalImageWidth = self.myPng.width;
+            self.originalImageHeight = self.myPng.height;
+
+            // Устанавливаем размеры canvas и другие параметры
+            let newWidth = parseInt(self.widthInput.value, 10);
+            let newHeight = parseInt(self.heightInput.value, 10);
+
+            if (isNaN(newWidth) || isNaN(newHeight)) {
+                newWidth = self.myPng.width;
+                newHeight = self.myPng.height;
+                self.widthInput.value = newWidth.toString();
+                self.heightInput.value = newHeight.toString();
+            }
+
+            if (self.preserveAspectCheckbox.checked) {
+                newHeight = newWidth / (self.myPng.width / self.myPng.height);
+                self.heightInput.value = Math.round(newHeight).toString();
+            }
+
+            self.canvas.width = newWidth;
+            self.canvas.height = newHeight;
+
+            // Отображаем изображение на canvas
+            if (self.myPng.frame?.image) {
+                const ctx = self.canvas.getContext("2d")!;
+                ctx.drawImage(self.myPng.frame.image, 0, 0, newWidth, newHeight);
+            }
+        };
+
+        this.myPng.loadFromArrayBuffer(arrayBuffer);
+    }
+
+
+    private parsePng(): PngType {
+        const png: PngType = {
+            onload: null,
+            onerror: null,
+            loading: true,
+            width: 0,
+            height: 0,
+            frame: null,
+            image: null,
+            loadFromArrayBuffer: function (arrayBuffer: ArrayBuffer) {
+                const img = new Image();
+                img.onload = () => {
+                    this.width = img.width;
+                    this.height = img.height;
+
+                    // Создаем canvas для изображения и устанавливаем его в frame.image
+                    const canvas = document.createElement('canvas') as CanvasWithCtx;
+                    canvas.width = this.width;
+                    canvas.height = this.height;
+                    const ctx = canvas.getContext("2d")!;
+                    ctx.drawImage(img, 0, 0);
+                    canvas.ctx = ctx; // Привязываем контекст к canvas
+
+                    // Инициализируем frame для PNG
+                    this.frame = {
+                        disposalMethod: 0,
+                        time: 0,
+                        delay: 0,
+                        leftPos: 0,
+                        topPos: 0,
+                        width: this.width,
+                        height: this.height,
+                        localColourTableFlag: false,
+                        interlaced: false,
+                        image: canvas
+                    };
+
+                    this.image = canvas;
+                    this.loading = false;
+
+                    if (typeof this.onload === "function") {
+                        this.onload();
+                    }
+                };
+
+                img.onerror = () => {
+                    this.loading = false;
+                    if (typeof this.onerror === "function") {
+                        this.onerror("Ошибка загрузки PNG");
+                    }
+                };
+
+                // Преобразуем ArrayBuffer в URL для загрузки изображения
+                const blob = new Blob([arrayBuffer], { type: 'image/png' });
+                img.src = URL.createObjectURL(blob);
+            }
+        };
+
+        return png;
+    }
+
+
+
+    private loadGif(arrayBuffer: ArrayBuffer): void {
         this.myGif = this.parseGif();
         const self = this;
         this.myGif.onload = function () {
@@ -340,7 +479,7 @@ export default class CanvasManager {
         }
 
         function parseImg(): void {
-            let frame: GifFrame;
+            let frame: Frame;
             let bitField: number;
             const deinterlace = function (width: number) {
                 let lines: number, fromLine: number, pass: number, toLine: number;
@@ -357,7 +496,7 @@ export default class CanvasManager {
                     }
                 }
             };
-            frame = {} as GifFrame;
+            frame = {} as Frame;
             gif.frames.push(frame);
             frame.disposalMethod = gif.disposalMethod;
             frame.time = gif.length;
@@ -391,7 +530,7 @@ export default class CanvasManager {
             processFrame(frame);
         }
 
-        function processFrame(frame: GifFrame): void {
+        function processFrame(frame: Frame): void {
             // Создаем canvas и приводим его к типу CanvasWithCtx
             const canvas = document.createElement('canvas') as CanvasWithCtx;
             canvas.width = gif.width;
@@ -534,7 +673,18 @@ export default class CanvasManager {
     }
     // Применяет трансформации кадра на канвасе
     public applyFrameTransforms(frameNumber: number): void {
-        const frame = this.myGif.frames[frameNumber];
+
+        let frame: Frame | HTMLCanvasElement | null = null;
+        let image: CanvasWithCtx | HTMLCanvasElement;
+        if (this.mode == "gif") {
+            frame = this.myGif.frames[frameNumber];
+            image = frame.image!;
+        } else {
+            frame = this.myPng.image;
+            image = this.myPng.image!;
+        }
+
+        // const frame = this.mode == "gif" ? this.myGif.frames[frameNumber] : this.myPng.image;
 
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -553,14 +703,18 @@ export default class CanvasManager {
             [drawWidth, drawHeight] = [drawHeight, drawWidth];
         }
 
-        this.ctx.drawImage(frame.image, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+        // const image
+
+        this.ctx.drawImage(image, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
         this.ctx.restore();
     }
 
     // Отображает кадр, определяет текущий индекс и обрабатывает циклическое воспроизведение
     public displayFrame(frameNumber: number): void {
-        if (this.myGif && this.myGif.frames.length > 0) {
-            const totalFrames = this.myGif.frames.length;
+        if (this.myGif && this.myGif.frames.length > 0 || this.myPng) {
+
+
+            const totalFrames = this._mode == "gif" ? this.myGif.frames.length : 1;
 
             // Обрабатываем количество кадров для отображения
             let specifiedFrameCount = parseInt(this.frameCountInput.value, 10);
@@ -583,10 +737,15 @@ export default class CanvasManager {
 
             this.currentFrame = frameIndex;
             this.applyFrameTransforms(frameIndex);
+        } else if (this.myPng) {
+            // Если загружен PNG, отображаем его как единственный кадр
+            this.currentFrame = 0;
+            this.applyFrameTransforms(0);
         } else {
-            alert('Gif не загружен или не содержит кадров.');
+            alert('Файл не загружен или содержит ошибки.');
         }
     }
+
 
     public rotate(angle: number): void {
         this.rotationAngle = (this.rotationAngle + angle) % 360;
@@ -646,8 +805,8 @@ export default class CanvasManager {
         this.displayFrame(this.currentFrame);
     }
     // Извлекает битмап кадра после применения трансформаций
-    public getBitmap(frame: number): Bitmap {
-        if (!this.myGif || frame < 0 || frame >= this.myGif.frames.length) {
+    private getBitmap(frame: number): Bitmap {
+        if ((!this.myGif || frame < 0 || frame >= this.myGif.frames.length) && (!this.myPng)) {
             throw new Error("Недопустимый номер кадра");
         }
 
@@ -672,7 +831,6 @@ export default class CanvasManager {
 
     public getFrameBitmap(frame: number): FrameBitmap {
         const bitmap = this.getBitmap(frame);
-        // const frameData = this.myGif.frames[frame];
 
         return {
             width: this.ctx.canvas.width,
@@ -790,6 +948,7 @@ export default class CanvasManager {
     }
 
     public startAutoPlay(): void {
+        if (!this.myGif) return;
         clearInterval(this.autoPlayInterval);
         let frameNumber = parseInt(this.frameInput.value, 10) || 0;
         const fps = parseInt(this.frameRateInput.value, 10);

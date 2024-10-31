@@ -50,20 +50,28 @@ const canvasManager = CanvasManager.getInstance();
 gifInput.addEventListener('change', function (event: Event) {
     const target = event.target as HTMLInputElement;
     const file = target.files?.[0];
-    if (file && file.type === 'image/gif') {
-        const reader = new FileReader();
-        reader.onload = function (e: ProgressEvent<FileReader>) {
-            const arrayBuffer = e.target?.result as ArrayBuffer;
-            canvasManager.loadGif(arrayBuffer);
-        };
-        reader.readAsArrayBuffer(file);
-        hide();
-    } else if (file && file.type === 'image/png') {
-        
-        alert('КЛАСС');
-    } else {
-        alert('Пожалуйста, выберите файл GIF.');
+
+    if (!file) {
+        alert('Пожалуйста, выберите файл.');
+        return;
     }
+
+    // Определяем режим (gif или png) и проверяем тип файла
+    const mode = file.type === 'image/gif' ? 'gif' : file.type === 'image/png' ? 'png' : null;
+
+    if (!mode) {
+        alert('Пожалуйста, выберите файл GIF или PNG.');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e: ProgressEvent<FileReader>) {
+        const arrayBuffer = e.target?.result as ArrayBuffer;
+        canvasManager.loader({ mode, arrayBuffer });
+        alert(mode.toUpperCase() + ' загружен!');
+        hide();
+    };
+    reader.readAsArrayBuffer(file);
 });
 
 // Кнопка зеркального отображения
