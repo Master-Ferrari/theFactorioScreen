@@ -33,6 +33,25 @@
     --small-radius: 5px;
     --large-radius: 20px;
     --border-size: 5px;
+
+    --PlayBold: Play-Bold;
+    --Play: Play-Regular;
+    --PtMono: PtMono;
+}
+
+@font-face {
+    font-family: 'Play-Bold';
+    src: url('misc/Play-Bold.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Play-Regular';
+    src: url('misc/Play-Regular.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'PtMono';
+    src: url('misc/PtMono-Regular.ttf') format('truetype');
 }
 
 body {
@@ -107,8 +126,6 @@ input:checked+.slider:before {
 
 .rainbow-text {
     display: inline-block;
-    font-size: 48px;
-    font-weight: bold;
     color: #000;
     margin-bottom: 20px;
     letter-spacing: 5px;
@@ -203,7 +220,7 @@ input:checked+.slider:before {
     flex: 1;
 }
 
-button,
+.custom-button,
 input[type="number"],
 input[type="range"] {
     padding: 10px;
@@ -216,7 +233,7 @@ input[type="range"] {
     width: 100%;
 }
 
-button{
+button {
     color: var(--button-text-color);
 }
 
@@ -391,13 +408,16 @@ canvas {
     color: white;
     background: red;
     width: 100%;
-    font-weight: bold;
+    /* font-weight: bold; */
     text-align: center;
     border-radius: var(--small-radius);
+    padding: 3px 2px;
 }
 
 
-
+.canvas-controls {
+    gap: 15px;
+}
 
 .dropdown-select {
     position: relative;
@@ -460,4 +480,27 @@ canvas {
 .icon-button:hover,
 .dropdown-option:hover {
     background-color: var(--button-hover);
+}
+
+.custom-button,
+.custom-file-upload,
+.icon-button,
+.dropdown-option {
+    height: 35px;
+    text-align: center;
+}
+
+
+.custom-button,
+.custom-file-upload,
+.icon-button,
+.dropdown-option,
+body {
+    font-size: 14px;
+    font-family: var(--PtMono);
+}
+.rainbow-text {
+    font-size: 48px;
+    font-weight: bold;
+    font-family: var(--PlayBold);
 }

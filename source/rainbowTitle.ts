@@ -1,4 +1,4 @@
-const titleText = "Приколюха";
+const titleText = "theFactorioScreen";
 const titleElement = document.getElementById('title');
 
 if (titleElement) {

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>GIF Viewer with Enhanced Design</title>
+    <title>theFactorioScreen</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -26,7 +26,7 @@
                 <label for="gifInput" class="custom-file-upload">
                     Выберите файл
                 </label>
-                <input type="file" id="gifInput" accept=".gif,.png">
+                <input type="file" id="gifInput" accept=".gif,.png" style="display: none;">
 
                 <div id="mainControls">
                     <label class="control-title" for="frameInput">Номер кадра:</label>
@@ -76,8 +76,8 @@
             <!-- Right panel with canvas and controls -->
             <div class="island" style="justify-content: flex-end;">
                 <canvas id="canvas" width="330" height="330"></canvas>
-                <div id="canvasControls">
-                    <button id="scaleCanvas" class="icon-button custom-button">
+                <div id="canvasControls" class="canvas-controls">
+                    <div id="scaleCanvas" class="icon-button custom-button">
 
                         <svg xmlns="http://www.w3.org/2000/svg" id="scalePlusSVG" display="block" fill="none"
                             viewBox="0 0 24 24" stroke="white" style="width: 24px; height: 24px; ">
@@ -89,9 +89,9 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
                         </svg>
 
-                    </button>
+                    </div>
 
-                    <button id="mirrorCanvas" class="icon-button custom-button">
+                    <div id="mirrorCanvas" class="icon-button custom-button">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"
                             style="width: 24px; height: 24px;">
                             <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
@@ -105,9 +105,9 @@
                                     style="--darkreader-inline-stroke: #9e9b96;"></rect>
                             </g>
                         </svg>
-                    </button>
+                    </div>
 
-                    <button id="rotateCounterClockwise" class="icon-button custom-button">
+                    <div id="rotateCounterClockwise" class="icon-button custom-button">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"
                             style="width: 24px; height: 24px;">
                             <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
@@ -126,9 +126,9 @@
                                 </path>
                             </g>
                         </svg>
-                    </button>
+                    </div>
 
-                    <button id="rotateClockwise" class="icon-button custom-button">
+                    <div id="rotateClockwise" class="icon-button custom-button">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"
                             style="width: 24px; height: 24px;">
                             <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
@@ -147,7 +147,7 @@
                                 </path>
                             </g>
                         </svg>
-                    </button>
+                    </div>
                 </div>
 
             </div>
@@ -158,15 +158,15 @@
                     <!-- ололо -->
                 </div>
 
-                <button id="makeVideoBlueprint" class="custom-button mrgnT15 hidden">Построить чертёж гифки</button>
-                <button id="makePhotoBlueprint" class="custom-button mrgnT15 hidden">Построить чертёж кадра</button>
+                <div id="makeVideoBlueprint" class="custom-button mrgnT15 hidden">Построить чертёж гифки</div>
+                <div id="makePhotoBlueprint" class="custom-button mrgnT15 hidden">Построить чертёж кадра</div>
             </div>
 
             <div class="island">
                 <textarea id="textOutput" readonly></textarea>
-                <button id="copyButton" class="mrgnT10 custom-button" style="margin-top: 10px; margin-bottom: 0px;"
+                <div id="copyButton" class="mrgnT10 custom-button" style="margin-top: 10px; margin-bottom: 0px;"
                     class="script-button hidden">Копировать в
-                    буфер</button>
+                    буфер</div>
             </div>
         </div>
 

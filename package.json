@@ -4,8 +4,9 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "copy": "copy source\\*.html dist & copy source\\*.css dist  & copy source\\*.js dist",
-    "build": "npx rimraf ./dist && npx tsc && npm run copy"
+    "mkdir": "mkdir \"dist\\misc\"",
+    "copy": "copy source\\*.html dist && copy source\\*.css dist && copy source\\misc\\*.ttf dist\\misc && copy source\\*.js dist ",
+    "build": "npx rimraf ./dist && npx tsc && npm run mkdir && npm run copy"
   },
   "author": "",
   "license": "ISC",

@@ -1,7 +1,4 @@
-// gifDecoder.ts
-
-// Типы данных
-type Bitmap = number[][]; // Содержит значения r, g, b для каждого пикселя
+type Bitmap = number[][];
 type FrameBitmap = { width: number, height: number, bitmap: Bitmap };
 type GifBitmap = { width: number, height: number, framesCount: number, fps: number, frames: Bitmap[] };
 
@@ -38,7 +35,7 @@ interface GifType {
     lastFrame: Frame | null;
     image: HTMLCanvasElement | null;
     loadFromArrayBuffer: (arrayBuffer: ArrayBuffer) => void;
-    [key: string]: any; // Для дополнительных свойств
+    [key: string]: any;
 }
 
 interface PngType {
@@ -63,7 +60,6 @@ type LoaderTypes = {
 
 type OnLoadCallback = (mode: "gif" | "png" | null) => void
 
-// Синглтон-класс для управления канвасом
 export default class CanvasManager {
     private static instance: CanvasManager;
 
@@ -88,11 +84,9 @@ export default class CanvasManager {
     private myGif: GifType = this.parseGif();
     private myPng: PngType = this.parsePng();
 
-    // this.myGif = GIF();
     private autoPlayInterval: number = 1;
     private currentFrame: number = 0;
 
-    // Элементы DOM
     private widthInput: HTMLInputElement;
     private heightInput: HTMLInputElement;
     private frameInput: HTMLInputElement;
@@ -106,17 +100,14 @@ export default class CanvasManager {
     get mode() { return this._mode; }
 
     private constructor() {
-        // Инициализация канваса и контекста
         this.canvas = document.getElementById("canvas") as HTMLCanvasElement;
         this.ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
 
-        // Отключение сглаживания изображения
         this.ctx.imageSmoothingEnabled = false;
         (this.ctx as any).mozImageSmoothingEnabled = false;
         (this.ctx as any).webkitImageSmoothingEnabled = false;
         (this.ctx as any).msImageSmoothingEnabled = false;
 
-        // Инициализация элементов DOM
         this.widthInput = document.getElementById("widthInput") as HTMLInputElement;
         this.heightInput = document.getElementById("heightInput") as HTMLInputElement;
         this.frameInput = document.getElementById("frameInput") as HTMLInputElement;
@@ -130,14 +121,15 @@ export default class CanvasManager {
 
     public loader(options: LoaderTypes): void {
         this._mode = options.mode;
+        this.verticalScale = 1;
+        this.rotationAngle = 0;
+
         if (options.mode === "gif") {
             this.loadGif(options.arrayBuffer);
-            // this.myGif = this.parseGif();
         } else if (options.mode === "png") {
             this.loadPng(options.arrayBuffer);
-            // this.myPng = this.parsePng();
         }
-        // this.onLoadCallback?.(options.mode);
+
     }
 
     public setOnLoadCallback(callback: OnLoadCallback): void {
@@ -155,52 +147,36 @@ export default class CanvasManager {
         this.myPng = this.parsePng();
         const self = this;
 
-        // Устанавливаем метод onload
         this.myPng.onload = function () {
             if (!self.myPng) return;
 
-            // Инициализация параметров после загрузки PNG
-            self.originalAspectRatio = self.myPng.width / self.myPng.height;
-            self.originalImageWidth = self.myPng.width;
-            self.originalImageHeight = self.myPng.height;
+            // Переменные
+            let imageWidth = self.myPng.width;
+            let imageHeight = self.myPng.height;
+            let [canvasWidth, canvasHeight] = self.ratioCalc(imageWidth, imageHeight);
 
+            // original щит
+            self.originalAspectRatio = imageWidth / imageHeight;
+            self.originalImageWidth = imageWidth;
+            self.originalImageHeight = imageHeight;
+            self.originalCanvasWidth = canvasWidth;
+            self.originalCanvasHeight = canvasHeight;
 
-            // Устанавливаем размеры canvas и другие параметры
-            // let newWidth = parseInt(self.widthInput.value, 10);
-            // let newHeight = parseInt(self.heightInput.value, 10);
-            let newWidth = self.myPng.width;
-            let newHeight = self.myPng.height;
+            // рычажки
+            self.widthInput.value = imageWidth.toString();
+            self.heightInput.value = imageHeight.toString();
 
-            // if (isNaN(newWidth) || isNaN(newHeight)) {
-            // newWidth = self.myPng.width;
-            // newHeight = self.myPng.height;
-            self.widthInput.value = newWidth.toString();
-            self.heightInput.value = newHeight.toString();
-            // }
+            // image size
+            self.canvas.width = imageWidth;
+            self.canvas.height = imageHeight;
 
-            // if (self.preserveAspectCheckbox.checked) {
-            //     newHeight = newWidth / (self.myPng.width / self.myPng.height);
-            //     self.heightInput.value = Math.round(newHeight).toString();
-            // }
-
-            self.canvas.width = newWidth;
-            self.canvas.height = newHeight;
-
-            // self.canvas.width = newWidth;
-            // self.canvas.height = newHeight;
-            // self.heightInput.value = newHeight.toString();
-            // self.widthInput.value = newWidth.toString();
-            // Отображаем изображение на canvas
-
-
-            [self.originalCanvasWidth, self.originalCanvasHeight] = self.ratioCalc(newWidth, newHeight);
-
-            self.canvas.style.width = self.originalCanvasWidth + 'px';
-            self.canvas.style.height = self.originalCanvasHeight + 'px';
+            // canvas size
+            self.canvas.style.width = canvasWidth + 'px';
+            self.canvas.style.height = canvasHeight + 'px';
 
             if (self.myPng.frame?.image) {
                 const ctx = self.canvas.getContext("2d")!;
-                ctx.drawImage(self.myPng.frame.image, 0, 0, newWidth, newHeight);
+                ctx.drawImage(self.myPng.frame.image, 0, 0, imageWidth, imageHeight);
             }
             self.onLoadCallback?.(self._mode);
         };
@@ -276,64 +252,42 @@ export default class CanvasManager {
         this.myGif = this.parseGif();
         const self = this;
         this.myGif.onload = function () {
-
             if (!self.myGif) return;
 
-            // Инициализация свойств
-            self.originalAspectRatio = self.myGif.width / self.myGif.height;
-            self.originalImageWidth = self.myGif.width;
-            self.originalImageHeight = self.myGif.height;
+            // Переменные
+            let imageWidth = self.myGif.width;
+            let imageHeight = self.myGif.height;
+            let [canvasWidth, canvasHeight] = self.ratioCalc(imageWidth, imageHeight);
 
-            // Установка размеров канваса
-            // let newWidth = parseInt(self.widthInput.value, 10);
-            // let newHeight = parseInt(self.heightInput.value, 10);
-            let newWidth = self.myGif.width;
-            let newHeight = self.myGif.height;
+            // original щит
+            self.originalAspectRatio = imageWidth / imageHeight;
+            self.originalImageWidth = imageWidth;
+            self.originalImageHeight = imageHeight;
+            self.originalCanvasWidth = canvasWidth;
+            self.originalCanvasHeight = canvasHeight;
 
-            // if (isNaN(newWidth) || isNaN(newHeight)) {
-            // newWidth = self.myGif.width;
-            // newHeight = self.myGif.height;
-            self.widthInput.value = newWidth.toString();
-            self.heightInput.value = newHeight.toString();
-            // }
+            // рычажки
+            self.widthInput.value = imageWidth.toString();
+            self.heightInput.value = imageHeight.toString();
 
-            // if (self.preserveAspectCheckbox.checked) {
-            //     if (isNaN(newWidth) && isNaN(newHeight)) {
-            //         newWidth = self.myGif.width;
-            //         newHeight = self.myGif.height;
-            //     } else if (isNaN(newWidth)) {
-            //         newWidth = newHeight * self.originalAspectRatio;
-            //         self.widthInput.value = Math.round(newWidth).toString();
-            //     } else if (isNaN(newHeight)) {
-            //         newHeight = newWidth / self.originalAspectRatio;
-            //         self.heightInput.value = Math.round(newHeight).toString();
-            //     } else {
-            //         newHeight = newWidth / self.originalAspectRatio;
-            //         self.heightInput.value = Math.round(newHeight).toString();
-            //     }
-            // }
+            // image size
+            self.canvas.width = imageWidth;
+            self.canvas.height = imageHeight;
 
-            self.canvas.width = newWidth;
-            self.canvas.height = newHeight;
-
-            [self.originalCanvasWidth, self.originalCanvasHeight] = self.ratioCalc(newWidth, newHeight);
-
-            self.canvas.style.width = self.originalCanvasWidth + 'px';
-            self.canvas.style.height = self.originalCanvasHeight + 'px';
+            // canvas size
+            self.canvas.style.width = canvasWidth + 'px';
+            self.canvas.style.height = canvasHeight + 'px';
 
             // Установка количества кадров
             const totalFrames = self.myGif.frames.length;
             self.frameCountInput.max = totalFrames.toString();
             self.frameCountInput.value = totalFrames.toString();
 
-            // Установка максимального значения для ввода кадра
             self.frameInput.max = (totalFrames - 1).toString();
             self.frameInput.value = '0';
 
-            // Отображение первого кадра
             self.displayFrame(0);
 
-            // Запуск автопроигрывания, если включено
             if (self.autoPlayCheckbox.checked) {
                 self.startAutoPlay();
             }
@@ -557,10 +511,10 @@ export default class CanvasManager {
             } else {
                 frame.interlaced = false;
             }
-            processFrame(frame);
+            processGifFrame(frame);
         }
 
-        function processFrame(frame: Frame): void {
+        function processGifFrame(frame: Frame): void {
             // Создаем canvas и приводим его к типу CanvasWithCtx
             const canvas = document.createElement('canvas') as CanvasWithCtx;
             canvas.width = gif.width;
@@ -701,6 +655,7 @@ export default class CanvasManager {
 
         return gif;
     }
+
     // Применяет трансформации кадра на канвасе
     public applyFrameTransforms(frameNumber: number): void {
 
@@ -778,29 +733,36 @@ export default class CanvasManager {
 
 
     public rotate(angle: number): void {
+        angle = this.verticalScale == 1 ? angle : -angle;
         this.rotationAngle = (this.rotationAngle + angle) % 360;
         this.rotateStyles();
-        this.displayFrame(this.currentFrame);
-
         [this.canvas.width, this.canvas.height] = [this.canvas.height, this.canvas.width];
+
+        this.displayFrame(this.currentFrame);
     }
 
     private rotateStyles(): void {
-        const userWidth = parseInt(this.widthInput.value, 10);
-        const userHeight = parseInt(this.heightInput.value, 10);
+        // const userWidth = parseInt(this.widthInput.value, 10);
+        // const userHeight = parseInt(this.heightInput.value, 10);
 
-        this.widthInput.value = userHeight.toString();
-        this.heightInput.value = userWidth.toString();
+        // this.widthInput.value = userHeight.toString();
+        // this.heightInput.value = userWidth.toString();
 
-        const maxCanvasWidth = parseInt(getComputedStyle(this.canvas).width);
-        const maxCanvasHeight = parseInt(getComputedStyle(this.canvas).height);
+        // const сanvasWidth = parseInt(getComputedStyle(this.canvas).width);// размер стилей
+        // const сanvasHeight = parseInt(getComputedStyle(this.canvas).height);
+        
+        // this.canvas.style.width = сanvasHeight + 'px';
+        // this.canvas.style.height = сanvasWidth + 'px';
 
-        const max = this.zoomed ? this.canvasSize : Math.max(maxCanvasWidth, maxCanvasHeight);
+        [this.canvas.style.width, this.canvas.style.height] = [this.canvas.style.height, this.canvas.style.width];
 
-        const [newWidth, newHeight] = this.ratioCalc(maxCanvasWidth, maxCanvasHeight);
 
-        this.canvas.style.width = newHeight + 'px';
-        this.canvas.style.height = newWidth + 'px';
+        // const max = this.zoomed ? this.canvasSize : Math.max(maxCanvasWidth, maxCanvasHeight);
+
+        // const [newWidth, newHeight] = this.ratioCalc(maxCanvasWidth, maxCanvasHeight);
+
+        // this.canvas.style.width = newHeight + 'px';
+        // this.canvas.style.height = newWidth + 'px';
     }
 
     public mirror(): void {
@@ -808,31 +770,57 @@ export default class CanvasManager {
         this.displayFrame(this.currentFrame);
     }
 
-    public scaleCanvas(): void {
-        const maxCanvasWidth = parseInt(getComputedStyle(this.canvas).maxWidth);
-        const maxCanvasHeight = parseInt(getComputedStyle(this.canvas).maxHeight);
+    public zoomCanvas(zoomed: boolean): void {
 
-        const userWidth = parseInt(this.widthInput.value, 10);
-        const userHeight = parseInt(this.heightInput.value, 10);
+        this.zoomed = zoomed;
 
-        const scaleX = this.originalImageWidth / this.canvasSize;
-        const scaleY = this.originalImageHeight / this.canvasSize;
-        const scale = Math.min(scaleX, scaleY);
+        let canvasWidth = parseInt(getComputedStyle(this.canvas).maxWidth); // размер стилей
+        let canvasHeight = parseInt(getComputedStyle(this.canvas).maxHeight);
 
-        let width = Math.round(this.originalImageWidth * scale);
-        let height = Math.round(this.originalImageHeight * scale);
+        let imageWidth, imageHeight;
 
-        [width, height] = this.ratioCalc(userWidth, userHeight);
+        // if (this._mode == "gif") {
+        //     imageWidth = this.myGif.width;
+        //     imageHeight = this.myGif.height;
+        // } else {
+        //     imageWidth = this.myPng.width;
+        //     imageHeight = this.myPng.height;
+        // }
+        imageWidth = this.canvas.width;
+        imageHeight = this.canvas.height;
 
-        if (!this.zoomed) {
-            this.canvas.style.width = width + 'px';
-            this.canvas.style.height = height + 'px';
-            this.zoomed = true;
-        } else {
-            this.canvas.style.width = this.originalCanvasWidth + 'px';
-            this.canvas.style.height = this.originalCanvasHeight + 'px';
-            this.zoomed = false;
-        }
+        console.log("imageWidth, imageHeight: ", imageWidth, imageHeight);
+
+        [canvasWidth, canvasHeight] = this.ratioCalc(imageWidth, imageHeight, zoomed);
+        this.canvas.style.width = canvasWidth + 'px';
+        this.canvas.style.height = canvasHeight + 'px';
+
+
+        // let imageWidth = self.myPng.width;
+        // let imageHeight = self.myPng.height;
+
+        // const userWidth = parseInt(this.widthInput.value, 10); // инпут
+        // const userHeight = parseInt(this.heightInput.value, 10);
+
+        // const scaleX = this.originalImageWidth / this.canvasSize;
+        // const scaleY = this.originalImageHeight / this.canvasSize;
+        // const scale = Math.min(scaleX, scaleY);
+
+        // let width = Math.round(this.originalImageWidth * scale);
+        // let height = Math.round(this.originalImageHeight * scale);
+
+        // let [canvasWidth, canvasHeight] = this.ratioCalc(imageWidth, imageHeight);
+
+        // if (!this.zoomed) {
+        //     this.canvas.style.width = width + 'px';
+        //     this.canvas.style.height = height + 'px';
+        //     this.zoomed = true;
+        // } else {
+        //     this.canvas.style.width = this.originalCanvasWidth + 'px';
+        //     this.canvas.style.height = this.originalCanvasHeight + 'px';
+        //     this.zoomed = false;
+        // }
+
 
         this.displayFrame(this.currentFrame);
     }
@@ -900,11 +888,13 @@ export default class CanvasManager {
     }
 
     private ratioCalc(width: number, height: number, zoomed: boolean = this.zoomed): [number, number] {
+        console.log("zoomed", zoomed);
+
         const ratio = width / height;
         let newWidth: number;
         let newHeight: number;
 
-        let max = this.zoomed ? this.canvasSize : Math.max(width, height);
+        let max = zoomed ? this.canvasSize : Math.max(width, height);
         max = Math.min(max, this.canvasSize);
 
         if (ratio > 1) {
@@ -914,6 +904,9 @@ export default class CanvasManager {
             newWidth = Math.round(max * ratio);
             newHeight = max;
         }
+
+        console.log("[newWidth, newHeight]", [newWidth, newHeight]);
+
         return [newWidth, newHeight];
     }
 

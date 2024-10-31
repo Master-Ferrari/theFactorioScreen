@@ -31,10 +31,8 @@ const scaleMinusSVG = document.getElementById('scaleMinusSVG') as HTMLButtonElem
 
 const methods: DropdownOption[] = [
     { name: "png", value: 'статичная пикча', isActive: true },
-    { name: "gif1", value: 'анимация 1', isActive: false },
-    { name: "gif2", value: 'анимация 2', isActive: true },
-    { name: "gif3", value: 'анимация 3', isActive: false },
-    { name: "gif4", value: 'анимация 4', isActive: false },
+    { name: "gif1", value: 'анимация 1', isActive: true },
+    { name: "gif2", value: 'анимация 2', isActive: false },
 ]
 
 const onMethodSelect = (index: number | null) => { }
@@ -71,7 +69,6 @@ function onLoad() {
 
 const canvasManager = CanvasManager.init();
 canvasManager.setOnLoadCallback(onLoad);
-// CanvasManager.dsfsdfedfs();
 
 // Обработчик выбора файла
 gifInput.addEventListener('change', function (event: Event) {
@@ -129,7 +126,7 @@ let cropped = false;
 scaleCanvasButton.addEventListener('click', function () {
     cropped = !cropped;
     cropIcon(cropped);
-    canvasManager.scaleCanvas();
+    canvasManager.zoomCanvas(cropped);
 });
 
 // Обработчик изменения ширины

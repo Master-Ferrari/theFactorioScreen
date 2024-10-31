@@ -1,4 +1,4 @@
-export type DropdownOption = {
+export type DropdownOption = { // стило бы сделат словарём
     name: string;
     value: string;
     isActive: boolean;
