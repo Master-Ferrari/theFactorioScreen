@@ -52,8 +52,8 @@ class Dropdown {
     private createDropdownTrigger(): HTMLButtonElement {
         const trigger = document.createElement('button');
         trigger.classList.add('dropdown-select-trigger');
-        trigger.classList.add('script-button');
-        
+        trigger.classList.add('custom-button');
+
         // trigger.classList.add('dropdown-select-trigger');
         trigger.innerText = 'Выберите опцию';
         return trigger;
@@ -65,17 +65,18 @@ class Dropdown {
         optionsContainer.style.display = 'none';
 
         this.optionsList.forEach((option, index) => {
+            const optionElement = document.createElement('button');
+            optionElement.id = `dropdown-option-${option.name + 1}`;
+            optionElement.innerText = option.value;
             if (option.isActive) {
-
-                const optionElement = document.createElement('button');
                 optionElement.classList.add('dropdown-option');
-                optionElement.id = `dropdown-option-${option.name + 1}`;
-                optionElement.innerText = option.value;
                 optionElement.addEventListener('mouseup', () => {
                     this.selectOption(option, index);
                 });
-                optionsContainer.appendChild(optionElement);
+            } else {
+                optionElement.classList.add('dropdown-option-deactivated');
             }
+            optionsContainer.appendChild(optionElement);
         });
 
         return optionsContainer;

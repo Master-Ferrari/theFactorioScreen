@@ -2,6 +2,7 @@
 :root {
     --background-color: #1e1e1e;
     --text-color: #f5f5f5;
+    --text-color-deactivated: #a7a7a7;
     --input-bg: #333;
     --button-bg: #454545;
     --button-color: #fff;
@@ -10,10 +11,25 @@
     --container-bg: #2e2e2e;
     --slider-bg: #555;
     --slider-bg-checked: #ccc;
+}
 
+.light-theme {
+    --background-color: #f5f5f5;
+    --text-color: #333;
+    --text-color-deactivated: #5e5e5e;
+    --input-bg: #fff;
+    --button-bg: #666;
+    --button-color: #fff;
+    --button-hover: #444;
+    --border-color: #ccc;
+    --container-bg: #fff;
+    --slider-bg: #ccc;
+    --slider-bg-checked: #666;
+}
+
+:root {
     --small-radius: 5px;
     --large-radius: 20px;
-
     --border-size: 5px;
 }
 
@@ -163,10 +179,6 @@ input:checked+.slider:before {
     box-sizing: border-box;
 }
 
-.custom-file-upload:hover {
-    background-color: var(--button-hover, #888);
-}
-
 .inputs {
     margin: 10px 0;
 }
@@ -202,15 +214,12 @@ input[type="range"] {
     width: 100%;
 }
 
-button {
+
+.custom-button {
     border: none;
     background-color: var(--button-bg, #454545);
     color: var(--button-color, #fff);
     cursor: pointer;
-}
-
-button:hover {
-    background-color: var(--button-hover, #888);
 }
 
 canvas {
@@ -260,7 +269,7 @@ canvas {
 }
 
 
-.island button {
+/* .island button {
     padding: 10px;
     border-radius: var(--large-radius);
     border: none;
@@ -271,20 +280,7 @@ canvas {
 
 .island button:hover {
     background-color: var(--button-hover, #888);
-}
-
-.light-theme {
-    --background-color: #f5f5f5;
-    --text-color: #333;
-    --input-bg: #fff;
-    --button-bg: #666;
-    --button-color: #fff;
-    --button-hover: #444;
-    --border-color: #ccc;
-    --container-bg: #fff;
-    --slider-bg: #ccc;
-    --slider-bg-checked: #666;
-}
+} */
 
 /* Responsive design */
 @media (max-width: 800px) {
@@ -307,7 +303,11 @@ canvas {
 }
 
 .mrgnT10 {
-    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+.mrgnT15 {
+    margin-top: 15px;
 }
 
 .control-toggle label {
@@ -366,9 +366,10 @@ canvas {
     max-height: 330px;
 }
 
+/* 
 .script-button {
     margin-bottom: 15px;
-}
+} */
 
 /* 
 #makeVideoBlueprint {
@@ -431,15 +432,26 @@ canvas {
     box-sizing: content-box;
 
     border: var(--container-bg) var(--border-size) solid;
-    transform: translate(calc(-1* var(--border-size)), -15px);
+    transform: translate(calc(-1* var(--border-size)), 0px);
 }
 
-.dropdown-option {
+.dropdown-option,
+.dropdown-option-deactivated {
     padding: 10px;
     cursor: pointer;
+    background-color: var(--button-bg);
     user-select: none;
 }
 
+.dropdown-option-deactivated {
+    cursor: default;
+    color: var(--text-color-deactivated);
+    text-decoration: line-through;
+}
+
+.custom-button:hover,
+.custom-file-upload:hover,
+.icon-button:hover,
 .dropdown-option:hover {
-    background: var(--button-hover);
+    background-color: var(--button-hover, #888);
 }
