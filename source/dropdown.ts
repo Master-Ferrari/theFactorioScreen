@@ -1,9 +1,10 @@
 export type DropdownOption = {
     name: string;
+    value: string;
     isActive: boolean;
 };
 
-type OptionSelectCallback = (index: number) => void;
+type OptionSelectCallback = (index: number | null) => void;
 
 class Dropdown {
     private dropdown: HTMLElement;
@@ -32,6 +33,22 @@ class Dropdown {
         document.addEventListener('mousedown', (event) => this.handleOutsideClick(event));
     }
 
+    updateOptions(newOptions: DropdownOption[]): void {
+        this.optionsList.forEach((option, index) => {
+            this.selectedOption = null;
+            this.onSelectCallback(null);
+            const element = this.dropdownOptions.querySelector(this.generateId(option.name));
+            element?.removeEventListener('mouseup', () => this.selectOption(option, index));
+            element?.remove();
+        });
+        this.optionsList = newOptions;
+        this.createDropdownOptions();
+    }
+
+    private generateId(name: string): string {
+        return `dropdown-option-${name}`;
+    }
+
     private createDropdownTrigger(): HTMLButtonElement {
         const trigger = document.createElement('button');
         trigger.classList.add('dropdown-select-trigger');
@@ -49,11 +66,13 @@ class Dropdown {
 
         this.optionsList.forEach((option, index) => {
             if (option.isActive) {
+
                 const optionElement = document.createElement('button');
                 optionElement.classList.add('dropdown-option');
-                optionElement.innerText = option.name;
+                optionElement.id = `dropdown-option-${option.name + 1}`;
+                optionElement.innerText = option.value;
                 optionElement.addEventListener('mouseup', () => {
-                    this.selectOption(option.name, index);
+                    this.selectOption(option, index);
                 });
                 optionsContainer.appendChild(optionElement);
             }
@@ -82,8 +101,8 @@ class Dropdown {
         }
     }
 
-    private selectOption(optionName: string, index: number): void {
-        this.dropdownTrigger.innerText = optionName;
+    private selectOption(option: DropdownOption, index: number): void {
+        this.dropdownTrigger.innerText = option.value;
         this.selectedOption = index;
         this.onSelectCallback(index); // Вызов колбэка с индексом выбранной опции
         this.closeOptions();

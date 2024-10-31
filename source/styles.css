@@ -1,3 +1,22 @@
+/* Light and Dark themes */
+:root {
+    --background-color: #1e1e1e;
+    --text-color: #f5f5f5;
+    --input-bg: #333;
+    --button-bg: #454545;
+    --button-color: #fff;
+    --button-hover: #888;
+    --border-color: #444;
+    --container-bg: #2e2e2e;
+    --slider-bg: #555;
+    --slider-bg-checked: #ccc;
+
+    --small-radius: 5px;
+    --large-radius: 20px;
+
+    --border-size: 5px;
+}
+
 body {
     font-family: 'Arial', sans-serif;
     display: flex;
@@ -31,7 +50,7 @@ body {
     position: absolute;
     cursor: pointer;
     background-color: #666;
-    border-radius: 20px;
+    border-radius: var(--large-radius);
     top: 0;
     left: 0;
     right: 0;
@@ -45,7 +64,7 @@ body {
     position: absolute;
     height: 18px;
     width: 18px;
-    border-radius: 20px;
+    border-radius: var(--large-radius);
     background-color: white;
     left: 3px;
     bottom: 3px;
@@ -109,7 +128,7 @@ input:checked+.slider:before {
 .island {
     background-color: var(--container-bg, #2e2e2e);
     border: 1px solid var(--border-color, #444);
-    border-radius: 20px;
+    border-radius: var(--large-radius);
     padding: 20px;
     margin: 10px;
     flex: 1 1 calc(33.33% - 40px);
@@ -135,7 +154,7 @@ input:checked+.slider:before {
     display: inline-block;
     padding: 10px 20px;
     cursor: pointer;
-    border-radius: 20px;
+    border-radius: var(--large-radius);
     background-color: var(--button-bg, #454545);
     color: var(--button-color, #fff);
     text-align: center;
@@ -174,7 +193,7 @@ button,
 input[type="number"],
 input[type="range"] {
     padding: 10px;
-    border-radius: 20px;
+    border-radius: var(--large-radius);
     border: 1px solid var(--border-color, #444);
     background-color: var(--input-bg, #333);
     color: var(--text-color, #f5f5f5);
@@ -196,7 +215,7 @@ button:hover {
 
 canvas {
     border: 1px solid var(--border-color, #444);
-    border-radius: 20px;
+    border-radius: var(--large-radius);
     margin-top: 20px;
     max-width: 336px;
     max-height: 336px;
@@ -207,7 +226,7 @@ canvas {
 #textOutput {
     flex-grow: 1;
     padding: 10px;
-    border-radius: 5px;
+    border-radius: var(--small-radius);
     border: 1px solid var(--border-color, #444);
     background-color: var(--input-bg, #333);
     color: var(--text-color, #f5f5f5);
@@ -236,37 +255,22 @@ canvas {
 #textOutput::-webkit-scrollbar-thumb {
     background-color: gray;
     /* Цвет бегунка */
-    border-radius: 5px;
+    border-radius: var(--small-radius);
     /* Радиус углов бегунка */
 }
 
 
 .island button {
     padding: 10px;
-    border-radius: 20px;
+    border-radius: var(--large-radius);
     border: none;
     background-color: var(--button-bg, #454545);
     color: var(--button-color, #fff);
     cursor: pointer;
-    margin-bottom: 10px;
 }
 
 .island button:hover {
     background-color: var(--button-hover, #888);
-}
-
-/* Light and Dark themes */
-:root {
-    --background-color: #1e1e1e;
-    --text-color: #f5f5f5;
-    --input-bg: #333;
-    --button-bg: #454545;
-    --button-color: #fff;
-    --button-hover: #888;
-    --border-color: #444;
-    --container-bg: #2e2e2e;
-    --slider-bg: #555;
-    --slider-bg-checked: #ccc;
 }
 
 .light-theme {
@@ -300,6 +304,9 @@ canvas {
 .control-toggle {
     display: flex;
     align-items: center;
+}
+
+.mrgnT10 {
     margin-bottom: 10px;
 }
 
@@ -354,7 +361,7 @@ canvas {
 
 #canvas {
     margin: auto;
-    border-radius: 5px;
+    border-radius: var(--small-radius);
     max-width: 330px;
     max-height: 330px;
 }
@@ -380,7 +387,7 @@ canvas {
     width: 100%;
     font-weight: bold;
     text-align: center;
-    border-radius: 5px;
+    border-radius: var(--small-radius);
 }
 
 
@@ -408,6 +415,10 @@ canvas {
     position: absolute;
     top: 100%;
     left: 0;
+
+    border-radius: var(--large-radius);
+    background-color: var(--button-bg);
+
     /* margin-top: 5px;
     border: 1px solid #ccc;
     border-radius: 10px;
@@ -417,7 +428,10 @@ canvas {
     display: none;
     /* z-index: 99; */
     width: 100%;
-    box-sizing: border-box;
+    box-sizing: content-box;
+
+    border: var(--container-bg) var(--border-size) solid;
+    transform: translate(calc(-1* var(--border-size)), -15px);
 }
 
 .dropdown-option {
@@ -426,6 +440,6 @@ canvas {
     user-select: none;
 }
 
-/* .dropdown-option:hover {
-    background: #f1f1f1;
-} */
+.dropdown-option:hover {
+    background: var(--button-hover);
+}

@@ -30,11 +30,11 @@ const scalePlusSVG = document.getElementById('scalePlusSVG') as HTMLButtonElemen
 const scaleMinusSVG = document.getElementById('scaleMinusSVG') as HTMLButtonElement;
 
 const methods: DropdownOption[] = [
-    { name: 'статичная пикча', isActive: true },
-    { name: 'анимация 1', isActive: true },
+    { name: "png", value: 'статичная пикча', isActive: true },
+    { name: "gif1", value: 'анимация 1', isActive: true },
 ]
 
-const onMethodSelect = (index: number) => { }
+const onMethodSelect = (index: number | null) => { }
 
 initializeDropdown(methodSelect, methods, onMethodSelect);
 
