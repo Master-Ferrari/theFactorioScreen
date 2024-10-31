@@ -61,6 +61,8 @@ type LoaderTypes = {
     arrayBuffer: ArrayBuffer
 }
 
+type OnLoadCallback = (mode: "gif" | "png") => void
+
 // Синглтон-класс для управления канвасом
 export default class CanvasManager {
     private static instance: CanvasManager;
@@ -69,6 +71,9 @@ export default class CanvasManager {
     private ctx: CanvasRenderingContext2D;
 
     private _mode: "gif" | "png" | null = null;
+    private onLoadCallback: OnLoadCallback | null = null;
+
+    private canvasSize: number = 330;
 
     private rotationAngle: number = 0;
     private verticalScale: number = 1;
@@ -104,7 +109,7 @@ export default class CanvasManager {
         // Инициализация канваса и контекста
         this.canvas = document.getElementById("canvas") as HTMLCanvasElement;
         this.ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
-        
+
         // Отключение сглаживания изображения
         this.ctx.imageSmoothingEnabled = false;
         (this.ctx as any).mozImageSmoothingEnabled = false;
@@ -127,13 +132,19 @@ export default class CanvasManager {
         this._mode = options.mode;
         if (options.mode === "gif") {
             this.loadGif(options.arrayBuffer);
-            // this.myGif = this.parseGif();
+            this.myGif = this.parseGif();
         } else if (options.mode === "png") {
             this.loadPng(options.arrayBuffer);
+            this.myPng = this.parsePng();
         }
+        this.onLoadCallback?.(options.mode);
     }
 
-    public static getInstance(): CanvasManager {
+    public setOnLoadCallback(callback: OnLoadCallback): void {
+        this.onLoadCallback = callback;
+    }
+
+    public static init(): CanvasManager {
         if (!CanvasManager.instance) {
             CanvasManager.instance = new CanvasManager();
         }
@@ -751,6 +762,8 @@ export default class CanvasManager {
         this.rotationAngle = (this.rotationAngle + angle) % 360;
         this.rotateStyles();
         this.displayFrame(this.currentFrame);
+
+        [this.canvas.width, this.canvas.height] = [this.canvas.height, this.canvas.width];
     }
 
     private rotateStyles(): void {
@@ -763,7 +776,7 @@ export default class CanvasManager {
         const maxCanvasWidth = parseInt(getComputedStyle(this.canvas).width);
         const maxCanvasHeight = parseInt(getComputedStyle(this.canvas).height);
 
-        const max = this.zoomed ? 330 : Math.max(maxCanvasWidth, maxCanvasHeight);
+        const max = this.zoomed ? this.canvasSize : Math.max(maxCanvasWidth, maxCanvasHeight);
 
         const [newWidth, newHeight] = this.ratioCalc(maxCanvasWidth, maxCanvasHeight, max);
 
@@ -783,8 +796,8 @@ export default class CanvasManager {
         const userWidth = parseInt(this.widthInput.value, 10);
         const userHeight = parseInt(this.heightInput.value, 10);
 
-        const scaleX = this.originalImageWidth / 330;
-        const scaleY = this.originalImageHeight / 330;
+        const scaleX = this.originalImageWidth / this.canvasSize;
+        const scaleY = this.originalImageHeight / this.canvasSize;
         const scale = Math.min(scaleX, scaleY);
 
         let width = Math.round(this.originalImageWidth * scale);
@@ -854,7 +867,7 @@ export default class CanvasManager {
         };
     }
 
-    private ratioCalc(width: number, height: number, max: number = 330): [number, number] {
+    private ratioCalc(width: number, height: number, max: number = this.canvasSize): [number, number] {
         const ratio = width / height;
         let newWidth: number;
         let newHeight: number;
@@ -881,39 +894,36 @@ export default class CanvasManager {
         }
     }
 
-    public updateWidth(): void {
-        const newWidth = parseInt(this.widthInput.value, 10);
-        if (!isNaN(newWidth)) {
+    public updateCanvasSize(byChanging: "width" | "height"): void {
+        let newWidth = parseInt(this.widthInput.value, 10);
+        let newHeight = parseInt(this.heightInput.value, 10);
+
+
+
+        if (!isNaN(newWidth) && !isNaN(newHeight)) {
+
             if (this.preserveAspectCheckbox.checked && this.originalAspectRatio) {
-                const newHeight = Math.round(newWidth / this.originalAspectRatio);
-                this.heightInput.value = newHeight.toString();
+
+                if (byChanging === "width") {
+                    newHeight = Math.round(newWidth / this.originalAspectRatio);
+                    this.heightInput.value = newHeight.toString();
+                } else {
+                    newWidth = Math.round(newHeight * this.originalAspectRatio);
+                    this.widthInput.value = newWidth.toString();
+                }
+
             }
             this.originalCanvasWidth = newWidth;
-            this.originalCanvasHeight = parseInt(this.heightInput.value, 10);
-            this.canvas.width = newWidth;
-            this.canvas.height = this.originalCanvasHeight;
-
-            this.canvas.style.width = newWidth + 'px';
-            this.canvas.style.height = this.originalCanvasHeight + 'px';
-            this.displayFrame(this.currentFrame);
-        }
-        this.checkAlert();
-    }
-
-    public updateHeight(): void {
-        const newHeight = parseInt(this.heightInput.value, 10);
-        if (!isNaN(newHeight)) {
-            if (this.preserveAspectCheckbox.checked && this.originalAspectRatio) {
-                const newWidth = Math.round(newHeight * this.originalAspectRatio);
-                this.widthInput.value = newWidth.toString();
-            }
-            this.originalCanvasWidth = parseInt(this.widthInput.value, 10);
             this.originalCanvasHeight = newHeight;
-            this.canvas.width = this.originalCanvasWidth;
+            this.canvas.width = newWidth;
             this.canvas.height = newHeight;
 
-            this.canvas.style.width = this.originalCanvasWidth + 'px';
-            this.canvas.style.height = newHeight + 'px';
+            const max = this.zoomed ? this.canvasSize : Math.max(newWidth, newHeight);
+            const [calcWidth, calcHeight] = this.ratioCalc(newWidth, newHeight, max);
+
+            this.canvas.style.width = calcWidth + 'px';
+            this.canvas.style.height = calcHeight + 'px';
+
             this.displayFrame(this.currentFrame);
         }
         this.checkAlert();

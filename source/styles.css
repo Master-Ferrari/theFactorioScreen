@@ -201,6 +201,7 @@ canvas {
     max-width: 336px;
     max-height: 336px;
     height: 100%;
+    image-rendering: pixelated;
 }
 
 #textOutput {

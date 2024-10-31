@@ -1,4 +1,4 @@
-import CanvasManager from "./fileDecoder.js";
+import CanvasManager from "./imageProcessor.js";
 
 // Обработчики событий
 const gifInput = document.getElementById("gifInput") as HTMLInputElement;
@@ -43,7 +43,16 @@ function hide(hide: boolean = false) {
     }
 }
 
-const canvasManager = CanvasManager.getInstance();
+
+function onLoad() {
+    // const arrayBuffer = e.target?.result as ArrayBuffer;
+    // canvasManager.loader({ mode, arrayBuffer });
+    // alert(mode.toUpperCase() + ' загружен!');
+    hide();
+};
+
+const canvasManager = CanvasManager.init();
+canvasManager.setOnLoadCallback(onLoad);
 // CanvasManager.dsfsdfedfs();
 
 // Обработчик выбора файла
@@ -66,12 +75,11 @@ gifInput.addEventListener('change', function (event: Event) {
 
     const reader = new FileReader();
     reader.onload = function (e: ProgressEvent<FileReader>) {
+        reader.readAsArrayBuffer(file);
         const arrayBuffer = e.target?.result as ArrayBuffer;
         canvasManager.loader({ mode, arrayBuffer });
-        alert(mode.toUpperCase() + ' загружен!');
         hide();
     };
-    reader.readAsArrayBuffer(file);
 });
 
 // Кнопка зеркального отображения
@@ -108,12 +116,12 @@ scaleCanvasButton.addEventListener('click', function () {
 
 // Обработчик изменения ширины
 widthInput.addEventListener('input', function () {
-    canvasManager.updateWidth();
+    canvasManager.updateCanvasSize("width");
 });
 
 // Обработчик изменения высоты
 heightInput.addEventListener('input', function () {
-    canvasManager.updateHeight();
+    canvasManager.updateCanvasSize("height");
 });
 
 // Обработчик изменения текущего кадра

@@ -1,5 +1,5 @@
-import CanvasManager from "./fileDecoder.js";
-const canvasManager = CanvasManager.getInstance();
+import CanvasManager from "./imageProcessor.js";
+const canvasManager = CanvasManager.init();
 
 import jsonToBlueprint from "./blueprintEncoder.js";
 
