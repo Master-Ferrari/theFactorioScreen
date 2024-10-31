@@ -160,29 +160,44 @@ export default class CanvasManager {
             if (!self.myPng) return;
 
             // Инициализация параметров после загрузки PNG
+            self.originalAspectRatio = self.myPng.width / self.myPng.height;
             self.originalImageWidth = self.myPng.width;
             self.originalImageHeight = self.myPng.height;
 
+
             // Устанавливаем размеры canvas и другие параметры
-            let newWidth = parseInt(self.widthInput.value, 10);
-            let newHeight = parseInt(self.heightInput.value, 10);
+            // let newWidth = parseInt(self.widthInput.value, 10);
+            // let newHeight = parseInt(self.heightInput.value, 10);
+            let newWidth = self.myPng.width;
+            let newHeight = self.myPng.height;
 
-            if (isNaN(newWidth) || isNaN(newHeight)) {
-                newWidth = self.myPng.width;
-                newHeight = self.myPng.height;
-                self.widthInput.value = newWidth.toString();
-                self.heightInput.value = newHeight.toString();
-            }
+            // if (isNaN(newWidth) || isNaN(newHeight)) {
+            // newWidth = self.myPng.width;
+            // newHeight = self.myPng.height;
+            self.widthInput.value = newWidth.toString();
+            self.heightInput.value = newHeight.toString();
+            // }
 
-            if (self.preserveAspectCheckbox.checked) {
-                newHeight = newWidth / (self.myPng.width / self.myPng.height);
-                self.heightInput.value = Math.round(newHeight).toString();
-            }
+            // if (self.preserveAspectCheckbox.checked) {
+            //     newHeight = newWidth / (self.myPng.width / self.myPng.height);
+            //     self.heightInput.value = Math.round(newHeight).toString();
+            // }
 
             self.canvas.width = newWidth;
             self.canvas.height = newHeight;
 
+            // self.canvas.width = newWidth;
+            // self.canvas.height = newHeight;
+            // self.heightInput.value = newHeight.toString();
+            // self.widthInput.value = newWidth.toString();
             // Отображаем изображение на canvas
+
+
+            [self.originalCanvasWidth, self.originalCanvasHeight] = self.ratioCalc(newWidth, newHeight);
+
+            self.canvas.style.width = self.originalCanvasWidth + 'px';
+            self.canvas.style.height = self.originalCanvasHeight + 'px';
+
             if (self.myPng.frame?.image) {
                 const ctx = self.canvas.getContext("2d")!;
                 ctx.drawImage(self.myPng.frame.image, 0, 0, newWidth, newHeight);
@@ -270,31 +285,33 @@ export default class CanvasManager {
             self.originalImageHeight = self.myGif.height;
 
             // Установка размеров канваса
-            let newWidth = parseInt(self.widthInput.value, 10);
-            let newHeight = parseInt(self.heightInput.value, 10);
+            // let newWidth = parseInt(self.widthInput.value, 10);
+            // let newHeight = parseInt(self.heightInput.value, 10);
+            let newWidth = self.myGif.width;
+            let newHeight = self.myGif.height;
 
-            if (isNaN(newWidth) || isNaN(newHeight)) {
-                newWidth = self.myGif.width;
-                newHeight = self.myGif.height;
-                self.widthInput.value = newWidth.toString();
-                self.heightInput.value = newHeight.toString();
-            }
+            // if (isNaN(newWidth) || isNaN(newHeight)) {
+            // newWidth = self.myGif.width;
+            // newHeight = self.myGif.height;
+            self.widthInput.value = newWidth.toString();
+            self.heightInput.value = newHeight.toString();
+            // }
 
-            if (self.preserveAspectCheckbox.checked) {
-                if (isNaN(newWidth) && isNaN(newHeight)) {
-                    newWidth = self.myGif.width;
-                    newHeight = self.myGif.height;
-                } else if (isNaN(newWidth)) {
-                    newWidth = newHeight * self.originalAspectRatio;
-                    self.widthInput.value = Math.round(newWidth).toString();
-                } else if (isNaN(newHeight)) {
-                    newHeight = newWidth / self.originalAspectRatio;
-                    self.heightInput.value = Math.round(newHeight).toString();
-                } else {
-                    newHeight = newWidth / self.originalAspectRatio;
-                    self.heightInput.value = Math.round(newHeight).toString();
-                }
-            }
+            // if (self.preserveAspectCheckbox.checked) {
+            //     if (isNaN(newWidth) && isNaN(newHeight)) {
+            //         newWidth = self.myGif.width;
+            //         newHeight = self.myGif.height;
+            //     } else if (isNaN(newWidth)) {
+            //         newWidth = newHeight * self.originalAspectRatio;
+            //         self.widthInput.value = Math.round(newWidth).toString();
+            //     } else if (isNaN(newHeight)) {
+            //         newHeight = newWidth / self.originalAspectRatio;
+            //         self.heightInput.value = Math.round(newHeight).toString();
+            //     } else {
+            //         newHeight = newWidth / self.originalAspectRatio;
+            //         self.heightInput.value = Math.round(newHeight).toString();
+            //     }
+            // }
 
             self.canvas.width = newWidth;
             self.canvas.height = newHeight;
@@ -780,7 +797,7 @@ export default class CanvasManager {
 
         const max = this.zoomed ? this.canvasSize : Math.max(maxCanvasWidth, maxCanvasHeight);
 
-        const [newWidth, newHeight] = this.ratioCalc(maxCanvasWidth, maxCanvasHeight, max);
+        const [newWidth, newHeight] = this.ratioCalc(maxCanvasWidth, maxCanvasHeight);
 
         this.canvas.style.width = newHeight + 'px';
         this.canvas.style.height = newWidth + 'px';
@@ -869,20 +886,6 @@ export default class CanvasManager {
         };
     }
 
-    private ratioCalc(width: number, height: number, max: number = this.canvasSize): [number, number] {
-        const ratio = width / height;
-        let newWidth: number;
-        let newHeight: number;
-        if (ratio > 1) {
-            newWidth = max;
-            newHeight = Math.round(max / ratio);
-        } else {
-            newWidth = Math.round(max * ratio);
-            newHeight = max;
-        }
-        return [newWidth, newHeight];
-    }
-
     private checkAlert(): void {
         const widthUserInput = parseInt(this.widthInput.value, 10);
         const framesUserInput = parseInt(this.frameCountInput.value, 10);
@@ -894,6 +897,24 @@ export default class CanvasManager {
         } else {
             this.alertBox.style.display = "none";
         }
+    }
+
+    private ratioCalc(width: number, height: number, zoomed: boolean = this.zoomed): [number, number] {
+        const ratio = width / height;
+        let newWidth: number;
+        let newHeight: number;
+
+        let max = this.zoomed ? this.canvasSize : Math.max(width, height);
+        max = Math.min(max, this.canvasSize);
+
+        if (ratio > 1) {
+            newWidth = max;
+            newHeight = Math.round(max / ratio);
+        } else {
+            newWidth = Math.round(max * ratio);
+            newHeight = max;
+        }
+        return [newWidth, newHeight];
     }
 
     public updateCanvasSize(byChanging: "width" | "height"): void {
@@ -921,7 +942,7 @@ export default class CanvasManager {
             this.canvas.height = newHeight;
 
             const max = this.zoomed ? this.canvasSize : Math.max(newWidth, newHeight);
-            const [calcWidth, calcHeight] = this.ratioCalc(newWidth, newHeight, max);
+            const [calcWidth, calcHeight] = this.ratioCalc(newWidth, newHeight);
 
             this.canvas.style.width = calcWidth + 'px';
             this.canvas.style.height = calcHeight + 'px';

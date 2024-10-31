@@ -1,3 +1,4 @@
+import { DropdownOption, initializeDropdown } from "./dropdown.js";
 import CanvasManager from "./imageProcessor.js";
 
 // Обработчики событий
@@ -23,8 +24,20 @@ const makePhotoBlueprint = document.getElementById('makePhotoBlueprint') as HTML
 const copyButton = document.getElementById('copyButton') as HTMLButtonElement;
 
 
+const methodSelect = document.getElementById('methodSelect') as HTMLElement;
+
 const scalePlusSVG = document.getElementById('scalePlusSVG') as HTMLButtonElement;
 const scaleMinusSVG = document.getElementById('scaleMinusSVG') as HTMLButtonElement;
+
+const methods: DropdownOption[] = [
+    { name: 'статичная пикча', isActive: true },
+    { name: 'анимация 1', isActive: true },
+]
+
+const onMethodSelect = (index: number) => { }
+
+initializeDropdown(methodSelect, methods, onMethodSelect);
+
 
 function visability(hide: boolean = false) {
     if (hide) {
@@ -72,6 +85,7 @@ gifInput.addEventListener('change', function (event: Event) {
 
     const reader = new FileReader();
     reader.onload = function (e: ProgressEvent<FileReader>) {
+        gifInput.textContent = file.name;
         const arrayBuffer = e.target?.result as ArrayBuffer;
         canvasManager.loader({ mode, arrayBuffer });
     };
@@ -140,3 +154,4 @@ frameRateInput.addEventListener('input', function () {
     canvasManager.updateFrameRate();
 });
 // Декодер и проигрыватель GIF для использования с Canvas API
+

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        .container {
+            width: 300px;
+            height: 300px;
+            border: 2px solid red;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dropdown-select {
+            position: relative;
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .dropdown-select-trigger {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            cursor: pointer;
+            user-select: none;
+            box-sizing: border-box;
+        }
+
+        .dropdown-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background: #fff;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            z-index: 99;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .dropdown-option {
+            padding: 10px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .dropdown-option:hover {
+            background: #f1f1f1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="dropdown-select">
+            <div id="dropdown" class="dropdown-select-trigger">Выберите опцию</div>
+            <div id="dropdown-options" class="dropdown-options">
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        const dropdown = document.getElementById('dropdown');
+        const dropdownOptions = document.getElementById('dropdown-options');
+
+        const optionsList = [
+            { name: 'Опция 1', isActive: true },
+            { name: 'Опция 2', isActive: true },
+            { name: 'Опция 3', isActive: true }
+        ];
+
+        let isOpen = false;
+        let selectedOption = null;
+
+        optionsList.forEach((option, index) => {
+            const optionElement = document.createElement('div');
+            optionElement.classList.add('dropdown-option');
+            optionElement.innerHTML = option.name;
+            dropdownOptions.appendChild(optionElement);
+
+            optionElement.addEventListener('mouseup', () => {
+                dropdown.innerHTML = option.name;
+                selectedOption = index;
+                closeOptions();
+            });
+        });
+
+        dropdown.addEventListener('mousedown', toggleOptions);
+
+        // Глобальный обработчик для закрытия меню при клике вне dropdownOptions
+        document.addEventListener('mousedown', (event) => {
+            if (isOpen && !dropdown.contains(event.target) && !dropdownOptions.contains(event.target)) {
+                closeOptions();
+            }
+        });
+
+        function openOptions() {
+            dropdownOptions.style.display = 'block';
+            isOpen = true;
+            console.log('Открыто');
+        }
+
+        function closeOptions() {
+            dropdownOptions.style.display = 'none';
+            isOpen = false;
+            console.log('Закрыто');
+        }
+
+        function toggleOptions() {
+            if (isOpen) {
+                closeOptions();
+            } else {
+                openOptions();
+            }
+        }
+    </script>
+
+</body>
+
+</html>

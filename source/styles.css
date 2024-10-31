@@ -382,3 +382,50 @@ canvas {
     text-align: center;
     border-radius: 5px;
 }
+
+
+
+
+.dropdown-select {
+    position: relative;
+    width: 100%;
+    /* border-radius: 10px; */
+}
+
+.dropdown-select-trigger {
+    display: block;
+    width: 100%;
+    /* padding: 10px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 10px; */
+    cursor: pointer;
+    user-select: none;
+    box-sizing: border-box;
+}
+
+.dropdown-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    /* margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background: #fff;
+    max-height: 200px;
+    overflow-y: auto; */
+    display: none;
+    /* z-index: 99; */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.dropdown-option {
+    padding: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* .dropdown-option:hover {
+    background: #f1f1f1;
+} */
