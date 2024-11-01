@@ -1,4 +1,4 @@
-import { DropdownOption, initializeDropdown } from "./dropdown.js";
+import { DropdownOption, Dropdown } from "./dropdown.js";
 import CanvasManager from "./imageProcessor.js";
 
 // Обработчики событий
@@ -30,7 +30,7 @@ const methodSelect = document.getElementById('methodSelect') as HTMLElement;
 const scalePlusSVG = document.getElementById('scalePlusSVG') as HTMLButtonElement;
 const scaleMinusSVG = document.getElementById('scaleMinusSVG') as HTMLButtonElement;
 
-const methods: DropdownOption[] = [
+const methods: DropdownOption[] = [  // это должен возвращать новый класс
     { name: "png", value: 'статичная пикча', isActive: true },
     { name: "gif1", value: 'анимация 1', isActive: true },
     { name: "gif2", value: 'анимация 2', isActive: false },
@@ -38,13 +38,12 @@ const methods: DropdownOption[] = [
 
 const onMethodSelect = (index: number | null) => { }
 
-initializeDropdown({
+const modeDropdown = new Dropdown({
     dropdownElement: methodSelect,
     optionsList: methods,
     onSelectCallback: onMethodSelect,
     defaultText: "Выбор метода"
 });
-
 
 function visability(hide: boolean = false) {
     if (hide) {
@@ -65,6 +64,7 @@ function visability(hide: boolean = false) {
 
 
 function onLoad() {
+    modeDropdown.updateOptions(methods);
     visability(false);
 };
 

@@ -1,7 +1,8 @@
-import CanvasManager from "./imageProcessor.js";
+import CanvasManager, { Mode } from "./imageProcessor.js";
 const canvasManager = CanvasManager.init();
 
 import jsonToBlueprint from "./blueprintEncoder.js";
+import { DropdownOption } from "./dropdown.js";
 
 
 document.getElementById('makePhotoBlueprint')?.addEventListener('click', function () {
@@ -79,4 +80,81 @@ function simpleLamp(index: number, x: number, y: number, r: number, g: number, b
         },
         always_on: true
     };
+}
+
+
+
+class MethodsManager {
+    private methods: Method[] = [];
+
+    add(methods: Method[]) {
+        methods.forEach((method) => {
+            this.methods.push(method);
+        })
+    }
+
+    getList(mode: Mode): DropdownOption[] {
+        return this.methods.map((method) => {
+            return {
+                name: method.name,
+                value: method.value,
+                isActive: method.supportedModes.includes(mode)
+            }
+        })
+    }
+}
+
+
+abstract class Method {
+    abstract readonly name: string;
+    abstract readonly value: string;
+    abstract readonly optionsContainer: HTMLElement;
+    abstract readonly supportedModes: Mode[];
+
+    // Абстрактные методы, которые должны быть реализованы в каждом наследуемом классе
+    abstract init(): void;
+    abstract makeJson(): string;
+
+    constructor() {
+        this.init(); // Автоматический вызов при создании экземпляра
+    }
+}
+
+
+class ImageMethod extends Method {
+    readonly name = "image";
+    readonly value = "one frame image";
+    readonly optionsContainer: HTMLElement;
+    readonly supportedModes: Mode[] = ["png"];
+
+    private internalVariable: any;
+
+    constructor(optionsContainer: HTMLElement) {
+        super();
+        this.optionsContainer = optionsContainer;
+    }
+
+    init(): void {
+        const button = document.createElement('button');
+        button.textContent = "Click me";
+
+        button.addEventListener('click', () => {
+            this.internalVariable = "Updated by click";
+            console.log("Button clicked, internalVariable updated:", this.internalVariable);
+        });
+
+        this.optionsContainer.appendChild(button);
+    }
+
+    makeJson(): string {
+        return JSON.stringify({ data: this.internalVariable });
+    }
+}
+
+export default function getMethods(optionsContainer: HTMLElement): MethodsManager {
+    const methods = new MethodsManager;
+    methods.add([
+        (new ImageMethod(optionsContainer))
+    ]);
+    return methods;
 }

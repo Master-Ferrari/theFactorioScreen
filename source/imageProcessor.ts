@@ -57,8 +57,9 @@ type LoaderTypes = {
     mode: "png",
     arrayBuffer: ArrayBuffer
 }
+export type Mode = "gif" | "png" | null;
+type OnLoadCallback = (mode: Mode) => void;
 
-type OnLoadCallback = (mode: "gif" | "png" | null) => void
 
 export default class CanvasManager {
     private static instance: CanvasManager;
@@ -66,7 +67,7 @@ export default class CanvasManager {
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
 
-    private _mode: "gif" | "png" | null = null;
+    private _mode: Mode = null;
     private onLoadCallback: OnLoadCallback | null = null;
 
     private canvasSize: number = 330;

@@ -6,7 +6,7 @@ export type DropdownOption = { // стило бы сделат словарём
 
 type OptionSelectCallback = (index: number | null) => void;
 
-class Dropdown {
+export class Dropdown {
     private dropdown: HTMLElement;
     private dropdownTrigger: HTMLButtonElement;
     private dropdownOptions: HTMLDivElement;
@@ -123,9 +123,9 @@ type options = {
 }
 
 // Функция инициализации компонента
-export function initializeDropdown({ dropdownElement, optionsList, onSelectCallback, defaultText }: options): void {
-    new Dropdown({ dropdownElement, optionsList, onSelectCallback, defaultText });
-}
+// export function initializeDropdown({ dropdownElement, optionsList, onSelectCallback, defaultText }: options): Dropdown {
+    // return new Dropdown({ dropdownElement, optionsList, onSelectCallback, defaultText });
+// }
 
 // // Пример вызова
 // const optionsList: Option[] = [

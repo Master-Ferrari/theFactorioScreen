@@ -96,6 +96,11 @@ body {
     display: none;
 }
 
+#blueprintOptions {
+    width: 100%;
+    height: 100%;
+}
+
 .slider {
     position: absolute;
     cursor: pointer;
