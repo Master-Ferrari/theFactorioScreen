@@ -1,8 +1,9 @@
 import { DropdownOption, Dropdown } from "./dropdown.js";
 import CanvasManager from "./imageProcessor.js";
+import getMethods from "./methods.js";
 
 // Обработчики событий
-const gifInput = document.getElementById("gifInput") as HTMLInputElement;
+const fileInput = document.getElementById("fileInput") as HTMLInputElement;
 const fileNameLabel = document.getElementById("fileNameLabel") as HTMLInputElement;
 const frameInput = document.getElementById("frameInput") as HTMLInputElement;
 const widthInput = document.getElementById("widthInput") as HTMLInputElement;
@@ -18,157 +19,124 @@ const rotateCounterClockwiseButton = document.getElementById('rotateCounterClock
 const scaleCanvasButton = document.getElementById("scaleCanvas") as HTMLButtonElement;
 
 
-const mainControls = document.getElementById('mainControls') as HTMLButtonElement;
-const canvasControls = document.getElementById('canvasControls') as HTMLButtonElement;
-const makeVideoBlueprint = document.getElementById('makeVideoBlueprint') as HTMLButtonElement;
-const makePhotoBlueprint = document.getElementById('makePhotoBlueprint') as HTMLButtonElement;
-const copyButton = document.getElementById('copyButton') as HTMLButtonElement;
-
-
-const methodSelect = document.getElementById('methodSelect') as HTMLElement;
-
 const scalePlusSVG = document.getElementById('scalePlusSVG') as HTMLButtonElement;
 const scaleMinusSVG = document.getElementById('scaleMinusSVG') as HTMLButtonElement;
 
-const methods: DropdownOption[] = [  // это должен возвращать новый класс
-    { name: "png", value: 'статичная пикча', isActive: true },
-    { name: "gif1", value: 'анимация 1', isActive: true },
-    { name: "gif2", value: 'анимация 2', isActive: false },
-]
+// const textOutput = document.getElementById('textOutput') as HTMLTextAreaElement;
 
-const onMethodSelect = (index: number | null) => { }
 
-const modeDropdown = new Dropdown({
-    dropdownElement: methodSelect,
-    optionsList: methods,
-    onSelectCallback: onMethodSelect,
-    defaultText: "Выбор метода"
-});
-
-function visability(hide: boolean = false) {
-    if (hide) {
-        mainControls.style.display = 'none';
-        canvasControls.style.display = 'none';
-        makeVideoBlueprint.classList.add('hidden');
-        makePhotoBlueprint.classList.add('hidden');
-        copyButton.classList.add('hidden');
+export default class InputHandler {
+    private canvasManager: CanvasManager;
+    constructor(canvasManager: CanvasManager) {
+        this.canvasManager = canvasManager;
     }
-    else {
-        mainControls.style.display = 'grid';
-        canvasControls.style.display = 'flex';
-        makeVideoBlueprint.classList.remove('hidden');
-        makePhotoBlueprint.classList.remove('hidden');
-        copyButton.classList.remove('hidden');
+
+    addEventListeners() {
+        const self = this;
+        // Обработчик выбора файла
+        fileInput.addEventListener('change', function (event: Event) {
+            const target = event.target as HTMLInputElement;
+            const file = target.files?.[0];
+
+            if (!file) {
+                alert('Пожалуйста, выберите файл.');
+                return;
+            }
+
+            console.log(file);
+            fileNameLabel.textContent = "selected: " + self.shortLabel(file.name, 10);
+
+            // Определяем режим (gif или png) и проверяем тип файла
+            const mode = file.type === 'image/gif' ? 'gif' : file.type === 'image/png' ? 'png' : null;
+
+            if (!mode) {
+                alert('Пожалуйста, выберите файл GIF или PNG.');
+                return;
+            }
+
+            console.log("test4", mode);
+            const reader = new FileReader();
+            reader.onload = function (e: ProgressEvent<FileReader>) {
+                const arrayBuffer = e.target?.result as ArrayBuffer;
+                self.canvasManager.loader({ mode, arrayBuffer });
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // Кнопка зеркального отображения
+        mirrorCanvasButton.addEventListener('click', function () {
+            self.canvasManager.mirror();
+        });
+
+        // Кнопки поворота
+        rotateClockwiseButton.addEventListener('click', function () {
+            self.canvasManager.rotate(90);
+        });
+
+        rotateCounterClockwiseButton.addEventListener('click', function () {
+            self.canvasManager.rotate(-90);
+        });
+
+        // Кнопка масштабирования канваса
+        function cropIcon(crop: boolean) {
+            if (crop) {
+                scalePlusSVG.style.display = 'none';
+                scaleMinusSVG.style.display = 'block';
+            } else {
+                scalePlusSVG.style.display = 'block';
+                scaleMinusSVG.style.display = 'none';
+            }
+        }
+
+        let cropped = false;
+        scaleCanvasButton.addEventListener('click', function () {
+            cropped = !cropped;
+            cropIcon(cropped);
+            self.canvasManager.zoomCanvas(cropped);
+        });
+
+        // Обработчик изменения ширины
+        widthInput.addEventListener('input', function () {
+            self.canvasManager.updateCanvasSize("width");
+        });
+
+        // Обработчик изменения высоты
+        heightInput.addEventListener('input', function () {
+            self.canvasManager.updateCanvasSize("height");
+        });
+
+        // Обработчик изменения текущего кадра
+        frameInput.addEventListener('input', function () {
+            self.canvasManager.updateFrameInput();
+        });
+
+        // Обработчик изменения количества кадров
+        frameCountInput.addEventListener('change', function () {
+            self.canvasManager.updateFrameCount();
+        });
+
+        // Обработчик чекбокса автопроигрывания
+        autoPlayCheckbox.addEventListener('change', function () {
+            self.canvasManager.toggleAutoPlay();
+        });
+
+        // Обработчик изменения FPS
+        frameRateInput.addEventListener('input', function () {
+            self.canvasManager.updateFrameRate();
+        });
+        // Декодер и проигрыватель GIF для использования с Canvas API
+
+    }
+
+    private shortLabel(text: string, max: number) {
+        if (text.length <= max) {
+            return text;
+        }
+
+        const start = text.slice(0, max - 1); // первые max - 1 символов
+        const end = text.slice(- (max - 2)); // последние max - 2 символов
+        return `${start}...${end}`; // соединяем с троеточием
     }
 }
 
-
-function onLoad() {
-    modeDropdown.updateOptions(methods);
-    visability(false);
-};
-
-const canvasManager = CanvasManager.init();
-canvasManager.setOnLoadCallback(onLoad);
-
-function shortLabel(text: string, max: number) {
-    if (text.length <= max) {
-        return text;
-    }
-
-    const start = text.slice(0, max - 1); // первые max - 1 символов
-    const end = text.slice(- (max - 2)); // последние max - 2 символов
-    return `${start}...${end}`; // соединяем с троеточием
-}
-// Обработчик выбора файла
-gifInput.addEventListener('change', function (event: Event) {
-    const target = event.target as HTMLInputElement;
-    const file = target.files?.[0];
-
-    if (!file) {
-        alert('Пожалуйста, выберите файл.');
-        return;
-    }
-
-    console.log(file);
-    fileNameLabel.textContent = "selected: " + shortLabel(file.name, 10);
-
-    // Определяем режим (gif или png) и проверяем тип файла
-    const mode = file.type === 'image/gif' ? 'gif' : file.type === 'image/png' ? 'png' : null;
-
-    if (!mode) {
-        alert('Пожалуйста, выберите файл GIF или PNG.');
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = function (e: ProgressEvent<FileReader>) {
-        const arrayBuffer = e.target?.result as ArrayBuffer;
-        canvasManager.loader({ mode, arrayBuffer });
-    };
-    reader.readAsArrayBuffer(file);
-});
-
-// Кнопка зеркального отображения
-mirrorCanvasButton.addEventListener('click', function () {
-    canvasManager.mirror();
-});
-
-// Кнопки поворота
-rotateClockwiseButton.addEventListener('click', function () {
-    canvasManager.rotate(90);
-});
-
-rotateCounterClockwiseButton.addEventListener('click', function () {
-    canvasManager.rotate(-90);
-});
-
-// Кнопка масштабирования канваса
-function cropIcon(crop: boolean) {
-    if (crop) {
-        scalePlusSVG.style.display = 'none';
-        scaleMinusSVG.style.display = 'block';
-    } else {
-        scalePlusSVG.style.display = 'block';
-        scaleMinusSVG.style.display = 'none';
-    }
-}
-
-let cropped = false;
-scaleCanvasButton.addEventListener('click', function () {
-    cropped = !cropped;
-    cropIcon(cropped);
-    canvasManager.zoomCanvas(cropped);
-});
-
-// Обработчик изменения ширины
-widthInput.addEventListener('input', function () {
-    canvasManager.updateCanvasSize("width");
-});
-
-// Обработчик изменения высоты
-heightInput.addEventListener('input', function () {
-    canvasManager.updateCanvasSize("height");
-});
-
-// Обработчик изменения текущего кадра
-frameInput.addEventListener('input', function () {
-    canvasManager.updateFrameInput();
-});
-
-// Обработчик изменения количества кадров
-frameCountInput.addEventListener('change', function () {
-    canvasManager.updateFrameCount();
-});
-
-// Обработчик чекбокса автопроигрывания
-autoPlayCheckbox.addEventListener('change', function () {
-    canvasManager.toggleAutoPlay();
-});
-
-// Обработчик изменения FPS
-frameRateInput.addEventListener('input', function () {
-    canvasManager.updateFrameRate();
-});
-// Декодер и проигрыватель GIF для использования с Canvas API
 

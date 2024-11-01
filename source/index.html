@@ -26,10 +26,10 @@
             </div>
 
             <div class="island">
-                <label for="gifInput" class="custom-file-upload">
+                <label for="fileInput" class="custom-file-upload">
                     <div id="fileNameLabel">Выбор файла</div>
                 </label>
-                <input type="file" id="gifInput" accept=".gif,.png" style="display: none;">
+                <input type="file" id="fileInput" accept=".gif,.png" style="display: none;">
 
                 <div id="mainControls">
                     <label class="control-title" for="frameInput">Номер кадра:</label>
@@ -171,8 +171,8 @@
 
             <div class="island">
                 <textarea id="textOutput" readonly></textarea>
-                <div id="copyButton" class="control-margin-top-2 custom-button" style="margin-top: 10px; margin-bottom: 0px;"
-                    class="script-button hidden">Копировать в
+                <div id="copyButton" class="control-margin-top-2 custom-button"
+                    style="margin-top: 10px; margin-bottom: 0px;" class="script-button hidden">Копировать в
                     буфер</div>
             </div>
         </div>
@@ -181,10 +181,8 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
-    <script type="module" src="rainbowTitle.js"></script>
-    <script type="module" src="themeSwitch.js"></script>
-    <script type="module" src="inputHandler.js"></script>
-    <script type="module" src="blueprints.js"></script>
+
+    <script type="module" src="index.js"></script>
 </body>
 
 </html>

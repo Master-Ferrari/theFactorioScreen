@@ -247,8 +247,6 @@ export default class CanvasManager {
         return png;
     }
 
-
-
     private loadGif(arrayBuffer: ArrayBuffer): void {
         this.myGif = this.parseGif();
         const self = this;

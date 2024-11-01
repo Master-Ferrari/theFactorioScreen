@@ -3,29 +3,10 @@ const canvasManager = CanvasManager.init();
 
 import jsonToBlueprint from "./blueprintEncoder.js";
 import { DropdownOption } from "./dropdown.js";
+import FactorioItems from "./factorioItems.js";
 
 
 document.getElementById('makePhotoBlueprint')?.addEventListener('click', function () {
-    const currentFrame = parseInt((document.getElementById('frameInput') as HTMLInputElement).value, 10);
-    let frameData = canvasManager.getFrameBitmap(currentFrame);
-
-
-
-    let lamps: any[] = [];
-    for (let i = 0; i < frameData.bitmap.length; i++) {
-        const x = (i % frameData.width) + 0.5;
-        const y = Math.floor(i / frameData.width) + 0.5;
-        const [r, g, b] = frameData.bitmap[i];
-        lamps.push(simpleLamp(i + 1, x, y, r, g, b));
-    }
-
-    let outputData = blueprintTitle(lamps);
-
-    const textOutput = document.getElementById('textOutput') as HTMLTextAreaElement;
-
-    console.log("lamps", lamps);
-
-    textOutput.value = jsonToBlueprint(JSON.stringify(outputData));
 });
 
 document.getElementById('makeVideoBlueprint')?.addEventListener('click', function () {
@@ -46,41 +27,6 @@ document.getElementById('copyButton')?.addEventListener('click', async function 
 // Blueprints
 
 
-function blueprintTitle(entities: any[]): any {
-    return {
-        blueprint: {
-            icons: [
-                {
-                    signal: {
-                        name: "small-lamp"
-                    },
-                    index: 1
-                }
-            ],
-            entities: entities,
-            item: "blueprint",
-            version: 562949954076673
-        }
-    };
-}
-
-function simpleLamp(index: number, x: number, y: number, r: number, g: number, b: number): any {
-    return {
-        entity_number: index,
-        name: "small-lamp",
-        position: {
-            x: x,
-            y: y
-        },
-        color: {
-            r: r / 255,
-            g: g / 255,
-            b: b / 255,
-            a: 1
-        },
-        always_on: true
-    };
-}
 
 
 
@@ -108,30 +54,32 @@ class MethodsManager {
 abstract class Method {
     abstract readonly name: string;
     abstract readonly value: string;
-    abstract readonly optionsContainer: HTMLElement;
+    readonly optionsContainer: HTMLElement;
     abstract readonly supportedModes: Mode[];
+
+    constructor(optionsContainer: HTMLElement) {
+        this.optionsContainer = optionsContainer; // Инициализируем optionsContainer в базовом классе
+        this.init(); // Вызываем init после инициализации optionsContainer
+    }
 
     // Абстрактные методы, которые должны быть реализованы в каждом наследуемом классе
     abstract init(): void;
     abstract makeJson(): string;
-
-    constructor() {
-        this.init(); // Автоматический вызов при создании экземпляра
-    }
 }
+
 
 
 class ImageMethod extends Method {
     readonly name = "image";
     readonly value = "one frame image";
-    readonly optionsContainer: HTMLElement;
     readonly supportedModes: Mode[] = ["png"];
 
     private internalVariable: any;
 
     constructor(optionsContainer: HTMLElement) {
-        super();
-        this.optionsContainer = optionsContainer;
+        console.log("test2", optionsContainer);
+        super(optionsContainer);
+        console.log("test3", optionsContainer);
     }
 
     init(): void {
@@ -147,7 +95,20 @@ class ImageMethod extends Method {
     }
 
     makeJson(): string {
-        return JSON.stringify({ data: this.internalVariable });
+
+        const currentFrame = parseInt((document.getElementById('frameInput') as HTMLInputElement).value, 10);
+        let frameData = canvasManager.getFrameBitmap(currentFrame);
+        let lamps: any[] = [];
+        for (let i = 0; i < frameData.bitmap.length; i++) {
+            const x = (i % frameData.width) + 0.5;
+            const y = Math.floor(i / frameData.width) + 0.5;
+            const [r, g, b] = frameData.bitmap[i];
+            lamps.push(FactorioItems.simpleLamp(i + 1, x, y, r, g, b));
+        }
+        let outputData = FactorioItems.blueprintTitle(lamps);
+        const json = jsonToBlueprint(JSON.stringify(outputData));
+
+        return json;
     }
 }
 
