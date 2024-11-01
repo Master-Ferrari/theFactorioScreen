@@ -1,6 +1,6 @@
 import { DropdownOption, Dropdown } from "./dropdown.js";
 import CanvasManager from "./imageProcessor.js";
-import getMethods from "./methods.js";
+// import getMethods from "./method.js";
 
 // Обработчики событий
 const fileInput = document.getElementById("fileInput") as HTMLInputElement;

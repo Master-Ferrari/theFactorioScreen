@@ -44,7 +44,7 @@
 
     --PlayBold: Play-Bold;
     --Play: Play-Regular;
-    --PtMono: PtMono;
+    --PtMono: Pt Mono;
     --Signika: Signika;
 }
 
@@ -59,7 +59,7 @@
 }
 
 @font-face {
-    font-family: 'PtMono';
+    font-family: 'Pt Mono';
     src: url('misc/PtMono-Regular.ttf') format('truetype');
 }
 

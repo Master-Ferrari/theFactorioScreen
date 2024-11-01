@@ -28,7 +28,9 @@ const resizeMainContent = () => {
     const mainContent = document.getElementById('mainContent');
     const mainContainer = document.getElementById('mainContainer');
     if (mainContent && mainContainer) {
-        const islandCount = Math.floor(mainContainer.offsetWidth / islandWidth);
+        let islandCount = Math.floor(mainContainer.offsetWidth / islandWidth);
+        if (islandCount < 1) { islandCount = 1; }
+        else if (islandCount > 4) { islandCount = 4; }
         mainContent.style.width = islandCount * islandWidth + 'px';
     }
 }

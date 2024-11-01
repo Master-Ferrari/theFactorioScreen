@@ -1,7 +1,7 @@
 import "./rainbowTitle.js";
 import "./themeSwitch.js";
 import "./inputHandler.js";
-import getMethods from "./methods.js";
+import getMethods from "./methodsManager.js";
 import { Dropdown } from "./dropdown.js";
 import CanvasManager from "./imageProcessor.js";
 import InputHandler from "./inputHandler.js";

@@ -1,3 +1,4 @@
+// import getMethods from "./method.js";
 // Обработчики событий
 const fileInput = document.getElementById("fileInput");
 const fileNameLabel = document.getElementById("fileNameLabel");
