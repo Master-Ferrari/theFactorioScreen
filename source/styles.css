@@ -4,14 +4,16 @@
     --text-color: #f5f5f5;
     --button-text-color: #f5f5f5;
     --button-text-color-deactivated: #a7a7a7;
-    --input-bg: #333;
     --button-bg: #454545;
     --button-color: #fff;
     --button-hover: #888;
     --border-color: #444;
     --container-bg: #2e2e2e;
-    --slider-bg: #555;
     --slider-bg-checked: #ccc;
+
+
+    --input-bg: #333;
+    --slider-bg: #555;
 }
 
 .light-theme {
@@ -20,7 +22,7 @@
     --button-text-color: #f5f5f5;
     --button-text-color-deactivated: #a7a7a7;
     --input-bg: #fff;
-    --button-bg: #666;
+    --button-bg: #858585;
     --button-color: #fff;
     --button-hover: #444;
     --border-color: #ccc;
@@ -33,6 +35,12 @@
     --small-radius: 5px;
     --large-radius: 20px;
     --border-size: 5px;
+
+    --control-width: 90px;
+    --control-height: 35px;
+    --island-margin: 10px;
+
+    --control-margin: 5px;
 
     --PlayBold: Play-Bold;
     --Play: Play-Regular;
@@ -74,15 +82,14 @@ body {
 
 .theme-toggle {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: calc(-1* var(--control-height) - var(--island-margin));
+    right: 10px;
 }
 
 .toggle-switch {
     position: relative;
     display: inline-block;
-    width: 50px;
-    height: 24px;
+    height: var(--control-height);
 }
 
 .toggle-switch input {
@@ -100,27 +107,69 @@ body {
     bottom: 0;
     transition: background-color 0.4s;
     width: inherit;
+    border: var(--border-color) 1px solid;
+
+    /* box-sizing: border-box; */
+    height: var(--control-height);
 }
 
+/* рычажок выкл */
 .slider:before {
     content: "";
     position: absolute;
-    height: 18px;
-    width: 18px;
+    height: 15px;
+    width: 15px;
     border-radius: var(--large-radius);
-    background-color: white;
-    left: 3px;
-    bottom: 3px;
+    background-color: var(--button-bg);
+    left: 9px;
+    bottom: 9px;
     transition: transform 0.4s;
 }
 
+/* неясно 
 input:checked+.slider {
-    background-color: var(--slider-bg-checked);
+    background-color: rgb(128, 0, 0);
 }
 
+ рычажок вкл  */
 input:checked+.slider:before {
-    transform: translateX(26px);
+    background-color: var(--button-bg);
+    transform: translateX(calc(var(--control-width) - var(--control-height)));
 }
+
+/* 
+ фон вкл 
+.toggle-switch input:checked+.slider {
+    background-color: var(--container-bg);
+}
+
+ фон выкл */
+.toggle-switch .slider {
+    background-color: var(--input-bg);
+}
+
+/* 
+ фон вкл навестись 
+input:checked+.slider:hover {
+    background-color: rgb(0, 0, 128);
+}
+
+ .slider:hover {
+    background-color: #666;
+} */
+
+/* рычажок выкл с наведением */
+.slider:hover:before {
+    background-color: var(--button-hover);
+    /* Выберите цвет для состояния "выкл" при наведении */
+}
+
+/* рычажок вкл с наведением */
+input:checked+.slider:hover:before {
+    background-color: var(--button-hover);
+    /* Выберите цвет для состояния "вкл" при наведении */
+}
+
 
 .container {
     display: flex;
@@ -133,10 +182,10 @@ input:checked+.slider:before {
 .rainbow-text {
     display: inline-block;
     color: #000;
-    margin-bottom: 20px;
+    margin-bottom: 50px;
     letter-spacing: 5px;
     text-align: center;
-    margin-top: 20px;
+    margin-top: 15px;
 }
 
 .letter {
@@ -161,9 +210,10 @@ input:checked+.slider:before {
 .main-content {
     display: flex;
     justify-content: space-between;
-    width: 100%;
+    /* width: 100%; */
     flex-wrap: wrap;
     justify-content: center;
+    width: fit-content;
 }
 
 .island {
@@ -171,7 +221,7 @@ input:checked+.slider:before {
     border: 1px solid var(--border-color);
     border-radius: var(--large-radius);
     padding: 20px;
-    margin: 10px;
+    margin: var(--island-margin);
     flex: 1 1 calc(33.33% - 40px);
     box-sizing: border-box;
     display: flex;
@@ -179,7 +229,7 @@ input:checked+.slider:before {
     max-width: 450px;
     min-width: 450px;
     /* width: 100%; */
-    margin-bottom: 10px;
+    /* margin-bottom: 10px; */
     min-height: 450px;
     height: 450px;
     max-height: 450px;
@@ -205,25 +255,36 @@ input:checked+.slider:before {
 }
 
 .inputs {
-    margin: 10px 0;
+    margin: var(--control-margin) 0;
 }
 
 .resolution-inputs {
     display: flex;
     align-items: center;
+    width: 100%;
 }
 
 .resolution-inputs input[type="number"] {
-    width: 50%;
+    width: var(--control-width);
     /* margin: 0 5px; */
 }
 
-.resolution-inputs span {
+/* .resolution-inputs span {
     margin: 0 5px;
-}
+} */
 
 .resolution-inputs label {
     flex: 1;
+}
+
+
+/* Стили самого ползунка */
+.range {
+    -webkit-appearance: none;
+    /* Убирает стандартный стиль для WebKit-браузеров */
+    width: var(--control-width);
+    background-color: var(--input-bg);
+    margin: 0px;
 }
 
 .custom-button,
@@ -320,7 +381,7 @@ canvas {
     .island {
         flex: none;
         width: 90%;
-        margin: 10px 0;
+        margin: var(--island-margin) 0;
     }
 }
 
@@ -330,32 +391,21 @@ canvas {
     align-items: center;
 }
 
-.mrgnT10 {
-    margin-top: 10px;
-}
-
-.mrgnT15 {
-    margin-top: 15px;
+.control-margin-top-2 {
+    margin-top: calc(2 * var(--control-margin));
 }
 
 .control-toggle label {
     margin: 0;
-    margin-right: 10px;
     cursor: pointer;
     flex: 1;
 }
 
-.control-toggle .toggle-switch {
+.control-toggle,
+.toggle-switch,
+.slider {
     flex-shrink: 0;
-    width: 50px;
-}
-
-.toggle-switch input:checked+.slider {
-    background-color: var(--slider-bg-checked);
-}
-
-.toggle-switch .slider {
-    background-color: var(--slider-bg);
+    width: var(--control-width);
 }
 
 .icon-button {
@@ -365,7 +415,7 @@ canvas {
 }
 
 #mainControls {
-    margin-top: 10px;
+    margin-top: var(--control-margin);
     display: none;
     grid-template-columns: 50% 50%;
     justify-items: start;
@@ -394,6 +444,40 @@ canvas {
     max-height: 330px;
 }
 
+/* Стили для бегунка */
+.range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    background-color: var(--button-bg);
+    cursor: pointer;
+    border-radius: 50%;
+    /* Закругление бегунка */
+    transition: background-color 0.3s;
+}
+
+.range::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    background-color: var(--button-bg);
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+}
+
+/* Подсветка бегунка при наведении на весь элемент range */
+.range:hover::-webkit-slider-thumb {
+    background-color: var(--button-hover);
+    /* Цвет подсветки бегунка при наведении */
+}
+
+.range:hover::-moz-range-thumb {
+    background-color: var(--button-hover);
+    /* Цвет подсветки бегунка при наведении */
+}
+
+
 /* 
 .script-button {
     margin-bottom: 15px;
@@ -418,7 +502,7 @@ canvas {
     text-align: center;
     border-radius: var(--small-radius);
     padding: 3px 2px;
-    height: 35px;
+    height: var(--control-height);
     box-sizing: border-box;
 }
 
@@ -507,7 +591,7 @@ canvas {
 .custom-file-upload,
 .icon-button,
 .dropdown-option {
-    height: 35px;
+    height: var(--control-height);
     text-align: center;
 }
 

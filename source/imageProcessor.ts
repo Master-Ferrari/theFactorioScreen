@@ -946,6 +946,9 @@ export default class CanvasManager {
     }
 
     public updateFrameInput(): void {
+        if (this._mode === "png") {
+            this.frameInput.value = '0';
+        }
         if (!this.autoPlayCheckbox.checked) {
             const frameNumber = parseInt(this.frameInput.value, 10) || 0;
             this.displayFrame(frameNumber);

@@ -91,7 +91,7 @@ gifInput.addEventListener('change', function (event: Event) {
     }
 
     console.log(file);
-    fileNameLabel.textContent = shortLabel(file.name, 20);
+    fileNameLabel.textContent = "selected: " + shortLabel(file.name, 10);
 
     // Определяем режим (gif или png) и проверяем тип файла
     const mode = file.type === 'image/gif' ? 'gif' : file.type === 'image/png' ? 'png' : null;

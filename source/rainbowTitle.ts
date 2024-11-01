@@ -19,3 +19,21 @@ if (titleElement) {
         });
     }, 100);
 }
+
+
+
+
+const islandWidth = 470;
+const resizeMainContent = () => {
+    const mainContent = document.getElementById('mainContent');
+    const mainContainer = document.getElementById('mainContainer');
+    if (mainContent && mainContainer) {
+        const islandCount = Math.floor(mainContainer.offsetWidth / islandWidth);
+        console.log(islandCount);
+        mainContent.style.width = islandCount * islandWidth + 'px';
+    }
+}
+window.addEventListener('resize', function () {
+    resizeMainContent();
+});
+resizeMainContent();

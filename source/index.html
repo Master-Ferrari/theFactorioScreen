@@ -10,8 +10,13 @@
 <body>
 
 
-    <div class="container">
+    <div class="container" id="mainContainer">
         <div id="title" class="rainbow-text">
+
+        </div>
+
+
+        <div class="main-content" id="mainContent" style="position: relative;">
 
             <div class="theme-toggle">
                 <label class="toggle-switch">
@@ -19,12 +24,10 @@
                     <span class="slider"></span>
                 </label>
             </div>
-        </div>
 
-        <div class="main-content">
             <div class="island">
                 <label for="gifInput" class="custom-file-upload">
-                    <div id="fileNameLabel">Выбор файла</div> 
+                    <div id="fileNameLabel">Выбор файла</div>
                 </label>
                 <input type="file" id="gifInput" accept=".gif,.png" style="display: none;">
 
@@ -35,7 +38,7 @@
                     <label class="control-title" for="resolution">Разрешение:</label>
                     <div class="resolution-inputs inputs">
                         <input type="number" id="widthInput" min="1" placeholder="Ширина">
-                        <span>x</span>
+                        <span style="margin: 0px auto;">x</span>
                         <input type="number" id="heightInput" min="1" placeholder="Высота">
                     </div>
 
@@ -58,18 +61,19 @@
                         </label>
                     </div>
 
-                    <label class="control-title" for="frameRateInput">Частота кадров (FPS):</label>
+                    <label class="control-title" for="frameRateInput">Частота кадров
+                        <span id="frameRateDisplay">15 FPS</span>
+                    </label>
 
-                    <div class="inputs" style="display: flex; align-items: center;">
-                        <input type="range" id="frameRateInput" min="1" max="60" value="15">
-                        <span id="frameRateDisplay"
-                            style="margin-left: 10px; align-self: center; margin-left: 10px; min-width: 65px;">15
-                            FPS</span>
+                    <div class="inputs" style="width: 100%;">
+                        <input type="range" id="frameRateInput" class="range" min="1" max="60" value="15">
+
                     </div>
 
 
                 </div>
-                <div id="alert" style="display:none">Для анимации рекомендуется снизить размеры или количество кадров.
+                <div id="alert" style="display:none">Для анимации рекомендуется снизить размеры или количество
+                    кадров.
                 </div>
 
             </div>
@@ -158,17 +162,18 @@
                     <!-- ололо -->
                 </div>
 
-                <div id="makeVideoBlueprint" class="custom-button mrgnT15 hidden">Построить чертёж гифки</div>
-                <div id="makePhotoBlueprint" class="custom-button mrgnT15 hidden">Построить чертёж кадра</div>
+                <div id="makeVideoBlueprint" class="custom-button control-margin-top-2 hidden">Построить чертёж гифки</div>
+                <div id="makePhotoBlueprint" class="custom-button control-margin-top-2 hidden">Построить чертёж кадра</div>
             </div>
 
             <div class="island">
                 <textarea id="textOutput" readonly></textarea>
-                <div id="copyButton" class="mrgnT10 custom-button" style="margin-top: 10px; margin-bottom: 0px;"
+                <div id="copyButton" class="control-margin-top-2 custom-button" style="margin-top: 10px; margin-bottom: 0px;"
                     class="script-button hidden">Копировать в
                     буфер</div>
             </div>
         </div>
+
 
     </div>
 
