@@ -1,12 +1,189 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Моя первая страница</title>
+    <title>theFactorioScreen</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-    <h1>Привет, мир!</h1>
-    <p>Это мой первый HTML-документ.</p>
+
+
+    <div class="container" id="mainContainer">
+        <div id="title" class="rainbow-text">
+
+        </div>
+
+
+        <div class="main-content" id="mainContent" style="position: relative;">
+
+            <div class="theme-toggle">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="themeSwitch" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="island">
+                <label for="fileInput" class="custom-file-upload">
+                    <div id="fileNameLabel">Выбор файла</div>
+                </label>
+                <input type="file" id="fileInput" accept=".gif,.png" style="display: none;">
+
+                <div id="mainControls">
+                    <label class="control-title" for="frameInput">Номер кадра:</label>
+                    <input type="number" class="inputs" id="frameInput" min="0" value="0">
+
+                    <label class="control-title" for="resolution">Разрешение:</label>
+                    <div class="resolution-inputs inputs">
+                        <input type="number" id="widthInput" min="1" placeholder="Ширина">
+                        <span style="margin: 0px auto;">x</span>
+                        <input type="number" id="heightInput" min="1" placeholder="Высота">
+                    </div>
+
+                    <label class="control-title" for="preserveAspectCheckbox">Оригинальные пропорции</label>
+                    <div class="control-toggle inputs">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="preserveAspectCheckbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <label class="control-title" for="frameCountInput">Количество кадров:</label>
+                    <input type="number" class="inputs" id="frameCountInput" min="1" value="1">
+
+                    <label class="control-title" for="autoPlayCheckbox">Автопросмотр кадров</label>
+                    <div class="control-toggle inputs">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="autoPlayCheckbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <label class="control-title" for="frameRateInput">Частота кадров
+                        <span id="frameRateDisplay">15 FPS</span>
+                    </label>
+
+                    <div class="inputs" style="width: 100%;">
+                        <input type="range" id="frameRateInput" class="range" min="1" max="60" value="15">
+
+                    </div>
+
+
+                </div>
+                <div id="alert" style="display:none">Для анимации рекомендуется снизить размеры или количество
+                    кадров.
+                </div>
+
+            </div>
+            <!-- Right panel with canvas and controls -->
+            <div class="island" style="justify-content: flex-end;">
+                <canvas id="canvas" width="330" height="330"></canvas>
+                <div id="canvasControls" class="canvas-controls">
+                    <div id="scaleCanvas" class="icon-button custom-button">
+
+                        <svg xmlns="http://www.w3.org/2000/svg" id="scalePlusSVG" display="block" fill="none"
+                            viewBox="0 0 24 24" stroke="white" style="width: 24px; height: 24px; ">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+
+                        <svg xmlns="http://www.w3.org/2000/svg" id="scaleMinusSVG" display="none" fill="none"
+                            viewBox="0 0 24 24" stroke="white" style="width: 24px; height: 24px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                        </svg>
+
+                    </div>
+
+                    <div id="mirrorCanvas" class="icon-button custom-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"
+                            style="width: 24px; height: 24px;">
+                            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                            <g id="SVGRepo_iconCarrier">
+                                <path d="M7.75735 12L16.2426 12" stroke="#ffffff" stroke-width="2"
+                                    stroke-linecap="round" data-darkreader-inline-stroke=""
+                                    style="--darkreader-inline-stroke: #9e9b96;"></path>
+                                <rect x="3" y="3" width="18" height="18" rx="3" stroke="#ffffff" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" data-darkreader-inline-stroke=""
+                                    style="--darkreader-inline-stroke: #9e9b96;"></rect>
+                            </g>
+                        </svg>
+                    </div>
+
+                    <div id="rotateCounterClockwise" class="icon-button custom-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"
+                            style="width: 24px; height: 24px;">
+                            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                            <g id="SVGRepo_iconCarrier">
+                                <path d="M5.06697 5.91046L5.65392 1.99997" stroke="#ffffff" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" data-darkreader-inline-stroke=""
+                                    style="--darkreader-inline-stroke: #9e9b96;"></path>
+                                <path d="M5.06697 5.91046L8.80751 7.19296" stroke="#ffffff" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" data-darkreader-inline-stroke=""
+                                    style="--darkreader-inline-stroke: #9e9b96;"></path>
+                                <path
+                                    d="M3 12.0609C3 17.0314 7.02944 21.0609 12 21.0609C16.9706 21.0609 21 17.0314 21 12.0609C21 7.09029 16.9706 3.06085 12 3.06085C9.92877 3.06085 8.02095 3.76052 6.5 4.9364"
+                                    stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    data-darkreader-inline-stroke="" style="--darkreader-inline-stroke: #9e9b96;">
+                                </path>
+                            </g>
+                        </svg>
+                    </div>
+
+                    <div id="rotateClockwise" class="icon-button custom-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"
+                            style="width: 24px; height: 24px;">
+                            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                            <g id="SVGRepo_iconCarrier">
+                                <path d="M18.933 5.91052L18.3461 2.00003" stroke="#ffffff" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" data-darkreader-inline-stroke=""
+                                    style="--darkreader-inline-stroke: #9e9b96;"></path>
+                                <path d="M18.933 5.91052L15.1925 7.19302" stroke="#ffffff" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" data-darkreader-inline-stroke=""
+                                    style="--darkreader-inline-stroke: #9e9b96;"></path>
+                                <path
+                                    d="M21 12.0609C21 17.0315 16.9706 21.0609 12 21.0609C7.02944 21.0609 3 17.0315 3 12.0609C3 7.09035 7.02944 3.06091 12 3.06091C14.0712 3.06091 15.9791 3.76058 17.5 4.93646"
+                                    stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    data-darkreader-inline-stroke="" style="--darkreader-inline-stroke: #9e9b96;">
+                                </path>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="island">
+
+                <div id="methodSelect" class="dropdown-select">
+                    <!-- ололо -->
+                </div>
+
+                <div class="separation-line"></div>
+
+
+                <div id="blueprintOptions" class="control-margin-top-2"></div>
+
+                <!-- <div id="makeVideoBlueprint" class="custom-button control-margin-top-2 hidden">Построить чертёж гифки</div>
+                <div id="makePhotoBlueprint" class="custom-button control-margin-top-2 hidden">Построить чертёж кадра</div> -->
+            </div>
+
+            <div class="island">
+                <textarea id="textOutput" readonly></textarea>
+                <div id="copyButton" class="control-margin-top-2 custom-button"
+                    style="margin-top: 10px; margin-bottom: 0px;" class="script-button hidden">Copy to clipboard</div>
+            </div>
+        </div>
+
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
+
+    <script type="module" src="dist/index.js"></script>
 </body>
+
 </html>
