@@ -1,6 +1,7 @@
+import jsonToBlueprint from "./blueprintEncoder.js";
 import { DropdownOption, Dropdown } from "./dropdown.js";
 import CanvasManager from "./imageProcessor.js";
-// import getMethods from "./method.js";
+import tight3to4Method from "./tight3to4Method.js";
 
 // Обработчики событий
 const fileInput = document.getElementById("fileInput") as HTMLInputElement;
@@ -18,6 +19,8 @@ const rotateClockwiseButton = document.getElementById('rotateClockwise') as HTML
 const rotateCounterClockwiseButton = document.getElementById('rotateCounterClockwise') as HTMLButtonElement;
 const scaleCanvasButton = document.getElementById("scaleCanvas") as HTMLButtonElement;
 const copyButton = document.getElementById('copyButton') as HTMLButtonElement;
+
+const testButton = document.getElementById('testButton') as HTMLButtonElement;
 
 
 const scalePlusSVG = document.getElementById('scalePlusSVG') as HTMLButtonElement;
@@ -121,7 +124,28 @@ export default class InputHandler {
             copyButton.innerText = "Copied!";
             setTimeout(() => {
                 copyButton.innerText = "Copy to clipboard";
-            }, 500);
+            }, 1000);
+        });
+
+
+        testButton.addEventListener('click', async function () {
+
+
+            const textOutput = (() => {
+                const blueprintOptions = document.getElementById('blueprintOptions') as HTMLButtonElement;
+                function onBlueprint(text: string) {
+                }
+                const method = new tight3to4Method(blueprintOptions, onBlueprint);
+                method.init();
+                const json = method.makeJson();
+                return jsonToBlueprint(json);
+            })();
+
+            await navigator.clipboard.writeText(textOutput);
+            testButton.innerText = "Copied!";
+            setTimeout(() => {
+                testButton.innerText = "test";
+            }, 1000);
         });
 
         // Обработчик чекбокса автопроигрывания

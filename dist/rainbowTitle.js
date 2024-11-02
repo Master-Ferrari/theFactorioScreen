@@ -18,10 +18,10 @@ if (titleElement) {
         });
     }, 100);
 }
+const mainContent = document.getElementById('mainContent');
+const mainContainer = document.getElementById('mainContainer');
 const islandWidth = 470;
 const resizeMainContent = () => {
-    const mainContent = document.getElementById('mainContent');
-    const mainContainer = document.getElementById('mainContainer');
     if (mainContent && mainContainer) {
         let islandCount = Math.floor(mainContainer.offsetWidth / islandWidth);
         if (islandCount < 1) {

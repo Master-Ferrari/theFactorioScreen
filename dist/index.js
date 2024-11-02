@@ -8,9 +8,9 @@ import InputHandler from "./inputHandler.js";
 const mainControls = document.getElementById('mainControls');
 const canvasControls = document.getElementById('canvasControls');
 const copyButton = document.getElementById('copyButton');
-const blueprintOptions = document.getElementById('blueprintOptions');
 const methodSelect = document.getElementById('methodSelect');
 const textOutput = document.getElementById('textOutput');
+const blueprintOptions = document.getElementById('blueprintOptions');
 function onBlueprint(text) {
     textOutput.innerText = text;
 }

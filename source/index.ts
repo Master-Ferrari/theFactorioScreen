@@ -10,9 +10,9 @@ const mainControls = document.getElementById('mainControls') as HTMLButtonElemen
 const canvasControls = document.getElementById('canvasControls') as HTMLButtonElement;
 const copyButton = document.getElementById('copyButton') as HTMLButtonElement;
 
-const blueprintOptions = document.getElementById('blueprintOptions') as HTMLButtonElement;
 const methodSelect = document.getElementById('methodSelect') as HTMLElement;
 const textOutput = document.getElementById('textOutput') as HTMLElement;
+const blueprintOptions = document.getElementById('blueprintOptions') as HTMLButtonElement;
 
 function onBlueprint(text: string) {
     textOutput.innerText = text;

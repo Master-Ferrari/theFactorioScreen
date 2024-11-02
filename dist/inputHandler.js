@@ -1,4 +1,5 @@
-// import getMethods from "./method.js";
+import jsonToBlueprint from "./blueprintEncoder.js";
+import tight3to4Method from "./tight3to4Method.js";
 // Обработчики событий
 const fileInput = document.getElementById("fileInput");
 const fileNameLabel = document.getElementById("fileNameLabel");
@@ -15,6 +16,7 @@ const rotateClockwiseButton = document.getElementById('rotateClockwise');
 const rotateCounterClockwiseButton = document.getElementById('rotateCounterClockwise');
 const scaleCanvasButton = document.getElementById("scaleCanvas");
 const copyButton = document.getElementById('copyButton');
+const testButton = document.getElementById('testButton');
 const scalePlusSVG = document.getElementById('scalePlusSVG');
 const scaleMinusSVG = document.getElementById('scaleMinusSVG');
 // const textOutput = document.getElementById('textOutput') as HTMLTextAreaElement;
@@ -96,7 +98,23 @@ export default class InputHandler {
             copyButton.innerText = "Copied!";
             setTimeout(() => {
                 copyButton.innerText = "Copy to clipboard";
-            }, 500);
+            }, 1000);
+        });
+        testButton.addEventListener('click', async function () {
+            const textOutput = (() => {
+                const blueprintOptions = document.getElementById('blueprintOptions');
+                function onBlueprint(text) {
+                }
+                const method = new tight3to4Method(blueprintOptions, onBlueprint);
+                method.init();
+                const json = method.makeJson();
+                return jsonToBlueprint(json);
+            })();
+            await navigator.clipboard.writeText(textOutput);
+            testButton.innerText = "Copied!";
+            setTimeout(() => {
+                testButton.innerText = "test";
+            }, 1000);
         });
         // Обработчик чекбокса автопроигрывания
         autoPlayCheckbox.addEventListener('change', function () {

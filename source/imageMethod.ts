@@ -1,6 +1,6 @@
 import { Method, blueprintGetter } from "./method.js";
 import CanvasManager, { Mode } from "./imageProcessor.js";
-import FactorioItems from "./factorioItems.js";
+import {Blueprint, factorioEntities as f} from "./factorioEntities.js";
 const canvasManager = CanvasManager.init();
 
 export default class ImageMethod extends Method {
@@ -36,18 +36,22 @@ export default class ImageMethod extends Method {
     }
 
     makeJson(): string {
+        
         const currentFrame = parseInt((document.getElementById('frameInput') as HTMLInputElement).value, 10);
         let frameData = canvasManager.getFrameBitmap(currentFrame);
-        let lamps: any[] = [];
+
+        const blueprint = new Blueprint();
+
+        let entities: any[] = [];
         for (let i = 0; i < frameData.bitmap.length; i++) {
             const x = (i % frameData.width) + 0.5;
             const y = Math.floor(i / frameData.width) + 0.5;
             const [r, g, b] = frameData.bitmap[i];
-            lamps.push(FactorioItems.simpleLamp(i + 1, x, y, r, g, b));
+            entities.push(f.simpleLamp(i + 1, x, y, r, g, b));
         }
-        let outputData = FactorioItems.blueprintTitle(lamps);
-        const json = JSON.stringify(outputData);
 
-        return json;
+        blueprint.addEntities(entities);
+
+        return blueprint.json();
     }
 }

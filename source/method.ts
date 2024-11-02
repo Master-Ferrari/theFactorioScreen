@@ -1,9 +1,6 @@
-import CanvasManager, { Mode } from "./imageProcessor.js";
-const canvasManager = CanvasManager.init();
+import { Mode } from "./imageProcessor.js";
 
 import jsonToBlueprint from "./blueprintEncoder.js";
-import { DropdownOption } from "./dropdown.js";
-import FactorioItems from "./factorioItems.js";
 
 export type blueprintGetter = (json: any) => void;
 
