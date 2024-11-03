@@ -1,13 +1,22 @@
+function sizeAdapter(x: number, y: number, w: number, h: number, direction: Dir): {x: number, y: number} { // пу умолчанию блок смотрит вверх
+    if (direction == Dir.north || direction == Dir.south) {
+        x = x + w / 2;
+        y = y + h / 2;
+    } else {
+        x = x + h / 2;
+        y = y + w / 2;
+    }
+    return {x: x, y: y};
+}
+
+
 
 export class factorioEntities {
     static simpleLamp(index: number, x: number, y: number, r: number, g: number, b: number): any {
         return {
             entity_number: index,
             name: "small-lamp",
-            position: {
-                x: x,
-                y: y
-            },
+            position: sizeAdapter(x, y, 1, 1, Dir.south),
             color: {
                 r: r / 255,
                 g: g / 255,
@@ -22,10 +31,7 @@ export class factorioEntities {
         return {
             entity_number: index,
             name: "arithmetic-combinator",
-            position: {
-                x: x,
-                y: y
-            },
+            position: sizeAdapter(x, y, 1, 2, direction),
             direction: direction,
             control_behavior: {
                 arithmetic_conditions: arithmetic_conditions
@@ -35,21 +41,49 @@ export class factorioEntities {
     static deciderCombinator(index: number, x: number, y: number, direction: Dir, decider_conditions: any): any {
         return {
             entity_number: index,
-            name: "arithmetic-combinator",
-            position: {
-                x: x,
-                y: y
-            },
+            name: "decider-combinator",
+            position: sizeAdapter(x, y, 1, 2, direction),
             direction: direction,
             control_behavior: {
-                arithmetic_conditions: decider_conditions
+                decider_conditions: decider_conditions
             }
         };
+    }
+
+
+    static constantCombinator(index: number, x: number, y: number, direction: Dir, signalSections: Section[]): any {
+        return {
+            entity_number: index,
+            name: "constant-combinator",
+            position: sizeAdapter(x, y, 1, 1, direction),
+            direction: direction,
+            control_behavior: {
+                sections: {
+                    sections: signalSections
+                }
+            }
+        }
     }
 }
 
 
 // stuff
+
+export type Filter = {
+    index: number;
+    type: string;
+    name: string;
+    quality: string;
+    comparator: string;
+    count: number;
+    max_count?: number;
+}
+
+export type Section = {
+    index: number;
+    filters: Filter[];
+    active?: boolean;
+}
 
 export enum Dir {
     north = 1,
@@ -87,13 +121,15 @@ export class CoordinateCursor {
     get xy() { return [this._x, this._y]; }
 
     dx(number: number): number {
-        this._x += number;
-        return this._x;
+        const x = this._x + number;
+        this._x = x;
+        return x;
     }
 
     dy(number: number): number {
-        this._y += number;
-        return this._y;
+        const y = this._y + number;
+        this._y = y;
+        return y;
     }
 
     dxy(number: number): [number, number] {
@@ -117,6 +153,10 @@ export class indexIterator {
     }
     look(number: number): number {
         return this._index + number;
+    }
+    shift(number: number): number {
+        this._index += number;
+        return this._index;
     }
 }
 
