@@ -86,7 +86,9 @@ export default class CanvasManager {
     private myPng: PngType = this.parsePng();
 
     private autoPlayInterval: number = 1;
-    private currentFrame: number = 0;
+    private currentOriginFrame: number = 0;
+    private currentLocalFrame: number = 0;
+    private frameRatio: number = 1;
 
     private widthInput: HTMLInputElement;
     private heightInput: HTMLInputElement;
@@ -118,6 +120,8 @@ export default class CanvasManager {
         this.frameRateDisplay = document.getElementById("frameRateDisplay") as HTMLElement;
         this.preserveAspectCheckbox = document.getElementById("preserveAspectCheckbox") as HTMLInputElement;
         this.alertBox = document.getElementById("alert") as HTMLElement;
+
+        // this.frameRatioCalc();
     }
 
     public loader(options: LoaderTypes): void {
@@ -693,14 +697,30 @@ export default class CanvasManager {
         this.ctx.restore();
     }
 
+    private frameRatioCalc() {
+        const localCount = parseInt(this.frameCountInput.value, 10);
+        const originCount = this.myGif.frames.length;
+        this.frameRatio = originCount / localCount;
+    }
+
+    private originToLocal(originFrame: number): number {
+        if (!this.myGif) return 0;
+        return Math.floor(originFrame / this.frameRatio);
+    }
+
+    private localToOrigin(local: number) {
+        if (!this.myGif) return 0;
+        return Math.floor(local * this.frameRatio);
+    }
+
     // Отображает кадр, определяет текущий индекс и обрабатывает циклическое воспроизведение
-    public displayFrame(frameNumber: number): void {
+    public displayFrame(frameNumber: number = this.currentOriginFrame): void {
         if (this.myGif && this.myGif.frames.length > 0 || this.myPng) {
 
 
             const totalFrames = this._mode == "gif" ? this.myGif.frames.length : 1;
 
-            // Обрабатываем количество кадров для отображения
+            // чек границ по кадрам
             let specifiedFrameCount = parseInt(this.frameCountInput.value, 10);
             if (isNaN(specifiedFrameCount) || specifiedFrameCount < 1) {
                 specifiedFrameCount = totalFrames;
@@ -712,18 +732,23 @@ export default class CanvasManager {
                 this.frameCountInput.value = totalFrames.toString();
             }
 
-            // Расчет шага кадров
-            const step = totalFrames / specifiedFrameCount;
-            let frameIndex = Math.floor(frameNumber * step);
-            if (frameIndex >= totalFrames) {
-                frameIndex = totalFrames - 1;
-            }
+            this.currentOriginFrame = frameNumber;
+            this.currentLocalFrame = this.originToLocal(frameNumber);
 
-            this.currentFrame = frameIndex;
-            this.applyFrameTransforms(frameIndex);
+            // Расчет шага кадров
+            // const step = totalFrames / specifiedFrameCount;
+            // let frameIndex = Math.floor(frameNumber * step);
+            // if (frameIndex >= totalFrames) {
+            //     frameIndex = totalFrames - 1;
+            // }
+            // const playableFrames = this.getPlayableFrames();
+
+            // this.currentFrame = frameIndex;
+            this.applyFrameTransforms(frameNumber);
         } else if (this.myPng) {
             // Если загружен PNG, отображаем его как единственный кадр
-            this.currentFrame = 0;
+            this.currentOriginFrame = 0;
+            this.currentLocalFrame = 0;
             this.applyFrameTransforms(0);
         } else {
             alert('Файл не загружен или содержит ошибки.');
@@ -732,41 +757,41 @@ export default class CanvasManager {
 
 
     public rotate(angle: number): void {
-        angle = this.verticalScale == 1 ? angle : -angle;
+        angle = this.verticalScale == 1 ? angle : -angle; // так надо
         this.rotationAngle = (this.rotationAngle + angle) % 360;
-        this.rotateStyles();
-        [this.canvas.width, this.canvas.height] = [this.canvas.height, this.canvas.width];
-
-        this.displayFrame(this.currentFrame);
-    }
-
-    private rotateStyles(): void {
-        // const userWidth = parseInt(this.widthInput.value, 10);
-        // const userHeight = parseInt(this.heightInput.value, 10);
-
-        // this.widthInput.value = userHeight.toString();
-        // this.heightInput.value = userWidth.toString();
-
-        // const сanvasWidth = parseInt(getComputedStyle(this.canvas).width);// размер стилей
-        // const сanvasHeight = parseInt(getComputedStyle(this.canvas).height);
-        
-        // this.canvas.style.width = сanvasHeight + 'px';
-        // this.canvas.style.height = сanvasWidth + 'px';
-
+        // повороты бывают только на 90 так что..
+        [this.canvas.width, this.canvas.height] = [this.canvas.height, this.canvas.width]; // поменять пропорции
         [this.canvas.style.width, this.canvas.style.height] = [this.canvas.style.height, this.canvas.style.width];
 
-
-        // const max = this.zoomed ? this.canvasSize : Math.max(maxCanvasWidth, maxCanvasHeight);
-
-        // const [newWidth, newHeight] = this.ratioCalc(maxCanvasWidth, maxCanvasHeight);
-
-        // this.canvas.style.width = newHeight + 'px';
-        // this.canvas.style.height = newWidth + 'px';
+        this.displayFrame();
     }
+
+    // private rotateStyles(): void {
+    //     // const userWidth = parseInt(this.widthInput.value, 10);
+    //     // const userHeight = parseInt(this.heightInput.value, 10);
+
+    //     // this.widthInput.value = userHeight.toString();
+    //     // this.heightInput.value = userWidth.toString();
+
+    //     // const сanvasWidth = parseInt(getComputedStyle(this.canvas).width);// размер стилей
+    //     // const сanvasHeight = parseInt(getComputedStyle(this.canvas).height);
+
+    //     // this.canvas.style.width = сanvasHeight + 'px';
+    //     // this.canvas.style.height = сanvasWidth + 'px';
+
+
+
+    //     // const max = this.zoomed ? this.canvasSize : Math.max(maxCanvasWidth, maxCanvasHeight);
+
+    //     // const [newWidth, newHeight] = this.ratioCalc(maxCanvasWidth, maxCanvasHeight);
+
+    //     // this.canvas.style.width = newHeight + 'px';
+    //     // this.canvas.style.height = newWidth + 'px';
+    // }
 
     public mirror(): void {
         this.verticalScale *= -1;
-        this.displayFrame(this.currentFrame);
+        this.displayFrame();
     }
 
     public zoomCanvas(zoomed: boolean): void {
@@ -818,18 +843,30 @@ export default class CanvasManager {
         //     this.zoomed = false;
         // }
 
-
-        this.displayFrame(this.currentFrame);
+        this.displayFrame(this.currentOriginFrame);
     }
+
     // Извлекает битмап кадра после применения трансформаций
     private getBitmap(frame: number): Bitmap {
         if ((!this.myGif || frame < 0 || frame >= this.myGif.frames.length) && (!this.myPng)) {
             throw new Error("Недопустимый номер кадра");
         }
 
+
+        const oldFrame: number = parseInt(this.frameInput.value, 10);
+        if (frame != this.currentOriginFrame) { // перерендер если надо
+            this.displayFrame(frame);
+        }
+
         const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
         const data = imageData.data;
         const bitmap: Bitmap = [];
+
+        if (frame != oldFrame) { // вернуть обратно
+            // this.currentFrame = frame;
+            this.frameInput.value = this.localToOrigin(oldFrame).toString();
+            this.displayFrame(oldFrame);
+        }
 
         // Создаем битмап из данных изображения
         for (let i = 0; i < data.length; i += 4) {
@@ -842,6 +879,7 @@ export default class CanvasManager {
         return bitmap;
     }
 
+
     public getFrameBitmap(frame: number): FrameBitmap {
         const bitmap = this.getBitmap(frame);
 
@@ -853,17 +891,18 @@ export default class CanvasManager {
     }
 
     public getGifBitmap(): GifBitmap {
-        const frames: Bitmap[] = [];
-        for (let i = 0; i < this.myGif.frames.length; i++) {
-            frames.push(this.getBitmap(i));
+        const bitmaps: Bitmap[] = [];
+        const actualFrameArray = this.getLocalFrameArray();
+        for (let i = 0; i < actualFrameArray.length; i++) {
+            bitmaps.push(this.getBitmap(actualFrameArray[i]));
         }
-        const fps = 1000 / this.myGif.frames[0].delay; // Предполагая, что все кадры имеют одинаковую задержку
+        const fps = parseInt(this.frameRateInput.value);
         return {
             width: this.ctx.canvas.width,
             height: this.ctx.canvas.height,
             framesCount: this.myGif.frames.length,
             fps: fps,
-            frames: frames
+            frames: bitmaps
         };
     }
 
@@ -896,7 +935,7 @@ export default class CanvasManager {
             newWidth = Math.round(max * ratio);
             newHeight = max;
         }
-        
+
         return [newWidth, newHeight];
     }
 
@@ -930,7 +969,7 @@ export default class CanvasManager {
             this.canvas.style.width = calcWidth + 'px';
             this.canvas.style.height = calcHeight + 'px';
 
-            this.displayFrame(this.currentFrame);
+            this.displayFrame();
         }
         this.checkAlert();
     }
@@ -940,7 +979,7 @@ export default class CanvasManager {
             this.frameInput.value = '0';
         }
         if (!this.autoPlayCheckbox.checked) {
-            const frameNumber = parseInt(this.frameInput.value, 10) || 0;
+            const frameNumber = this.localToOrigin(parseInt(this.frameInput.value, 10)) || 0;
             this.displayFrame(frameNumber);
         }
     }
@@ -964,31 +1003,58 @@ export default class CanvasManager {
         this.frameInput.value = '0';
         this.displayFrame(0);
         this.checkAlert();
+        this.frameRatioCalc();
     }
+
+    private getLocalFrameArray(): number[] {
+        if (!this.myGif) return [0];
+
+        const totalFrames = this.myGif.frames.length;
+
+        let userFrameCount = parseInt(this.frameCountInput.value, 10);
+        userFrameCount = isNaN(userFrameCount) || userFrameCount < 1
+            ? totalFrames : userFrameCount;
+
+        const outFrames = [];
+
+        for (let i = 0; i < userFrameCount; i++) {
+            outFrames.push(Math.floor(i * this.frameRatio));
+        }
+
+        return outFrames;
+    }
+
 
     public startAutoPlay(): void {
         if (!this.myGif) return;
+
         clearInterval(this.autoPlayInterval);
-        let frameNumber = parseInt(this.frameInput.value, 10) || 0;
-        const fps = parseInt(this.frameRateInput.value, 10);
-        const interval = 1000 / fps;
+
+        let fps = this.frameRateInput.value;
+        let interval = 1000 / parseInt(fps, 10);
+
+        const oldFrameCount = parseInt(this.frameCountInput.value, 10);
+
+        let frameIndex = this.localToOrigin(parseInt(this.frameInput.value, 10)) || 0;
+        let actualFrameArray = this.getLocalFrameArray();
 
         this.autoPlayInterval = window.setInterval(() => {
-            frameNumber++;
-            const specifiedFrameCount = parseInt(this.frameCountInput.value, 10);
-            const totalFrames = this.myGif.frames.length;
-
-            if (isNaN(specifiedFrameCount) || specifiedFrameCount < 1) {
-                this.frameCountInput.value = totalFrames.toString();
+            if (parseInt(this.frameCountInput.value, 10) != oldFrameCount) { // кеширование или типа того
+                actualFrameArray = this.getLocalFrameArray();
             }
-
-            if (frameNumber >= specifiedFrameCount) {
-                frameNumber = 0;
+            if (fps != this.frameRateInput.value) { // тож самое
+                fps = this.frameRateInput.value;
+                interval = 1000 / parseInt(fps, 10);
             }
-            this.frameInput.value = frameNumber.toString();
-            this.displayFrame(frameNumber);
+            frameIndex = (frameIndex + 1) % actualFrameArray.length; //типа цикл
+            const newFrame = actualFrameArray[frameIndex];
+            this.currentOriginFrame = newFrame;
+            this.currentLocalFrame = this.originToLocal(newFrame);
+            this.frameInput.value = this.originToLocal(newFrame).toString();
+            this.displayFrame(newFrame);
         }, interval);
     }
+
 
     public updateFrameRate(): void {
         const fps = parseInt(this.frameRateInput.value, 10);

@@ -1,4 +1,4 @@
-function sizeAdapter(x: number, y: number, w: number, h: number, direction: Dir): {x: number, y: number} { // пу умолчанию блок смотрит вверх
+function sizeAdapter(x: number, y: number, w: number, h: number, direction: Dir): { x: number, y: number } { // пу умолчанию блок смотрит вверх
     if (direction == Dir.north || direction == Dir.south) {
         x = x + w / 2;
         y = y + h / 2;
@@ -6,7 +6,7 @@ function sizeAdapter(x: number, y: number, w: number, h: number, direction: Dir)
         x = x + h / 2;
         y = y + w / 2;
     }
-    return {x: x, y: y};
+    return { x: x, y: y };
 }
 
 
@@ -120,16 +120,40 @@ export class CoordinateCursor {
     get u() { return this._y; }
     get xy() { return [this._x, this._y]; }
 
-    dx(number: number): number {
+    setxy(x: number, y: number): void;
+    setxy(xy: { x: number, y: number }): void;
+    setxy(x: number | { x: number, y: number }, y?: number): void {
+        if (typeof x === 'object') {
+            this._x = x.x;
+            this._y = x.y;
+        } else {
+            this._x = x;
+            this._y = y as number;
+        }
+    }
+
+    dx(number: number): number { // delta 
         const x = this._x + number;
         this._x = x;
         return x;
     }
 
-    dy(number: number): number {
+    dy(number: number): number { // delta 
         const y = this._y + number;
         this._y = y;
         return y;
+    }
+
+    px(number: number): (number) { // post change
+        const old = this._x;
+        this._x += number;
+        return old;
+    }
+
+    py(number: number): (number) { // post change
+        const old = this._y;
+        this._y += number;
+        return old;
     }
 
     dxy(number: number): [number, number] {
