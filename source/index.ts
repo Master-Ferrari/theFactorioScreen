@@ -32,7 +32,7 @@ const modeDropdown = new Dropdown({
     dropdownElement: methodSelect,
     optionsList: methods.getList(null),
     onSelectCallback: onMethodSelect,
-    defaultText: "Выбор метода",
+    defaultText: "method select",
     selectedPrefix: "selected: "
 });
 

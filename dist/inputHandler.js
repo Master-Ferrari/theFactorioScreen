@@ -16,6 +16,7 @@ const rotateClockwiseButton = document.getElementById('rotateClockwise');
 const rotateCounterClockwiseButton = document.getElementById('rotateCounterClockwise');
 const scaleCanvasButton = document.getElementById("scaleCanvas");
 const copyButton = document.getElementById('copyButton');
+const methodSelect = document.getElementById('methodSelect');
 const testButton = document.getElementById('testButton');
 const scalePlusSVG = document.getElementById('scalePlusSVG');
 const scaleMinusSVG = document.getElementById('scaleMinusSVG');
@@ -41,6 +42,7 @@ export default class InputHandler {
                 alert('Пожалуйста, выберите файл GIF или PNG.');
                 return;
             }
+            methodSelect.classList.remove('hidden');
             const reader = new FileReader();
             reader.onload = function (e) {
                 const arrayBuffer = e.target?.result;
@@ -100,7 +102,7 @@ export default class InputHandler {
                 copyButton.innerText = "Copy to clipboard";
             }, 1000);
         });
-        testButton.addEventListener('click', async function () {
+        testButton?.addEventListener('click', async function () {
             const textOutput = (() => {
                 const blueprintOptions = document.getElementById('blueprintOptions');
                 function onBlueprint(text) {

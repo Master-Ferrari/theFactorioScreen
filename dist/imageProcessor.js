@@ -18,6 +18,8 @@ export default class CanvasManager {
         this.currentOriginFrame = 0;
         this.currentLocalFrame = 0;
         this.frameRatio = 1;
+        this.tpf = 4;
+        this.fps = 15;
         this.canvas = document.getElementById("canvas");
         this.ctx = this.canvas.getContext("2d");
         this.ctx.imageSmoothingEnabled = false;
@@ -508,6 +510,7 @@ export default class CanvasManager {
     applyFrameTransforms(frameNumber) {
         let image;
         if (this.mode == "gif") {
+            console.log("test15-frameNumber", frameNumber);
             image = this.myGif.frames[frameNumber].image;
         }
         else {
@@ -576,6 +579,7 @@ export default class CanvasManager {
         // повороты бывают только на 90 так что..
         [this.canvas.width, this.canvas.height] = [this.canvas.height, this.canvas.width]; // поменять пропорции
         [this.canvas.style.width, this.canvas.style.height] = [this.canvas.style.height, this.canvas.style.width];
+        [this.widthInput.value, this.heightInput.value] = [this.heightInput.value, this.widthInput.value];
         this.displayFrame();
     }
     mirror() {
@@ -599,17 +603,18 @@ export default class CanvasManager {
         if ((!this.myGif || frame < 0 || frame >= this.myGif.frames.length) && (!this.myPng)) {
             throw new Error("Недопустимый номер кадра");
         }
-        const oldFrame = parseInt(this.frameInput.value, 10);
+        console.log("test15-getBitmap", this.frameInput.value, 10);
+        // const oldFrame: number = parseInt(this.frameInput.value, 10);
         if (frame != this.currentOriginFrame) { // перерендер если надо
             this.displayFrame(frame);
         }
         const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
         const data = imageData.data;
         const bitmap = [];
-        if (frame != oldFrame) { // вернуть обратно
-            this.frameInput.value = this.localToOrigin(oldFrame).toString();
-            this.displayFrame(oldFrame);
-        }
+        // if (frame != oldFrame) { // вернуть обратно
+        //     this.frameInput.value = this.localToOrigin(oldFrame).toString();
+        //     this.displayFrame(oldFrame);
+        // }
         // Создаем битмап из данных изображения
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i];
@@ -740,8 +745,8 @@ export default class CanvasManager {
         if (!this.myGif)
             return;
         clearInterval(this.autoPlayInterval);
-        let fps = this.frameRateInput.value;
-        let interval = 1000 / parseInt(fps, 10);
+        let fps = this.fps;
+        let interval = 1000 / (60 / this.tpf);
         const oldFrameCount = parseInt(this.frameCountInput.value, 10);
         let frameIndex = this.localToOrigin(parseInt(this.frameInput.value, 10)) || 0;
         let actualFrameArray = this.getLocalFrameArray();
@@ -749,9 +754,9 @@ export default class CanvasManager {
             if (parseInt(this.frameCountInput.value, 10) != oldFrameCount) { // кеширование или типа того
                 actualFrameArray = this.getLocalFrameArray();
             }
-            if (fps != this.frameRateInput.value) { // тож самое
-                fps = this.frameRateInput.value;
-                interval = 1000 / parseInt(fps, 10);
+            if (fps != this.fps) { // тож самое
+                fps = this.fps;
+                interval = 1000 / (60 / this.tpf);
             }
             frameIndex = (frameIndex + 1) % actualFrameArray.length; //типа цикл
             const newFrame = actualFrameArray[frameIndex];
@@ -762,10 +767,15 @@ export default class CanvasManager {
         }, interval);
     }
     updateFrameRate() {
-        const fps = parseInt(this.frameRateInput.value, 10);
-        this.frameRateDisplay.textContent = fps + ' FPS';
+        this.tpf = parseInt(this.frameRateInput.value, 10);
+        this.fps = Math.round(60 / this.tpf);
+        this.frameRateDisplay.textContent = formatNumber(this.tpf) + " ticks/frame (" + formatNumber(this.fps) + " FPS)";
         if (this.autoPlayCheckbox.checked) {
             this.startAutoPlay();
+        }
+        function formatNumber(num) {
+            const str = num.toString();
+            return str.length === 1 ? ' ' + str : str;
         }
     }
     toggleAutoPlay() {

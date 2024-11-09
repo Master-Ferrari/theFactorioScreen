@@ -242,6 +242,9 @@ export class indexIterator {
     }
 
     getpairs(key: string): [number, number][] {
+        if (!this.pairs[key]) {
+            return [];
+        }
         return this.pairs[key].pairs;
     }
 

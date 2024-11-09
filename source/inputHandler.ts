@@ -19,6 +19,8 @@ const rotateClockwiseButton = document.getElementById('rotateClockwise') as HTML
 const rotateCounterClockwiseButton = document.getElementById('rotateCounterClockwise') as HTMLButtonElement;
 const scaleCanvasButton = document.getElementById("scaleCanvas") as HTMLButtonElement;
 const copyButton = document.getElementById('copyButton') as HTMLButtonElement;
+const methodSelect = document.getElementById('methodSelect') as HTMLButtonElement;
+
 
 const testButton = document.getElementById('testButton') as HTMLButtonElement;
 
@@ -56,6 +58,8 @@ export default class InputHandler {
                 alert('Пожалуйста, выберите файл GIF или PNG.');
                 return;
             }
+
+            methodSelect.classList.remove('hidden');
 
             const reader = new FileReader();
             reader.onload = function (e: ProgressEvent<FileReader>) {
@@ -128,7 +132,7 @@ export default class InputHandler {
         });
 
 
-        testButton.addEventListener('click', async function () {
+        testButton?.addEventListener('click', async function () {
 
 
             const textOutput = (() => {

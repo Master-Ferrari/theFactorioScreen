@@ -19,5 +19,6 @@ export abstract class Method {
     abstract init(): void;
     protected exportJson(json: string) {
         this.blueprintGetter(jsonToBlueprint(json));
+        // this.blueprintGetter(json);
     }
 }

@@ -100,6 +100,18 @@ export default class tight3to4Method extends Method {
         return { entities: block, wires: wires };
     }
 
+    makeSequencer(ii: indexIterator, cc: CoordinateCursor, fps: number, framesCount: number): entitiesAndWires {
+        let block: Entities = [];
+        let wires: Wires = [];
+        
+
+        
+        // block.push(f.deciderCombinator(ii.next(), cc.px(2), cc.y, Dir.east, deciderFrameSelector(index)));
+
+
+        return { entities: block, wires: wires };
+    }
+
     makeFrames(ii: indexIterator, cc: CoordinateCursor, frames: Signals[]): entitiesAndWires {
         let block: Entities = [];
         let wires: Wires = [];
@@ -140,20 +152,17 @@ export default class tight3to4Method extends Method {
         for (let index = 0; index < frames.length; index++) {
             const itIsLastFrame = index >= frames.length - 1;
 
-            console.log(index, itIsLastFrame);
-            console.log("constantCombinator", ii.i);
             block.push(f.constantCombinator(ii.next(), cc.px(1), cc.y, Dir.east, makeSignals(frames[index])));
             wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenIn]);
 
-            console.log("deciderCombinator", ii.i);
             block.push(f.deciderCombinator(ii.next(), cc.px(2), cc.y, Dir.east, deciderFrameSelector(index)));
 
             if (!itIsLastFrame) {
-                ii.addPairMember("frame decider combinator", ii.i); // вертикальный перенос сигнала кадра
-
                 wires.push([ii.i, Wire.greenOut, ii.look(2), Wire.greenOut]);
                 wires.push([ii.i, Wire.redIn, ii.look(2), Wire.redIn]);
             } else {
+                ii.addPairMember("frame decider combinator", ii.i); // вертикальный перенос сигнала кадра
+
                 wires.push([ii.i, Wire.greenOut, ii.look(1), Wire.greenIn]);
             }
         }
@@ -268,8 +277,6 @@ export default class tight3to4Method extends Method {
         const signalNamesRgbGroups: RgbSignalsNames[] = [];
         const keys: string[] = Object.keys(frames);
 
-        console.log("test12-RgbSignalsPacks", keys);
-
 
         for (let i = 0; i < keys.length; i += 3) {
             signalNamesRgbGroups.push({
@@ -286,12 +293,9 @@ export default class tight3to4Method extends Method {
 
             block.push(f.rgbLamp(ii.next(), cc.dx(1), cc.y, signalNamesRgbGroups[packIndex]));
 
-            console.log("test14", i, ii.i, ii.look(-4));
-
             if (packIndex == 0) {
                 wires.push([ii.i, Wire.greenIn, ii.look(-4), Wire.greenOut]);
             } else {
-                console.log("test15" + e++, [ii.i, Wire.greenIn, ii.look(-4), Wire.greenIn]);
                 wires.push([ii.i, Wire.greenIn, ii.look(-4), Wire.greenIn]);
             }
         }
@@ -320,10 +324,6 @@ export default class tight3to4Method extends Method {
 
         for (let y = 0; y < rowCount; y++) {
             preparedGifData.rows[y] = { frames: [], width: gifData.width };
-            // preparedGifData.rows[y].frames;
-
-            const rowSignals: Signals = {};
-
 
             for (let f = 0; f < gifData.frames.length; f++) {
                 const frameRow = gifData.frames[f].slice(y * rowLenght, (y + 1) * rowLenght);
@@ -340,10 +340,10 @@ export default class tight3to4Method extends Method {
                     }
 
                     const pixels: pixelsPack = [
-                        pixelAdapter(frameRow[x] ?? 0),
-                        pixelAdapter(frameRow[x + 1] ?? 0),
-                        pixelAdapter(frameRow[x + 2] ?? 0),
                         pixelAdapter(frameRow[x + 3] ?? 0),
+                        pixelAdapter(frameRow[x + 2] ?? 0),
+                        pixelAdapter(frameRow[x + 1] ?? 0),
+                        pixelAdapter(frameRow[x] ?? 0),
                     ];
 
 
@@ -398,7 +398,6 @@ function makeSignals(signals: Signals = {}): any {
         {
             index: 1,
             filters: Object.keys(signals).map(key => {
-                console.log("index", i);
                 return {
                     index: i++,
                     type: "virtual",
