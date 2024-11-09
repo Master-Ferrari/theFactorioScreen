@@ -1,6 +1,6 @@
 type Bitmap = number[][];
 type FrameBitmap = { width: number, height: number, bitmap: Bitmap };
-type GifBitmap = { width: number, height: number, framesCount: number, fps: number, frames: Bitmap[] };
+export type GifBitmap = { width: number, height: number, framesCount: number, fps: number, frames: Bitmap[] };
 
 interface CanvasWithCtx extends HTMLCanvasElement {
     ctx: CanvasRenderingContext2D;
@@ -518,18 +518,14 @@ export default class CanvasManager {
         }
 
         function processGifFrame(frame: Frame): void {
-            // Создаем canvas и приводим его к типу CanvasWithCtx
             const canvas = document.createElement('canvas') as CanvasWithCtx;
             canvas.width = gif.width;
             canvas.height = gif.height;
 
-            // Получаем контекст рисования и сохраняем его в свойство ctx
             canvas.ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-            // Сохраняем canvas в frame.image
             frame.image = canvas;
 
-            // Используем frame.image.ctx в дальнейшем коде
             const ct = frame.localColourTableFlag ? frame.localColourTable! : gif.globalColourTable;
 
             if (gif.lastFrame === null) {
@@ -662,17 +658,12 @@ export default class CanvasManager {
     // Применяет трансформации кадра на канвасе
     public applyFrameTransforms(frameNumber: number): void {
 
-        // let frame: Frame | HTMLCanvasElement | null = null;
         let image: CanvasWithCtx | HTMLCanvasElement;
         if (this.mode == "gif") {
-            // frame = this.myGif.frames[frameNumber];
             image = this.myGif.frames[frameNumber].image;
         } else {
-            // frame = this.myPng.image;
             image = this.myPng.image!;
         }
-
-        // const frame = this.mode == "gif" ? this.myGif.frames[frameNumber] : this.myPng.image;
 
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -690,8 +681,6 @@ export default class CanvasManager {
         if (this.rotationAngle % 180 !== 0) {
             [drawWidth, drawHeight] = [drawHeight, drawWidth];
         }
-
-        // const image
 
         this.ctx.drawImage(image, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
         this.ctx.restore();
@@ -713,7 +702,6 @@ export default class CanvasManager {
         return Math.floor(local * this.frameRatio);
     }
 
-    // Отображает кадр, определяет текущий индекс и обрабатывает циклическое воспроизведение
     public displayFrame(frameNumber: number = this.currentOriginFrame): void {
         if (this.myGif && this.myGif.frames.length > 0 || this.myPng) {
 
@@ -735,18 +723,8 @@ export default class CanvasManager {
             this.currentOriginFrame = frameNumber;
             this.currentLocalFrame = this.originToLocal(frameNumber);
 
-            // Расчет шага кадров
-            // const step = totalFrames / specifiedFrameCount;
-            // let frameIndex = Math.floor(frameNumber * step);
-            // if (frameIndex >= totalFrames) {
-            //     frameIndex = totalFrames - 1;
-            // }
-            // const playableFrames = this.getPlayableFrames();
-
-            // this.currentFrame = frameIndex;
             this.applyFrameTransforms(frameNumber);
         } else if (this.myPng) {
-            // Если загружен PNG, отображаем его как единственный кадр
             this.currentOriginFrame = 0;
             this.currentLocalFrame = 0;
             this.applyFrameTransforms(0);
@@ -766,29 +744,6 @@ export default class CanvasManager {
         this.displayFrame();
     }
 
-    // private rotateStyles(): void {
-    //     // const userWidth = parseInt(this.widthInput.value, 10);
-    //     // const userHeight = parseInt(this.heightInput.value, 10);
-
-    //     // this.widthInput.value = userHeight.toString();
-    //     // this.heightInput.value = userWidth.toString();
-
-    //     // const сanvasWidth = parseInt(getComputedStyle(this.canvas).width);// размер стилей
-    //     // const сanvasHeight = parseInt(getComputedStyle(this.canvas).height);
-
-    //     // this.canvas.style.width = сanvasHeight + 'px';
-    //     // this.canvas.style.height = сanvasWidth + 'px';
-
-
-
-    //     // const max = this.zoomed ? this.canvasSize : Math.max(maxCanvasWidth, maxCanvasHeight);
-
-    //     // const [newWidth, newHeight] = this.ratioCalc(maxCanvasWidth, maxCanvasHeight);
-
-    //     // this.canvas.style.width = newHeight + 'px';
-    //     // this.canvas.style.height = newWidth + 'px';
-    // }
-
     public mirror(): void {
         this.verticalScale *= -1;
         this.displayFrame();
@@ -803,13 +758,6 @@ export default class CanvasManager {
 
         let imageWidth, imageHeight;
 
-        // if (this._mode == "gif") {
-        //     imageWidth = this.myGif.width;
-        //     imageHeight = this.myGif.height;
-        // } else {
-        //     imageWidth = this.myPng.width;
-        //     imageHeight = this.myPng.height;
-        // }
         imageWidth = this.canvas.width;
         imageHeight = this.canvas.height;
 
@@ -818,30 +766,6 @@ export default class CanvasManager {
         this.canvas.style.height = canvasHeight + 'px';
 
 
-        // let imageWidth = self.myPng.width;
-        // let imageHeight = self.myPng.height;
-
-        // const userWidth = parseInt(this.widthInput.value, 10); // инпут
-        // const userHeight = parseInt(this.heightInput.value, 10);
-
-        // const scaleX = this.originalImageWidth / this.canvasSize;
-        // const scaleY = this.originalImageHeight / this.canvasSize;
-        // const scale = Math.min(scaleX, scaleY);
-
-        // let width = Math.round(this.originalImageWidth * scale);
-        // let height = Math.round(this.originalImageHeight * scale);
-
-        // let [canvasWidth, canvasHeight] = this.ratioCalc(imageWidth, imageHeight);
-
-        // if (!this.zoomed) {
-        //     this.canvas.style.width = width + 'px';
-        //     this.canvas.style.height = height + 'px';
-        //     this.zoomed = true;
-        // } else {
-        //     this.canvas.style.width = this.originalCanvasWidth + 'px';
-        //     this.canvas.style.height = this.originalCanvasHeight + 'px';
-        //     this.zoomed = false;
-        // }
 
         this.displayFrame(this.currentOriginFrame);
     }
@@ -863,7 +787,6 @@ export default class CanvasManager {
         const bitmap: Bitmap = [];
 
         if (frame != oldFrame) { // вернуть обратно
-            // this.currentFrame = frame;
             this.frameInput.value = this.localToOrigin(oldFrame).toString();
             this.displayFrame(oldFrame);
         }

@@ -10,6 +10,7 @@ function sizeAdapter(x: number, y: number, w: number, h: number, direction: Dir)
 }
 
 
+export type RgbSignalsNames = { rName: string, gName: string, bName: string };
 
 export class factorioEntities {
     static simpleLamp(index: number, x: number, y: number, r: number, g: number, b: number): any {
@@ -22,6 +23,31 @@ export class factorioEntities {
                 g: g / 255,
                 b: b / 255,
                 a: 1
+            },
+            always_on: true
+        };
+    }
+    static rgbLamp(index: number, x: number, y: number, names: RgbSignalsNames): any {
+        return {
+            entity_number: index,
+            name: "small-lamp",
+            position: sizeAdapter(x, y, 1, 1, Dir.south),
+
+            control_behavior: {
+                use_colors: true,
+                red_signal: {
+                    type: "virtual",
+                    name: names.rName
+                },
+                green_signal: {
+                    type: "virtual",
+                    name: names.gName
+                },
+                blue_signal: {
+                    type: "virtual",
+                    name: names.bName
+                },
+                color_mode: 1
             },
             always_on: true
         };
@@ -117,8 +143,8 @@ export class CoordinateCursor {
     }
 
     get x() { return this._x; }
-    get u() { return this._y; }
-    get xy() { return [this._x, this._y]; }
+    get y() { return this._y; }
+    get xy() { return { x: this._x, y: this._y }; }
 
     setxy(x: number, y: number): void;
     setxy(xy: { x: number, y: number }): void;
@@ -166,6 +192,14 @@ export class CoordinateCursor {
 
 export class indexIterator {
     private _index: number;
+
+    private pairs: {
+        [key: string]: {
+            pairs: [number, number][],
+            incompletePairMember: number | null
+        }
+    } = {};
+
     constructor(index: number = 1) {
         this._index = index;
     }
@@ -182,6 +216,35 @@ export class indexIterator {
         this._index += number;
         return this._index;
     }
+    set(index: number): number {
+        this._index = index;
+        return this._index;
+    }
+
+    addPairMember(key: string, value: number): void {
+
+        if (!this.pairs[key]) { // в первый раз
+            this.pairs[key] = {
+                pairs: [],
+                incompletePairMember: value
+            }
+        }
+
+        if (this.pairs[key].incompletePairMember) { // в чётный раз
+            this.pairs[key].pairs.push([this.pairs[key].incompletePairMember, value]);
+            this.pairs[key].incompletePairMember = null;
+        }
+
+        if (!this.pairs[key].incompletePairMember) { // в нечётный раз
+            this.pairs[key].incompletePairMember = value;
+        }
+
+    }
+
+    getpairs(key: string): [number, number][] {
+        return this.pairs[key].pairs;
+    }
+
 }
 
 export class Blueprint {
