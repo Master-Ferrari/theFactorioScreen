@@ -1,39 +1,8 @@
+import { Method } from "./method.js";
 import CanvasManager from "./imageProcessor.js";
+import { Blueprint, factorioEntities as f } from "./factorioEntities.js";
 const canvasManager = CanvasManager.init();
-import jsonToBlueprint from "./blueprintEncoder.js";
-import FactorioItems from "./factorioItems.js";
-class MethodsManager {
-    constructor() {
-        this.methods = [];
-    }
-    add(methods) {
-        methods.forEach((method) => {
-            this.methods.push(method);
-        });
-    }
-    getList(mode) {
-        return this.methods.map((method) => {
-            return {
-                name: method.name,
-                value: method.value,
-                isActive: method.supportedModes.includes(mode)
-            };
-        });
-    }
-    getById(id) {
-        return this.methods[id];
-    }
-}
-class Method {
-    constructor(optionsContainer, blueprintGetter) {
-        this.optionsContainer = optionsContainer;
-        this.blueprintGetter = blueprintGetter;
-    }
-    exportJson(json) {
-        this.blueprintGetter(jsonToBlueprint(json));
-    }
-}
-class ImageMethod extends Method {
+export default class ImageMethod extends Method {
     constructor(optionsContainer, blueprintGetter) {
         super(optionsContainer, blueprintGetter);
         this.name = "image";
@@ -61,23 +30,16 @@ class ImageMethod extends Method {
     makeJson() {
         const currentFrame = parseInt(document.getElementById('frameInput').value, 10);
         let frameData = canvasManager.getFrameBitmap(currentFrame);
-        let lamps = [];
+        const blueprint = new Blueprint();
+        let entities = [];
         for (let i = 0; i < frameData.bitmap.length; i++) {
             const x = (i % frameData.width) + 0.5;
             const y = Math.floor(i / frameData.width) + 0.5;
             const [r, g, b] = frameData.bitmap[i];
-            lamps.push(FactorioItems.simpleLamp(i + 1, x, y, r, g, b));
+            entities.push(f.simpleLamp(i + 1, x, y, r, g, b));
         }
-        let outputData = FactorioItems.blueprintTitle(lamps);
-        const json = JSON.stringify(outputData);
-        return json;
+        blueprint.addEntities(entities);
+        return blueprint.json();
     }
 }
-export default function getMethods(optionsContainer, blueprintGetter) {
-    const methods = new MethodsManager;
-    methods.add([
-        new ImageMethod(optionsContainer, blueprintGetter),
-    ]);
-    return methods;
-}
-//# sourceMappingURL=methods.js.map
+//# sourceMappingURL=imageMethod.js.map
