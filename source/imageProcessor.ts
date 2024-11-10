@@ -2,7 +2,7 @@ import { parse } from "path";
 
 type Bitmap = number[][];
 type FrameBitmap = { width: number, height: number, bitmap: Bitmap };
-export type GifBitmap = { width: number, height: number, framesCount: number, fps: number, frames: Bitmap[] };
+export type GifBitmap = { width: number, height: number, framesCount: number, fps: number, tpf: number, frames: Bitmap[] };
 
 interface CanvasWithCtx extends HTMLCanvasElement {
     ctx: CanvasRenderingContext2D;
@@ -665,7 +665,6 @@ export default class CanvasManager {
 
         let image: CanvasWithCtx | HTMLCanvasElement;
         if (this.mode == "gif") {
-            console.log("test15-frameNumber", frameNumber);
             image = this.myGif.frames[frameNumber].image;
         } else {
             image = this.myPng.image!;
@@ -783,8 +782,6 @@ export default class CanvasManager {
             throw new Error("Недопустимый номер кадра");
         }
 
-        console.log("test15-getBitmap", this.frameInput.value, 10);
-        // const oldFrame: number = parseInt(this.frameInput.value, 10);
         if (frame != this.currentOriginFrame) { // перерендер если надо
             this.displayFrame(frame);
         }
@@ -792,11 +789,6 @@ export default class CanvasManager {
         const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
         const data = imageData.data;
         const bitmap: Bitmap = [];
-
-        // if (frame != oldFrame) { // вернуть обратно
-        //     this.frameInput.value = this.localToOrigin(oldFrame).toString();
-        //     this.displayFrame(oldFrame);
-        // }
 
         // Создаем битмап из данных изображения
         for (let i = 0; i < data.length; i += 4) {
@@ -826,12 +818,13 @@ export default class CanvasManager {
         for (let i = 0; i < actualFrameArray.length; i++) {
             bitmaps.push(this.getBitmap(actualFrameArray[i]));
         }
-        const fps = parseInt(this.frameRateInput.value);
+        
         return {
             width: this.ctx.canvas.width,
             height: this.ctx.canvas.height,
             framesCount: this.myGif.frames.length,
-            fps: fps,
+            fps: this.fps,
+            tpf: this.tpf,
             frames: bitmaps
         };
     }
@@ -996,7 +989,7 @@ export default class CanvasManager {
 
         function formatNumber(num: number): string {
             const str = num.toString();
-            return str.length === 1 ? ' ' + str : str;
+            return str.length === 1 ? '_' + str : str;
         }
     }
 

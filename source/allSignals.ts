@@ -1,3 +1,11 @@
+export function getSignalName(index: number): { name: string, type: "virtual" | null } {
+    return { name: allSignals[index], type: index < 70 ? "virtual" : null };
+}
+
+export function getTypeByName(name: string): "virtual" | null {
+    return allSignals.indexOf(name) < 69 ? "virtual" : null;
+}
+
 export const allSignals = [
     "signal-0",
     "signal-1",
@@ -36,7 +44,7 @@ export const allSignals = [
     "signal-Y",
     "signal-Z",
     "signal-red",
-    "signal-green",
+    // "signal-green",
     "signal-blue",
     "signal-yellow",
     "signal-pink",

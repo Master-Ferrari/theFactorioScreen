@@ -125,9 +125,9 @@ export default class InputHandler {
         copyButton.addEventListener('click', async function () {
             const textOutput = document.getElementById('textOutput') as HTMLTextAreaElement;
             await navigator.clipboard.writeText(textOutput.value);
-            copyButton.innerText = "Copied!";
+            copyButton.innerText = "copied!";
             setTimeout(() => {
-                copyButton.innerText = "Copy to clipboard";
+                copyButton.innerText = "copy to clipboard";
             }, 1000);
         });
 
@@ -146,7 +146,7 @@ export default class InputHandler {
             })();
 
             await navigator.clipboard.writeText(textOutput);
-            testButton.innerText = "Copied!";
+            testButton.innerText = "copied!";
             setTimeout(() => {
                 testButton.innerText = "test";
             }, 1000);

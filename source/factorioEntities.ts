@@ -1,3 +1,6 @@
+import { CursorPos } from "readline";
+import { getTypeByName } from "./allSignals.js";
+
 function sizeAdapter(x: number, y: number, w: number, h: number, direction: Dir): { x: number, y: number } { // пу умолчанию блок смотрит вверх
     if (direction == Dir.north || direction == Dir.south) {
         x = x + w / 2;
@@ -36,15 +39,15 @@ export class factorioEntities {
             control_behavior: {
                 use_colors: true,
                 red_signal: {
-                    type: "virtual",
+                    ...(getTypeByName(names.rName) && { type: "virtual" }), // это конечно нормально бы оптимизировать. лишний поиск по сигналам. индекс можно пробрасывать вместе с именем.
                     name: names.rName
                 },
                 green_signal: {
-                    type: "virtual",
+                    ...(getTypeByName(names.gName) && { type: "virtual" }),
                     name: names.gName
                 },
                 blue_signal: {
-                    type: "virtual",
+                    ...(getTypeByName(names.bName) && { type: "virtual" }),
                     name: names.bName
                 },
                 color_mode: 1
@@ -53,7 +56,7 @@ export class factorioEntities {
         };
     }
 
-    static arithmeticCombinator(index: number, x: number, y: number, direction: Dir, arithmetic_conditions: any): any {
+    static arithmeticCombinator(index: number, x: number, y: number, direction: Dir, arithmetic_conditions: any, options?: { playerDescription?: string }): any {
         return {
             entity_number: index,
             name: "arithmetic-combinator",
@@ -61,10 +64,11 @@ export class factorioEntities {
             direction: direction,
             control_behavior: {
                 arithmetic_conditions: arithmetic_conditions
-            }
+            },
+            ...(options?.playerDescription && { player_description: options.playerDescription })
         };
     }
-    static deciderCombinator(index: number, x: number, y: number, direction: Dir, decider_conditions: any): any {
+    static deciderCombinator(index: number, x: number, y: number, direction: Dir, decider_conditions: any, options?: { playerDescription?: string }): any {
         return {
             entity_number: index,
             name: "decider-combinator",
@@ -72,22 +76,20 @@ export class factorioEntities {
             direction: direction,
             control_behavior: {
                 decider_conditions: decider_conditions
-            }
+            },
+            ...(options?.playerDescription && { player_description: options.playerDescription })
         };
     }
 
 
-    static constantCombinator(index: number, x: number, y: number, direction: Dir, signalSections: Section[]): any {
+    static constantCombinator(index: number, x: number, y: number, direction: Dir, signalsOrSections: any, options?: { playerDescription?: string }): any {
         return {
             entity_number: index,
             name: "constant-combinator",
             position: sizeAdapter(x, y, 1, 1, direction),
             direction: direction,
-            control_behavior: {
-                sections: {
-                    sections: signalSections
-                }
-            }
+            control_behavior: { sections: { sections: signalsOrSections } },
+            ...(options?.playerDescription && { player_description: options.playerDescription })
         }
     }
 }
@@ -182,10 +184,16 @@ export class CoordinateCursor {
         return old;
     }
 
-    dxy(number: number): [number, number] {
-        this._x += number;
-        this._y += number;
-        return [this._x, this._y];
+    dxy(xy: { x: number, y: number }): { x: number, y: number } {
+        this._x += xy.x;
+        this._y += xy.y;
+        return { x: this._x, y: this._y }
+    }
+
+    dxycc(xy: { x: number, y: number }): CoordinateCursor {
+        this._x += xy.x;
+        this._y += xy.y;
+        return this
     }
 
 }
@@ -228,15 +236,18 @@ export class indexIterator {
                 pairs: [],
                 incompletePairMember: value
             }
+            return;
         }
 
         if (this.pairs[key].incompletePairMember) { // в чётный раз
             this.pairs[key].pairs.push([this.pairs[key].incompletePairMember, value]);
             this.pairs[key].incompletePairMember = null;
+            return;
         }
 
         if (!this.pairs[key].incompletePairMember) { // в нечётный раз
             this.pairs[key].incompletePairMember = value;
+            return;
         }
 
     }
@@ -262,11 +273,15 @@ export class Blueprint {
     }
 
     addEntities(entities: Entities) {
-        this.entities.push(...entities);
+        for (const entitie of entities) {
+            this.entities.push(entitie);
+        }
     }
 
-    addWires(wire: Wires) {
-        this.wires.push(...wire);
+    addWires(wires: Wires) {
+        for (const wire of wires) {
+            this.wires.push(wire);
+        }
     }
 
     addEntitiesAndWires(data: entitiesAndWires) {
@@ -289,4 +304,42 @@ export class Blueprint {
     json(): string {
         return JSON.stringify(this.struct);
     }
-} 
+}
+
+
+export type Signals = { [name: string]: number };
+
+export function makeSignals(signals: Signals = {}): any {
+    const signalJsons: any = [];
+    let i = 1;
+    return [
+        {
+            index: 1,
+            filters: Object.keys(signals).map(key => {
+                const type = getTypeByName(key);
+                return {
+                    index: i++,
+                    ...(type && { type }),
+                    quality: "normal",
+                    comparator: "=",
+                    name: key,
+                    count: signals[key]
+                };
+            })
+        }
+    ]
+}
+
+export function makeSignalSections(sectionsData: { signals: Signals, active?: boolean, sectionName?: string }[]): any[] {
+    const sections: any[] = [];
+    let i = 1;
+    sectionsData.forEach(({ sectionName, signals, active }) => {
+        sections.push({
+            index: i++,
+            ...(sectionName && { group: sectionName }),
+            filters: makeSignals(signals),
+            active: active ?? true
+        });
+    });
+    return sections;
+}
