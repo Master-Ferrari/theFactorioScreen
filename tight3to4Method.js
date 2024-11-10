@@ -1,6 +1,6 @@
 import { Method } from "./method.js";
 import CanvasManager from "./imageProcessor.js";
-import { factorioEntities as f, Blueprint, CoordinateCursor, Dir, indexIterator, Wire } from "./factorioEntities.js";
+import { factorioEntities as f, Blueprint, CoordinateCursor, Dir, indexIterator, Wire, makeSignals, makeSignalSections } from "./factorioEntities.js";
 import { allSignals } from "./allSignals.js";
 const canvasManager = CanvasManager.init();
 export default class tight3to4Method extends Method {
@@ -34,27 +34,37 @@ export default class tight3to4Method extends Method {
         const preparedGifData = this.gifDataTopreparedGifData(gifData);
         const blueprint = new Blueprint();
         const cc = new CoordinateCursor(0, 0);
-        const ii = new indexIterator(1);
+        const ii = new indexIterator(0);
+        ii.shift(1);
         for (let y = 0; y < preparedGifData.rows.length; y++) {
             const rowData = preparedGifData.rows[y];
             const oldCC = cc.xy;
-            const row = this.makeRow(ii, cc, rowData.frames, rowData.frames[0], rowData.width);
+            const isItLastRow = y == preparedGifData.rows.length - 1;
+            const isItFirstRow = y == 0;
+            const row = this.makeRow(ii, cc, rowData.frames, rowData.frames[0], rowData.width, isItLastRow, isItFirstRow);
             blueprint.addEntitiesAndWires(row);
             cc.setxy({ x: oldCC.x, y: oldCC.y + 1 });
         }
+        // cc.dx(-2);
+        const framesCount = preparedGifData.rows[0].frames.length;
+        const Sequencer = this.makeSequencer(ii, cc.dxycc({ x: -3, y: 0 }), gifData.tpf, framesCount);
+        blueprint.addEntitiesAndWires(Sequencer);
         const frameDecidersPairs = ii.getpairs("frame decider combinator");
+        console.log("test20-frameDecidersPairs", frameDecidersPairs);
         frameDecidersPairs.forEach(pair => {
             blueprint.addWires([[pair[0], Wire.redIn, pair[1], Wire.redIn]]);
         });
+        const mainClockWire = ii.getpairs("main clock")[0];
+        blueprint.addWires([[mainClockWire[0], Wire.redIn, mainClockWire[1], Wire.redOut]]);
         return blueprint.json();
     }
     //#endregion
     //#region subblueprints
-    makeRow(ii, cc, frames, currentFrame, width) {
+    makeRow(ii, cc, frames, currentFrame, width, isItLastRow, isItFirstRow) {
         let block = [];
         let wires = [];
         const beforeFrameBlock = cc.xy;
-        const makeFramesBlock = this.makeFrames(ii, cc, frames);
+        const makeFramesBlock = this.makeFrames(ii, cc, frames, isItLastRow, isItFirstRow);
         cc.setxy(beforeFrameBlock);
         ii.shift(1);
         const bytesShiftBlock = this.makeByteGrid(ii, cc);
@@ -64,13 +74,130 @@ export default class tight3to4Method extends Method {
         wires.push(...makeFramesBlock.wires, ...bytesShiftBlock.wires, ...lamps.wires);
         return { entities: block, wires: wires };
     }
-    makeSequencer(ii, cc, fps, framesCount) {
+    makeSequencer(ii, cc, tpf, framesCount) {
         let block = [];
         let wires = [];
-        // block.push(f.deciderCombinator(ii.next(), cc.px(2), cc.y, Dir.east, deciderFrameSelector(index)));
+        function deciderFrameLenght(tpf) {
+            return {
+                conditions: [
+                    {
+                        first_signal: {
+                            type: "virtual",
+                            name: "signal-green"
+                        },
+                        constant: tpf
+                    }
+                ],
+                outputs: [
+                    {
+                        signal: {
+                            type: "virtual",
+                            name: "signal-green"
+                        }
+                    }
+                ]
+            };
+        }
+        ;
+        function deciderFrameCount(count) {
+            return {
+                conditions: [
+                    {
+                        first_signal: {
+                            type: "virtual",
+                            name: "signal-green"
+                        },
+                        constant: count,
+                        first_signal_networks: {
+                            red: false,
+                            green: true
+                        }
+                    },
+                    {
+                        first_signal: {
+                            type: "virtual",
+                            name: "signal-red"
+                        },
+                        comparator: "=",
+                        compare_type: "and"
+                    }
+                ],
+                outputs: [
+                    {
+                        signal: {
+                            type: "virtual",
+                            name: "signal-green"
+                        },
+                        networks: {
+                            red: false,
+                            green: true
+                        }
+                    }
+                ]
+            };
+        }
+        ;
+        function deciderReset() {
+            return {
+                conditions: [
+                    {
+                        first_signal: {
+                            type: "virtual",
+                            name: "signal-green"
+                        },
+                        constant: 1,
+                        comparator: "=",
+                        first_signal_networks: {
+                            red: true,
+                            green: false
+                        }
+                    },
+                    {
+                        first_signal: {
+                            type: "virtual",
+                            name: "signal-green"
+                        },
+                        constant: 1,
+                        comparator: "=",
+                        first_signal_networks: {
+                            red: false,
+                            green: true
+                        },
+                        compare_type: "and"
+                    }
+                ],
+                outputs: [
+                    {
+                        signal: {
+                            type: "virtual",
+                            name: "signal-green"
+                        },
+                        "copy_count_from_input": false
+                    }
+                ]
+            };
+        }
+        ;
+        const sections = makeSignalSections([
+            { signals: makeSignals({ "signal-green": 1 }), active: true, sectionName: "play[virtual-signal=signal-check]" },
+            { signals: makeSignals({ "signal-red": 1 }), active: false, sectionName: "stop[virtual-signal=signal-red]" },
+        ]);
+        //building
+        block.push(f.deciderCombinator(ii.next(), cc.px(1), cc.y, Dir.north, deciderFrameCount(framesCount)));
+        wires.push([ii.i, Wire.greenIn, ii.i, Wire.greenOut]);
+        wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenOut]);
+        wires.push([ii.i, Wire.redIn, ii.look(1), Wire.redIn]);
+        ii.addPairMember("main clock", ii.i);
+        block.push(f.deciderCombinator(ii.next(), cc.px(1), cc.y, Dir.north, deciderReset()));
+        wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenOut]);
+        wires.push([ii.i, Wire.redIn, ii.look(2), Wire.redIn]);
+        block.push(f.deciderCombinator(ii.next(), cc.px(1), cc.y, Dir.north, deciderFrameLenght(tpf)));
+        wires.push([ii.i, Wire.greenIn, ii.i, Wire.greenOut]);
+        wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenIn]);
+        block.push(f.constantCombinator(ii.next(), cc.px(1), cc.dy(1), Dir.south, sections, { playerDescription: "Media control" }));
         return { entities: block, wires: wires };
     }
-    makeFrames(ii, cc, frames) {
+    makeFrames(ii, cc, frames, isItLastRow, isItFirstRow) {
         let block = [];
         let wires = [];
         function deciderFrameSelector(frame) {
@@ -79,7 +206,7 @@ export default class tight3to4Method extends Method {
                     {
                         first_signal: {
                             type: "virtual",
-                            name: "signal-stack-size"
+                            name: "signal-green"
                         },
                         constant: frame,
                         comparator: "="
@@ -100,11 +227,12 @@ export default class tight3to4Method extends Method {
             };
         }
         ;
-        //buildings
+        //building
         cc.dx(-frames.length * 3);
         ii.shift(-1);
         for (let index = 0; index < frames.length; index++) {
             const itIsLastFrame = index >= frames.length - 1;
+            // console.log("test22-makeSignalsConstantCombinator", f.constantCombinator(ii.next(), cc.px(1), cc.y, Dir.east, makeSignals(frames[index])));
             block.push(f.constantCombinator(ii.next(), cc.px(1), cc.y, Dir.east, makeSignals(frames[index])));
             wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenIn]);
             block.push(f.deciderCombinator(ii.next(), cc.px(2), cc.y, Dir.east, deciderFrameSelector(index)));
@@ -114,6 +242,12 @@ export default class tight3to4Method extends Method {
             }
             else {
                 ii.addPairMember("frame decider combinator", ii.i); // вертикальный перенос сигнала кадра
+                if (!isItFirstRow) {
+                    ii.addPairMember("frame decider combinator", ii.i); // повторяем чтобы ну... короче блин,, да
+                }
+                if (isItLastRow) {
+                    ii.addPairMember("main clock", ii.i);
+                }
                 wires.push([ii.i, Wire.greenOut, ii.look(1), Wire.greenIn]);
             }
         }
@@ -231,7 +365,6 @@ export default class tight3to4Method extends Method {
             rows: [],
             height: gifData.height
         };
-        console.log("gifData", gifData);
         const rowCount = gifData.height;
         const rowLenght = gifData.width;
         for (let y = 0; y < rowCount; y++) {
@@ -255,10 +388,8 @@ export default class tight3to4Method extends Method {
                         pixelAdapter(frameRow[x] ?? 0),
                     ];
                     const packetSignals = this.packPixels(pixels);
-                    // console.log("allSignals", allSignals);
                     for (let i = 0; i < 3; i++) {
                         const signalNum = currentPixel + i;
-                        console.log("signalNum", signalNum);
                         frameSignals[allSignals[signalNum]] = packetSignals[i];
                     }
                     currentPixel += 3;
@@ -266,7 +397,6 @@ export default class tight3to4Method extends Method {
                 preparedGifData.rows[y].frames.push(frameSignals);
             }
         }
-        console.log("preparedGifData", preparedGifData);
         return preparedGifData;
     }
     packPixels(pixels) {
@@ -287,24 +417,5 @@ export default class tight3to4Method extends Method {
         }
         return [number1, number2, number3];
     }
-}
-function makeSignals(signals = {}) {
-    const signalJsons = [];
-    let i = 1;
-    return [
-        {
-            index: 1,
-            filters: Object.keys(signals).map(key => {
-                return {
-                    index: i++,
-                    type: "virtual",
-                    quality: "normal",
-                    comparator: "=",
-                    name: key,
-                    count: signals[key]
-                };
-            })
-        }
-    ];
 }
 //# sourceMappingURL=tight3to4Method.js.map

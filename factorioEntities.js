@@ -1,3 +1,4 @@
+import { getTypeByName } from "./allSignals.js";
 function sizeAdapter(x, y, w, h, direction) {
     if (direction == Dir.north || direction == Dir.south) {
         x = x + w / 2;
@@ -32,15 +33,15 @@ export class factorioEntities {
             control_behavior: {
                 use_colors: true,
                 red_signal: {
-                    type: "virtual",
+                    ...(getTypeByName(names.rName) && { type: "virtual" }), // это конечно нормально бы оптимизировать. лишний поиск по сигналам. индекс можно пробрасывать вместе с именем.
                     name: names.rName
                 },
                 green_signal: {
-                    type: "virtual",
+                    ...(getTypeByName(names.gName) && { type: "virtual" }),
                     name: names.gName
                 },
                 blue_signal: {
-                    type: "virtual",
+                    ...(getTypeByName(names.bName) && { type: "virtual" }),
                     name: names.bName
                 },
                 color_mode: 1
@@ -48,7 +49,7 @@ export class factorioEntities {
             always_on: true
         };
     }
-    static arithmeticCombinator(index, x, y, direction, arithmetic_conditions) {
+    static arithmeticCombinator(index, x, y, direction, arithmetic_conditions, options) {
         return {
             entity_number: index,
             name: "arithmetic-combinator",
@@ -56,10 +57,11 @@ export class factorioEntities {
             direction: direction,
             control_behavior: {
                 arithmetic_conditions: arithmetic_conditions
-            }
+            },
+            ...(options?.playerDescription && { player_description: options.playerDescription })
         };
     }
-    static deciderCombinator(index, x, y, direction, decider_conditions) {
+    static deciderCombinator(index, x, y, direction, decider_conditions, options) {
         return {
             entity_number: index,
             name: "decider-combinator",
@@ -67,20 +69,18 @@ export class factorioEntities {
             direction: direction,
             control_behavior: {
                 decider_conditions: decider_conditions
-            }
+            },
+            ...(options?.playerDescription && { player_description: options.playerDescription })
         };
     }
-    static constantCombinator(index, x, y, direction, signalSections) {
+    static constantCombinator(index, x, y, direction, signalsOrSections, options) {
         return {
             entity_number: index,
             name: "constant-combinator",
             position: sizeAdapter(x, y, 1, 1, direction),
             direction: direction,
-            control_behavior: {
-                sections: {
-                    sections: signalSections
-                }
-            }
+            control_behavior: { sections: { sections: signalsOrSections } },
+            ...(options?.playerDescription && { player_description: options.playerDescription })
         };
     }
 }
@@ -137,10 +137,15 @@ export class CoordinateCursor {
         this._y += number;
         return old;
     }
-    dxy(number) {
-        this._x += number;
-        this._y += number;
-        return [this._x, this._y];
+    dxy(xy) {
+        this._x += xy.x;
+        this._y += xy.y;
+        return { x: this._x, y: this._y };
+    }
+    dxycc(xy) {
+        this._x += xy.x;
+        this._y += xy.y;
+        return this;
     }
 }
 export class indexIterator {
@@ -170,13 +175,16 @@ export class indexIterator {
                 pairs: [],
                 incompletePairMember: value
             };
+            return;
         }
         if (this.pairs[key].incompletePairMember) { // в чётный раз
             this.pairs[key].pairs.push([this.pairs[key].incompletePairMember, value]);
             this.pairs[key].incompletePairMember = null;
+            return;
         }
         if (!this.pairs[key].incompletePairMember) { // в нечётный раз
             this.pairs[key].incompletePairMember = value;
+            return;
         }
     }
     getpairs(key) {
@@ -193,10 +201,14 @@ export class Blueprint {
         this.icons = icons ?? [];
     }
     addEntities(entities) {
-        this.entities.push(...entities);
+        for (const entitie of entities) {
+            this.entities.push(entitie);
+        }
     }
-    addWires(wire) {
-        this.wires.push(...wire);
+    addWires(wires) {
+        for (const wire of wires) {
+            this.wires.push(wire);
+        }
     }
     addEntitiesAndWires(data) {
         this.addEntities(data.entities);
@@ -216,5 +228,38 @@ export class Blueprint {
     json() {
         return JSON.stringify(this.struct);
     }
+}
+export function makeSignals(signals = {}) {
+    const signalJsons = [];
+    let i = 1;
+    return [
+        {
+            index: 1,
+            filters: Object.keys(signals).map(key => {
+                const type = getTypeByName(key);
+                return {
+                    index: i++,
+                    ...(type && { type }),
+                    quality: "normal",
+                    comparator: "=",
+                    name: key,
+                    count: signals[key]
+                };
+            })
+        }
+    ];
+}
+export function makeSignalSections(sectionsData) {
+    const sections = [];
+    let i = 1;
+    sectionsData.forEach(({ sectionName, signals, active }) => {
+        sections.push({
+            index: i++,
+            ...(sectionName && { group: sectionName }),
+            filters: makeSignals(signals),
+            active: active ?? true
+        });
+    });
+    return sections;
 }
 //# sourceMappingURL=factorioEntities.js.map
