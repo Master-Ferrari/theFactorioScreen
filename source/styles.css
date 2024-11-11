@@ -360,6 +360,18 @@ canvas {
     image-rendering: pixelated;
 }
 
+.method-canvas {
+    width: 330px;
+    height: 330px;
+    
+}
+
+.method-canvas-container{
+    display: flex;
+    align-items: center;
+    justify-self: flex-start;
+}
+
 #textOutput {
     flex-grow: 1;
     padding: 10px;

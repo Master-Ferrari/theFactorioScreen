@@ -49,24 +49,24 @@
                 <input type="file" id="fileInput" accept=".gif,.png" style="display: none;">
 
                 <div id="mainControls">
-                    <label class="control-title" for="frameInput">frame index</label>
+                    <label class="control-title" for="frameInput" id="frameLabel">frame index</label>
                     <input type="number" class="inputs" id="frameInput" min="0" value="0">
 
-                    <label class="control-title" for="frameCountInput">frame count</label>
+                    <label class="control-title" for="frameCountInput" id="frameCountLabel">frame count</label>
                     <input type="number" class="inputs" id="frameCountInput" min="1" value="1">
 
-                    <label class="control-title" for="autoPlayCheckbox">autoplay</label>
-                    <div class="control-toggle inputs">
+                    <label class="control-title" for="autoPlayCheckbox" id="autoPlayLabel">autoplay</label>
+                    <div class="control-toggle inputs" id="autoPlayContainer">
                         <label class="toggle-switch">
                             <input type="checkbox" id="autoPlayCheckbox" checked>
                             <span class="slider"></span>
                         </label>
                     </div>
 
-                    <label class="control-title" for="frameRateInput">
+                    <label class="control-title" for="frameRateInput" id="frameRateLabel">
                         <span id="frameRateDisplay" style="white-space: pre;">_4 ticks/frame (FPS 15)</span>
                     </label>
-                    <div class="inputs" style="width: 100%;">
+                    <div class="inputs" style="width: 100%;" id="frameRateContainer">
                         <input type="range" id="frameRateInput" class="range" min="1" max="60" value="4">
 
                     </div>
@@ -182,7 +182,8 @@
 
             <div class="island">
                 <textarea id="textOutput" readonly></textarea>
-                <div id="copyButton" class="control-margin-top-2 custom-button script-button hidden" style="margin-top: 10px; margin-bottom: 0px;">copy to clipboard</div>
+                <div id="copyButton" class="control-margin-top-2 custom-button script-button hidden"
+                    style="margin-top: 10px; margin-bottom: 0px;">copy to clipboard</div>
             </div>
         </div>
 
@@ -199,7 +200,7 @@
         gtag('js', new Date());
         gtag('config', 'G-FZPXCZ7E9S');
     </script>
-    
+
 </body>
 
 </html>

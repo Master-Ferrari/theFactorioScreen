@@ -20,6 +20,7 @@ export default class CanvasManager {
         this.frameRatio = 1;
         this.tpf = 4;
         this.fps = 15;
+        this.method = null;
         this.canvas = document.getElementById("canvas");
         this.ctx = this.canvas.getContext("2d");
         this.ctx.imageSmoothingEnabled = false;
@@ -51,11 +52,14 @@ export default class CanvasManager {
     setOnLoadCallback(callback) {
         this.onLoadCallback = callback;
     }
-    static init() {
+    static getInstance() {
         if (!CanvasManager.instance) {
             CanvasManager.instance = new CanvasManager();
         }
         return CanvasManager.instance;
+    }
+    changeMethod(newMethod) {
+        this.method = newMethod;
     }
     loadPng(arrayBuffer) {
         this.myPng = this.parsePng();
@@ -571,6 +575,7 @@ export default class CanvasManager {
         else {
             alert('Файл не загружен или содержит ошибки.');
         }
+        this.method?.update();
     }
     rotate(angle) {
         angle = this.verticalScale == 1 ? angle : -angle; // так надо

@@ -1,14 +1,18 @@
-import jsonToBlueprint from "./blueprintEncoder.js";
-import tight3to4Method from "./tight3to4Method.js";
 // Обработчики событий
 const fileInput = document.getElementById("fileInput");
 const fileNameLabel = document.getElementById("fileNameLabel");
 const frameInput = document.getElementById("frameInput");
+const frameLabel = document.getElementById("frameLabel");
 const widthInput = document.getElementById("widthInput");
 const heightInput = document.getElementById("heightInput");
 const frameCountInput = document.getElementById("frameCountInput");
+const frameCountLabel = document.getElementById("frameCountLabel");
+const autoPlayContainer = document.getElementById("autoPlayContainer");
 const autoPlayCheckbox = document.getElementById("autoPlayCheckbox");
+const autoPlayLabel = document.getElementById("autoPlayLabel");
 const frameRateInput = document.getElementById("frameRateInput");
+const frameRateContainer = document.getElementById("frameRateContainer");
+const frameRateLabel = document.getElementById("frameRateLabel");
 const frameRateDisplay = document.getElementById("frameRateDisplay");
 const preserveAspectCheckbox = document.getElementById("preserveAspectCheckbox");
 const mirrorCanvasButton = document.getElementById("mirrorCanvas");
@@ -49,6 +53,22 @@ export default class InputHandler {
                 self.canvasManager.loader({ mode, arrayBuffer });
             };
             reader.readAsArrayBuffer(file);
+            const gifInputs = [
+                frameCountInput,
+                frameCountLabel,
+                frameInput,
+                frameLabel,
+                frameRateContainer,
+                frameRateLabel,
+                autoPlayContainer,
+                autoPlayLabel,
+            ];
+            if (mode === 'gif') {
+                gifInputs.forEach(element => element.classList.remove('hidden'));
+            }
+            else if (mode === 'png') {
+                gifInputs.forEach(element => element.classList.add('hidden'));
+            }
         });
         // Кнопка зеркального отображения
         mirrorCanvasButton.addEventListener('click', function () {
@@ -102,22 +122,22 @@ export default class InputHandler {
                 copyButton.innerText = "copy to clipboard";
             }, 1000);
         });
-        testButton?.addEventListener('click', async function () {
-            const textOutput = (() => {
-                const blueprintOptions = document.getElementById('blueprintOptions');
-                function onBlueprint(text) {
-                }
-                const method = new tight3to4Method(blueprintOptions, onBlueprint);
-                method.init();
-                const json = method.makeJson();
-                return jsonToBlueprint(json);
-            })();
-            await navigator.clipboard.writeText(textOutput);
-            testButton.innerText = "copied!";
-            setTimeout(() => {
-                testButton.innerText = "test";
-            }, 1000);
-        });
+        // testButton?.addEventListener('click', async function () {
+        //     const textOutput = (() => {
+        //         const blueprintOptions = document.getElementById('blueprintOptions') as HTMLButtonElement;
+        //         function onBlueprint(text: string) {
+        //         }
+        //         const method = new tight3to4Method(blueprintOptions, onBlueprint);
+        //         method.init();
+        //         const json = method.makeJson();
+        //         return jsonToBlueprint(json);
+        //     })();
+        //     await navigator.clipboard.writeText(textOutput);
+        //     testButton.innerText = "copied!";
+        //     setTimeout(() => {
+        //         testButton.innerText = "test";
+        //     }, 1000);
+        // });
         // Обработчик чекбокса автопроигрывания
         autoPlayCheckbox.addEventListener('change', function () {
             self.canvasManager.toggleAutoPlay();

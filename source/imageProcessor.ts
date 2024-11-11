@@ -1,4 +1,5 @@
 import { parse } from "path";
+import { Method } from "./method";
 
 type Bitmap = number[][];
 type FrameBitmap = { width: number, height: number, bitmap: Bitmap };
@@ -105,6 +106,8 @@ export default class CanvasManager {
     private preserveAspectCheckbox: HTMLInputElement;
     private alertBox: HTMLElement;
 
+    private method: Method | null = null;
+
     get mode() { return this._mode; }
 
     private constructor() {
@@ -146,11 +149,15 @@ export default class CanvasManager {
         this.onLoadCallback = callback;
     }
 
-    public static init(): CanvasManager {
+    public static getInstance(): CanvasManager {
         if (!CanvasManager.instance) {
             CanvasManager.instance = new CanvasManager();
         }
         return CanvasManager.instance;
+    }
+
+    changeMethod(newMethod: Method) {
+        this.method = newMethod;
     }
 
     private loadPng(arrayBuffer: ArrayBuffer): void {
@@ -736,6 +743,9 @@ export default class CanvasManager {
         } else {
             alert('Файл не загружен или содержит ошибки.');
         }
+
+
+        this.method?.update();
     }
 
 
@@ -818,7 +828,7 @@ export default class CanvasManager {
         for (let i = 0; i < actualFrameArray.length; i++) {
             bitmaps.push(this.getBitmap(actualFrameArray[i]));
         }
-        
+
         return {
             width: this.ctx.canvas.width,
             height: this.ctx.canvas.height,

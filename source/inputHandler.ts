@@ -7,11 +7,17 @@ import tight3to4Method from "./tight3to4Method.js";
 const fileInput = document.getElementById("fileInput") as HTMLInputElement;
 const fileNameLabel = document.getElementById("fileNameLabel") as HTMLInputElement;
 const frameInput = document.getElementById("frameInput") as HTMLInputElement;
+const frameLabel = document.getElementById("frameLabel") as HTMLInputElement;
 const widthInput = document.getElementById("widthInput") as HTMLInputElement;
 const heightInput = document.getElementById("heightInput") as HTMLInputElement;
 const frameCountInput = document.getElementById("frameCountInput") as HTMLInputElement;
+const frameCountLabel = document.getElementById("frameCountLabel") as HTMLInputElement;
+const autoPlayContainer = document.getElementById("autoPlayContainer") as HTMLInputElement;
 const autoPlayCheckbox = document.getElementById("autoPlayCheckbox") as HTMLInputElement;
+const autoPlayLabel = document.getElementById("autoPlayLabel") as HTMLInputElement;
 const frameRateInput = document.getElementById("frameRateInput") as HTMLInputElement;
+const frameRateContainer = document.getElementById("frameRateContainer") as HTMLInputElement;
+const frameRateLabel = document.getElementById("frameRateLabel") as HTMLInputElement;
 const frameRateDisplay = document.getElementById("frameRateDisplay") as HTMLElement;
 const preserveAspectCheckbox = document.getElementById("preserveAspectCheckbox") as HTMLInputElement;
 const mirrorCanvasButton = document.getElementById("mirrorCanvas") as HTMLButtonElement;
@@ -67,6 +73,26 @@ export default class InputHandler {
                 self.canvasManager.loader({ mode, arrayBuffer });
             };
             reader.readAsArrayBuffer(file);
+
+
+            const gifInputs = [
+                frameCountInput,
+                frameCountLabel,
+                frameInput,
+                frameLabel,
+                frameRateContainer,
+                frameRateLabel,
+                autoPlayContainer,
+                autoPlayLabel,
+            ];
+            
+            if (mode === 'gif') {
+                gifInputs.forEach(element => element.classList.remove('hidden'));
+            } else if (mode === 'png') {
+                gifInputs.forEach(element => element.classList.add('hidden'));
+            }
+            
+
         });
 
         // Кнопка зеркального отображения
@@ -132,25 +158,25 @@ export default class InputHandler {
         });
 
 
-        testButton?.addEventListener('click', async function () {
+        // testButton?.addEventListener('click', async function () {
 
 
-            const textOutput = (() => {
-                const blueprintOptions = document.getElementById('blueprintOptions') as HTMLButtonElement;
-                function onBlueprint(text: string) {
-                }
-                const method = new tight3to4Method(blueprintOptions, onBlueprint);
-                method.init();
-                const json = method.makeJson();
-                return jsonToBlueprint(json);
-            })();
+        //     const textOutput = (() => {
+        //         const blueprintOptions = document.getElementById('blueprintOptions') as HTMLButtonElement;
+        //         function onBlueprint(text: string) {
+        //         }
+        //         const method = new tight3to4Method(blueprintOptions, onBlueprint);
+        //         method.init();
+        //         const json = method.makeJson();
+        //         return jsonToBlueprint(json);
+        //     })();
 
-            await navigator.clipboard.writeText(textOutput);
-            testButton.innerText = "copied!";
-            setTimeout(() => {
-                testButton.innerText = "test";
-            }, 1000);
-        });
+        //     await navigator.clipboard.writeText(textOutput);
+        //     testButton.innerText = "copied!";
+        //     setTimeout(() => {
+        //         testButton.innerText = "test";
+        //     }, 1000);
+        // });
 
         // Обработчик чекбокса автопроигрывания
         autoPlayCheckbox.addEventListener('change', function () {

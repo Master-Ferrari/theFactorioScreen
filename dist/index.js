@@ -5,6 +5,7 @@ import getMethods from "./methodsManager.js";
 import { Dropdown } from "./dropdown.js";
 import CanvasManager from "./imageProcessor.js";
 import InputHandler from "./inputHandler.js";
+// нужно выкинуть отсюда всякое в инпут хэндлер
 const mainControls = document.getElementById('mainControls');
 const canvasControls = document.getElementById('canvasControls');
 const copyButton = document.getElementById('copyButton');
@@ -24,6 +25,7 @@ const onMethodSelect = (index) => {
         return;
     }
     method.init();
+    canvasManager?.changeMethod(method);
 };
 const modeDropdown = new Dropdown({
     dropdownElement: methodSelect,
@@ -44,7 +46,7 @@ function visability(hide = false) {
         copyButton.classList.remove('hidden');
     }
 }
-const canvasManager = CanvasManager.init();
+const canvasManager = CanvasManager.getInstance();
 function onLoad() {
     modeDropdown.updateOptions(methods.getList(canvasManager.mode));
     visability(false);

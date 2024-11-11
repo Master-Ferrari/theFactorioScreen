@@ -4,6 +4,7 @@ import { factorioEntities as f, Blueprint, CoordinateCursor, Dir, Entities, enti
 import { group } from "console";
 import { allSignals, getTypeByName } from "./allSignals.js";
 import { constants } from "buffer";
+import { Tight3to4CanvasManager } from "./tight3to4Canvas.js";
 
 
 type pixel = { r: number, g: number, b: number };
@@ -15,14 +16,24 @@ type _frameSignals = Signals;
 type _row = { frames: _frameSignals[], width: number };
 type _gifData = { rows: _row[], height: number };
 
-const canvasManager = CanvasManager.init();
+
 export default class tight3to4Method extends Method {
     readonly name = "tight3to4";
     readonly value = "tight video player";
     readonly supportedModes: Mode[] = ["gif"];
 
+    private canvasManager: CanvasManager;
+
+    
+    private tight3to4CanvasManager: Tight3to4CanvasManager | null = null;
+
+
     constructor(optionsContainer: HTMLElement, blueprintGetter: blueprintGetter) {
         super(optionsContainer, blueprintGetter);
+
+
+        this.canvasManager = CanvasManager.getInstance();
+
     }
 
     init(): void {
@@ -31,6 +42,32 @@ export default class tight3to4Method extends Method {
         methodContainer.style.height = '100%';
         methodContainer.style.flexDirection = 'column';
         methodContainer.style.justifyContent = 'flex-end';
+
+        // Создаем контейнер для canvas и задаем стили
+        const canvasContainer = document.createElement('div');
+        canvasContainer.style.display = 'flex';
+        canvasContainer.style.alignItems = 'center';
+
+        // Создаем элемент canvas и задаем его атрибуты
+        const canvas = document.createElement('canvas');
+        canvas.id = 'canvas';
+
+        // Добавляем canvas в canvasContainer
+        canvasContainer.appendChild(canvas);
+
+        // Добавляем canvasContainer в основной контейнер
+        methodContainer.appendChild(canvasContainer);
+
+        const mainCanvas = document.getElementById("canvas") as HTMLCanvasElement;
+
+        // Пример использования
+        this.tight3to4CanvasManager = Tight3to4CanvasManager.getInstance(canvas, mainCanvas);
+
+        // Теперь можно использовать canvasManager для работы с canvas
+        this.tight3to4CanvasManager.copyFromMain();
+        this.tight3to4CanvasManager.drawRectangle(10, 10, 10, 10);
+        this.tight3to4CanvasManager.drawText("Hello, Canvas!", 50, 50);
+
 
         const button = document.createElement('div');
         button.classList.add('control-margin-top-2', 'custom-button');
@@ -47,10 +84,19 @@ export default class tight3to4Method extends Method {
 
         this.optionsContainer.appendChild(methodContainer);
     }
+
+    destroy(): void {
+        
+    }
+
+    update(): void {
+        this.tight3to4CanvasManager?.update();
+    }
+
     //#region makeJson
     makeJson(): string {
 
-        const gifData = canvasManager.getGifBitmap();
+        const gifData = this.canvasManager.getGifBitmap();
         const preparedGifData = this.gifDataTopreparedGifData(gifData);
 
 

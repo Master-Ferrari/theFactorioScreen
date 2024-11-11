@@ -1,7 +1,7 @@
 import { Method, blueprintGetter } from "./method.js";
 import CanvasManager, { Mode } from "./imageProcessor.js";
 import {Blueprint, factorioEntities as f} from "./factorioEntities.js";
-const canvasManager = CanvasManager.init();
+const canvasManager = CanvasManager.getInstance();
 
 export default class ImageMethod extends Method {
     readonly name = "image";
@@ -54,4 +54,7 @@ export default class ImageMethod extends Method {
 
         return blueprint.json();
     }
+
+    update(): void {}
+    destroy(): void {}
 }

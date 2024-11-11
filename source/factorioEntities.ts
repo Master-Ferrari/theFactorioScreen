@@ -337,7 +337,7 @@ export function makeSignalSections(sectionsData: { signals: Signals, active?: bo
         sections.push({
             index: i++,
             ...(sectionName && { group: sectionName }),
-            filters: makeSignals(signals),
+            filters: signals.filters,
             active: active ?? true
         });
     });
