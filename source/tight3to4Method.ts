@@ -1,5 +1,5 @@
 import { Method, blueprintGetter } from "./method.js";
-import CanvasManager, { GifBitmap, Mode } from "./imageProcessor.js";
+import ImageProcessor, { GifBitmap, Mode } from "./imageProcessor.js";
 import { factorioEntities as f, Blueprint, CoordinateCursor, Dir, Entities, entitiesAndWires, indexIterator, Wire, Wires, RgbSignalsNames, Signals, makeSignals, makeSignalSections } from "./factorioEntities.js";
 import { group } from "console";
 import { allSignals, getTypeByName } from "./allSignals.js";
@@ -22,7 +22,7 @@ export default class tight3to4Method extends Method {
     readonly value = "tight video player";
     readonly supportedModes: Mode[] = ["gif"];
 
-    private canvasManager: CanvasManager;
+    private canvasManager: ImageProcessor;
 
     
     private tight3to4CanvasManager: Tight3to4CanvasManager | null = null;
@@ -32,7 +32,7 @@ export default class tight3to4Method extends Method {
         super(optionsContainer, blueprintGetter);
 
 
-        this.canvasManager = CanvasManager.getInstance();
+        this.canvasManager = ImageProcessor.getInstance();
 
     }
 

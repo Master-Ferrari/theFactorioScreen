@@ -1,4 +1,4 @@
-export default class CanvasManager {
+export default class ImageProcessor {
     get mode() { return this._mode; }
     constructor() {
         this._mode = null;
@@ -53,10 +53,10 @@ export default class CanvasManager {
         this.onLoadCallback = callback;
     }
     static getInstance() {
-        if (!CanvasManager.instance) {
-            CanvasManager.instance = new CanvasManager();
+        if (!ImageProcessor.instance) {
+            ImageProcessor.instance = new ImageProcessor();
         }
-        return CanvasManager.instance;
+        return ImageProcessor.instance;
     }
     changeMethod(newMethod) {
         this.method = newMethod;

@@ -1,6 +1,6 @@
 import jsonToBlueprint from "./blueprintEncoder.js";
 import { DropdownOption, Dropdown } from "./dropdown.js";
-import CanvasManager from "./imageProcessor.js";
+import ImageProcessor from "./imageProcessor.js";
 import tight3to4Method from "./tight3to4Method.js";
 
 // Обработчики событий
@@ -38,8 +38,8 @@ const scaleMinusSVG = document.getElementById('scaleMinusSVG') as HTMLButtonElem
 
 
 export default class InputHandler {
-    private canvasManager: CanvasManager;
-    constructor(canvasManager: CanvasManager) {
+    private canvasManager: ImageProcessor;
+    constructor(canvasManager: ImageProcessor) {
         this.canvasManager = canvasManager;
     }
 

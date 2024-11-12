@@ -3,7 +3,7 @@ import "./themeSwitch.js";
 import "./inputHandler.js";
 import getMethods from "./methodsManager.js";
 import { Dropdown } from "./dropdown.js";
-import CanvasManager from "./imageProcessor.js";
+import ImageProcessor from "./imageProcessor.js";
 import InputHandler from "./inputHandler.js";
 
 // нужно выкинуть отсюда всякое в инпут хэндлер
@@ -52,7 +52,7 @@ function visability(hide: boolean = false) {
     }
 }
 
-const canvasManager = CanvasManager.getInstance();
+const canvasManager = ImageProcessor.getInstance();
 
 function onLoad() {
     modeDropdown.updateOptions(methods.getList(canvasManager.mode));

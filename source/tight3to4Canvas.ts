@@ -1,3 +1,5 @@
+import { canvasDrower } from "./canvasDrower";
+
 export class Tight3to4CanvasManager {
     private static instance: Tight3to4CanvasManager;
     private canvas: HTMLCanvasElement;
@@ -29,7 +31,7 @@ export class Tight3to4CanvasManager {
         this.canvas.style.height = this.ElementHeight + 'px';
         this.mainWidth = this.mainCanvas.width;
         this.mainHeight = this.mainCanvas.height;
-        
+
         const { width: targetW, height: targetH } = this.calcTargetSize(this.mainWidth, this.mainHeight);
         this.resizeCanvas(targetW, targetH);
     }
@@ -46,9 +48,9 @@ export class Tight3to4CanvasManager {
             this.canvas.height = myTargetWidth / targetRatio;
         }
 
-        
-        this.xOffset = this.canvas.width / 2 - this.mainWidth / 2;
-        this.yOffset = this.canvas.height / 2 - this.mainHeight / 2;
+
+        this.xOffset = Math.round(this.canvas.width / 2 - this.mainWidth / 2);
+        this.yOffset = Math.round(this.canvas.height / 2 - this.mainHeight / 2);
 
     }
 
@@ -98,6 +100,13 @@ export class Tight3to4CanvasManager {
             const { width: targetW, height: targetH } = this.calcTargetSize(this.mainWidth, this.mainHeight);
             this.resizeCanvas(targetW, targetH);
         }
+
+        if(!this.context) return;
+
+        const drower = new canvasDrower(this.context);
+        // drower.make(AddStripe)
+
         this.copyFromMain();
     }
 }
+

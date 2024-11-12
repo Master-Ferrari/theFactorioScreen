@@ -64,8 +64,8 @@ export type Mode = "gif" | "png" | null;
 type OnLoadCallback = (mode: Mode) => void;
 
 
-export default class CanvasManager {
-    private static instance: CanvasManager;
+export default class ImageProcessor {
+    private static instance: ImageProcessor;
 
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
@@ -149,11 +149,11 @@ export default class CanvasManager {
         this.onLoadCallback = callback;
     }
 
-    public static getInstance(): CanvasManager {
-        if (!CanvasManager.instance) {
-            CanvasManager.instance = new CanvasManager();
+    public static getInstance(): ImageProcessor {
+        if (!ImageProcessor.instance) {
+            ImageProcessor.instance = new ImageProcessor();
         }
-        return CanvasManager.instance;
+        return ImageProcessor.instance;
     }
 
     changeMethod(newMethod: Method) {
