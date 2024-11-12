@@ -85,13 +85,13 @@ export default class InputHandler {
                 autoPlayContainer,
                 autoPlayLabel,
             ];
-            
+
             if (mode === 'gif') {
                 gifInputs.forEach(element => element.classList.remove('hidden'));
             } else if (mode === 'png') {
                 gifInputs.forEach(element => element.classList.add('hidden'));
             }
-            
+
 
         });
 
@@ -150,8 +150,12 @@ export default class InputHandler {
 
         copyButton.addEventListener('click', async function () {
             const textOutput = document.getElementById('textOutput') as HTMLTextAreaElement;
-            await navigator.clipboard.writeText(textOutput.value);
-            copyButton.innerText = "copied!";
+            if (!textOutput || textOutput.value == "") {
+                copyButton.innerText = "it is nothing to copy...";
+            } else {
+                await navigator.clipboard.writeText(textOutput.value);
+                copyButton.innerText = "copied!";
+            }
             setTimeout(() => {
                 copyButton.innerText = "copy to clipboard";
             }, 1000);

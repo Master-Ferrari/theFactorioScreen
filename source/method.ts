@@ -3,6 +3,7 @@ import { Mode } from "./imageProcessor.js";
 import jsonToBlueprint from "./blueprintEncoder.js";
 
 export type blueprintGetter = (json: any) => void;
+export type updateOptions = {frameCount: number, currentFrame: number, mode: Mode};
 
 export abstract class Method {
     abstract readonly name: string;
@@ -20,7 +21,7 @@ export abstract class Method {
 
     abstract makeJson(): string;
 
-    abstract update(): void;
+    abstract update(options: updateOptions): void;
 
     abstract destroy(): void;
 

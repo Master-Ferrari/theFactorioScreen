@@ -745,7 +745,11 @@ export default class ImageProcessor {
         }
 
 
-        this.method?.update();
+        this.method?.update({
+            frameCount: parseInt(this.frameCountInput.value, 10),
+            currentFrame: this.currentLocalFrame,
+            mode: this.mode
+        });
     }
 
 

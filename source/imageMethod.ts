@@ -1,6 +1,6 @@
-import { Method, blueprintGetter } from "./method.js";
+import { Method, blueprintGetter, updateOptions } from "./method.js";
 import ImageProcessor, { Mode } from "./imageProcessor.js";
-import {Blueprint, factorioEntities as f} from "./factorioEntities.js";
+import { Blueprint, factorioEntities as f } from "./factorioEntities.js";
 const canvasManager = ImageProcessor.getInstance();
 
 export default class ImageMethod extends Method {
@@ -8,11 +8,11 @@ export default class ImageMethod extends Method {
     readonly value = "one frame image";
     readonly supportedModes: Mode[] = ["png", "gif"];
 
+    private infoTextLabel: HTMLElement;
+
     constructor(optionsContainer: HTMLElement, blueprintGetter: blueprintGetter) {
         super(optionsContainer, blueprintGetter);
-    }
 
-    init(): void {
         const methodContainer = document.createElement('div');
         methodContainer.style.display = 'flex';
         methodContainer.style.height = '100%';
@@ -22,6 +22,14 @@ export default class ImageMethod extends Method {
         const button = document.createElement('div');
         button.classList.add('control-margin-top-2', 'custom-button');
         button.textContent = "generate blueprint!";
+
+
+        this.infoTextLabel = document.createElement('div');
+        this.infoTextLabel.classList.add('info-text');
+        this.infoTextLabel.textContent = "";
+
+
+        methodContainer.appendChild(this.infoTextLabel);
 
         methodContainer.appendChild(button);
 
@@ -33,10 +41,14 @@ export default class ImageMethod extends Method {
         }
 
         this.optionsContainer.appendChild(methodContainer);
+
+    }
+
+    init(): void {
     }
 
     makeJson(): string {
-        
+
         const currentFrame = parseInt((document.getElementById('frameInput') as HTMLInputElement).value, 10);
         let frameData = canvasManager.getFrameBitmap(currentFrame);
 
@@ -55,6 +67,13 @@ export default class ImageMethod extends Method {
         return blueprint.json();
     }
 
-    update(): void {}
-    destroy(): void {}
+    update(options: updateOptions): void {
+        if (options.mode == "gif") {
+            this.infoTextLabel!.innerText = "selected frame: " + options.currentFrame.toString();
+        } else {
+            this.infoTextLabel!.innerText = "";
+        }
+    }
+
+    destroy(): void { }
 }

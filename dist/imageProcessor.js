@@ -575,7 +575,11 @@ export default class ImageProcessor {
         else {
             alert('Файл не загружен или содержит ошибки.');
         }
-        this.method?.update();
+        this.method?.update({
+            frameCount: parseInt(this.frameCountInput.value, 10),
+            currentFrame: this.currentLocalFrame,
+            mode: this.mode
+        });
     }
     rotate(angle) {
         angle = this.verticalScale == 1 ? angle : -angle; // так надо
