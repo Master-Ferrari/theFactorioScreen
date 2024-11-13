@@ -112,7 +112,7 @@ export default class ImageProcessor {
 
     private constructor() {
         this.canvas = document.getElementById("canvas") as HTMLCanvasElement;
-        this.ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
+        this.ctx = this.canvas.getContext("2d", { willReadFrequently: true }) as CanvasRenderingContext2D;
 
         this.ctx.imageSmoothingEnabled = false;
         (this.ctx as any).mozImageSmoothingEnabled = false;
@@ -192,7 +192,7 @@ export default class ImageProcessor {
             self.canvas.style.height = canvasHeight + 'px';
 
             if (self.myPng.frame?.image) {
-                const ctx = self.canvas.getContext("2d")!;
+                const ctx = self.canvas.getContext("2d", { willReadFrequently: true })!;
                 ctx.drawImage(self.myPng.frame.image, 0, 0, imageWidth, imageHeight);
             }
             self.onLoadCallback?.(self._mode);
@@ -221,7 +221,7 @@ export default class ImageProcessor {
                     const canvas = document.createElement('canvas') as CanvasWithCtx;
                     canvas.width = this.width;
                     canvas.height = this.height;
-                    const ctx = canvas.getContext("2d")!;
+                    const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
                     ctx.drawImage(img, 0, 0);
                     canvas.ctx = ctx; // Привязываем контекст к canvas
 
@@ -534,7 +534,7 @@ export default class ImageProcessor {
             canvas.width = gif.width;
             canvas.height = gif.height;
 
-            canvas.ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+            canvas.ctx = canvas.getContext("2d", { willReadFrequently: true }) as CanvasRenderingContext2D;
 
             frame.image = canvas;
 

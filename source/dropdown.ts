@@ -4,7 +4,7 @@ export type DropdownOption = { // стило бы сделат словарём
     isActive: boolean;
 };
 
-type OptionSelectCallback = (index: number | null) => void;
+export type OptionSelectCallback = (index: number | null) => void;
 
 
 type options = {

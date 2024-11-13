@@ -1,7 +1,7 @@
 import { CanvasDrawer } from "./canvasDrawer.js";
 
 export class Tight3to4CanvasManager {
-    private static instance: Tight3to4CanvasManager;
+    private static instance?: Tight3to4CanvasManager;
     private canvas: HTMLCanvasElement;
     private context: CanvasRenderingContext2D | null;
 
@@ -11,8 +11,8 @@ export class Tight3to4CanvasManager {
     private intermediateCanvas: HTMLCanvasElement;
     private intermediateContext: CanvasRenderingContext2D;
 
-    private readonly ElementWidth = 330;
-    private readonly ElementHeight = 200;
+    private readonly ElementWidth = 406;
+    private readonly ElementHeight = 150;
 
     private mainWidth = 1;
     private mainHeight = 1;
@@ -23,14 +23,14 @@ export class Tight3to4CanvasManager {
 
     private constructor(canvas: HTMLCanvasElement, mainCanvas: HTMLCanvasElement) {
         this.canvas = canvas;
-        this.context = canvas.getContext("2d");
+        this.context = canvas.getContext("2d", { willReadFrequently: true });
         this.mainCanvas = mainCanvas;
-        this.mainContext = mainCanvas.getContext("2d");
+        this.mainContext = mainCanvas.getContext("2d", { willReadFrequently: true });
         this.ElementInit();
 
 
-        this.intermediateCanvas = document.createElement('canvas');
-        this.intermediateContext = this.intermediateCanvas.getContext('2d')!;
+        this.intermediateCanvas = document.createElement("canvas");
+        this.intermediateContext = this.intermediateCanvas.getContext("2d", { willReadFrequently: true })!;
 
         this.intermediateCanvas.width = this.mainCanvas.width;
         this.intermediateCanvas.height = this.mainCanvas.height;
@@ -79,6 +79,12 @@ export class Tight3to4CanvasManager {
         return Tight3to4CanvasManager.instance;
     }
 
+    public static destroyInstance() {
+        if (Tight3to4CanvasManager.instance) {
+            delete Tight3to4CanvasManager.instance;
+        }
+    }
+
 
     update(frameCount: number): string {
         if (!this.context) return "";
@@ -88,8 +94,8 @@ export class Tight3to4CanvasManager {
         const drawer = new CanvasDrawer(this.intermediateContext); // рисуем
         drawer.addStripe({ width: 26, direction: "left", color: "rgb(150, 150, 150)" }); //декодер
         // drawer.addStripe({ width: 1, direction: "left", color: "rgba(0, 0, 0, 0)" }); // хз
-        drawer.addStripe({ width: 3*frameCount, direction: "left", color: "rgb(170, 170, 170)" }); // кадры
-        drawer.addStripe({ width: 2, direction: "bottom", color: "rgb(120, 220, 120)", lenght: 4, offsetFrom: "end", offset: this.mainCanvas.width+26 }); // осцилятор
+        drawer.addStripe({ width: 3 * frameCount, direction: "left", color: "rgb(170, 170, 170)" }); // кадры
+        drawer.addStripe({ width: 2, direction: "bottom", color: "rgb(120, 220, 120)", lenght: 4, offsetFrom: "end", offset: this.mainCanvas.width + 26 }); // осцилятор
 
 
         this.placeInside(this.intermediateCanvas, this.intermediateCanvas.width, this.intermediateCanvas.height); // вкорячиваем куда надо
@@ -99,3 +105,6 @@ export class Tight3to4CanvasManager {
     }
 }
 
+function makeGrid(drawer: CanvasDrawer, gridGap: number, xOffset: number, yOffset: number) {
+
+}

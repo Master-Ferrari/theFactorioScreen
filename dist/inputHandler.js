@@ -1,3 +1,6 @@
+import { Dropdown } from "./dropdown.js";
+import ImageProcessor from "./imageProcessor.js";
+import getMethods from "./methodsManager.js";
 // Обработчики событий
 const fileInput = document.getElementById("fileInput");
 const fileNameLabel = document.getElementById("fileNameLabel");
@@ -26,12 +29,66 @@ const scalePlusSVG = document.getElementById('scalePlusSVG');
 const scaleMinusSVG = document.getElementById('scaleMinusSVG');
 // const textOutput = document.getElementById('textOutput') as HTMLTextAreaElement;
 export default class InputHandler {
-    constructor(canvasManager) {
-        this.canvasManager = canvasManager;
+    static getInstance() {
+        if (!this.instance) {
+            this.instance = new InputHandler();
+        }
+        return this.instance;
     }
-    addEventListeners() {
+    constructor() {
+        //#region callbacks
         const self = this;
-        // Обработчик выбора файла
+        const mainControls = document.getElementById('mainControls');
+        const canvasControls = document.getElementById('canvasControls');
+        const copyButton = document.getElementById('copyButton');
+        const methodSelect = document.getElementById('methodSelect');
+        const textOutput = document.getElementById('textOutput');
+        const blueprintOptions = document.getElementById('blueprintOptions');
+        function onBlueprint(text) {
+            textOutput.innerText = text;
+        }
+        const methods = getMethods(blueprintOptions, onBlueprint);
+        let currentMethod = null;
+        const onMethodSelect = (index) => {
+            currentMethod?.destroy();
+            if (index === null) {
+                return;
+            }
+            currentMethod = methods.getById(index);
+            if (currentMethod === null) {
+                return;
+            }
+            currentMethod.init();
+            this.canvasManager?.changeMethod(currentMethod);
+        };
+        const modeDropdown = new Dropdown({
+            dropdownElement: methodSelect,
+            optionsList: methods.getList(null),
+            onSelectCallback: onMethodSelect,
+            defaultText: "method select",
+            selectedPrefix: "selected: "
+        });
+        function baseControlsVisability(hide = false) {
+            if (hide) {
+                mainControls.style.display = 'none';
+                canvasControls.style.display = 'none';
+                copyButton.classList.add('hidden');
+            }
+            else {
+                mainControls.style.display = 'grid';
+                canvasControls.style.display = 'flex';
+                copyButton.classList.remove('hidden');
+            }
+        }
+        this.canvasManager = ImageProcessor.getInstance();
+        function onLoad() {
+            modeDropdown.updateOptions(methods.getList(self.canvasManager.mode));
+            baseControlsVisability(false);
+        }
+        ;
+        this.canvasManager.setOnLoadCallback(onLoad);
+        //#endregion
+        //#region Afqkgbrth
         fileInput.addEventListener('change', function (event) {
             const target = event.target;
             const file = target.files?.[0];
@@ -70,6 +127,8 @@ export default class InputHandler {
                 gifInputs.forEach(element => element.classList.add('hidden'));
             }
         });
+        //#endregion
+        //#region кнопачки
         // Кнопка зеркального отображения
         mirrorCanvasButton.addEventListener('click', function () {
             self.canvasManager.mirror();
@@ -152,6 +211,7 @@ export default class InputHandler {
             self.canvasManager.updateFrameRate();
         });
         // Декодер и проигрыватель GIF для использования с Canvas API
+        //#endregion
     }
     shortLabel(text, max) {
         if (text.length <= max) {

@@ -1,11 +1,12 @@
 import { Method, blueprintGetter, updateOptions } from "./method.js";
 import ImageProcessor, { GifBitmap, Mode } from "./imageProcessor.js";
 import { factorioEntities as f, Blueprint, CoordinateCursor, Dir, Entities, entitiesAndWires, indexIterator, Wire, Wires, RgbSignalsNames, Signals, makeSignals, makeSignalSections } from "./factorioEntities.js";
-import { group } from "console";
+// import { group } from "console";
 import { allSignals, getTypeByName } from "./allSignals.js";
-import { constants } from "buffer";
+// import { constants } from "buffer";
 import { Tight3to4CanvasManager } from "./tight3to4Canvas.js";
-
+import { HtmlCreator as Html } from "./htmlStuff.js";
+// import { Dropdown } from "./dropdown.js";
 
 type pixel = { r: number, g: number, b: number };
 type pixelsPack = [pixel, pixel, pixel, pixel];
@@ -24,7 +25,7 @@ export default class tight3to4Method extends Method {
 
     private canvasManager: ImageProcessor;
 
-    private infoTextLabel: HTMLElement | null = null;
+    private infoTextChange: ((text: string) => void) | null = null;
 
 
     private tight3to4CanvasManager: Tight3to4CanvasManager | null = null;
@@ -39,59 +40,78 @@ export default class tight3to4Method extends Method {
     }
 
     init(): void {
-        const methodContainer = document.createElement('div');
-        methodContainer.style.display = 'flex';
-        methodContainer.style.height = '100%';
-        methodContainer.style.flexDirection = 'column';
-        methodContainer.style.justifyContent = 'flex-end';
-        methodContainer.style.alignItems = 'left';
+        const mainCanvas = document.getElementById("canvas") as HTMLCanvasElement;
 
+        const methodContainer = Html.createCenterContainer();
 
-        // Создаем контейнер для canvas и задаем стили
         const canvasContainer = document.createElement('div');
-        // canvasContainer.style.display = 'flex';
         canvasContainer.style.alignItems = 'center';
 
-        const previewLabel = document.createElement('div');
-        previewLabel.innerText = "preview:"
-        canvasContainer.appendChild(previewLabel);
+        const controlsContainer = Html.createControlsContainer();
 
-        // Создаем элемент canvas и задаем его атрибуты
+        const gridLabel = Html.addLabel("power substations grid");
+        const gridCheckbox = Html.addCheckbox("gridCheckbox");
+
+        controlsContainer.appendChild(gridLabel);
+        controlsContainer.appendChild(gridCheckbox);
+
+        const gridGapLabel = Html.addLabel("substation quality");
+        // const gridGapInput = Html.createNumberInput("lepQuality", 1, 5, 1);
+        const gridQuality = Html.createDropdown({
+            optionsList: [
+                { name: "1", value: "normal", isActive: true },
+                { name: "2", value: "uncommon", isActive: true },
+                { name: "3", value: "rare", isActive: true },
+                { name: "4", value: "epic", isActive: true },
+                { name: "5", value: "legendary", isActive: true },
+            ],
+            onSelectCallback: () => { },
+            defaultText: "normal",
+            selectedPrefix: "",
+            id: "substationQuality"
+        });
+
+        controlsContainer.appendChild(gridGapLabel);
+        controlsContainer.appendChild(gridQuality);
+
+        const offsetContainer = Html.createXYInput(
+            { id: "offsetX", min: -100, max: 100, value: 0 },
+            { id: "offsetY", min: -100, max: 100, value: 0 }
+        );
+        const offsetLabel = Html.addLabel("offset");
+
+        controlsContainer.appendChild(offsetLabel);
+        controlsContainer.appendChild(offsetContainer);
+
+        canvasContainer.appendChild(controlsContainer);
+
         const canvas = document.createElement('canvas');
         canvas.style.display = 'block';
         canvas.style.margin = "15px auto"
         canvas.id = 'canvas';
 
-        // Добавляем canvas в canvasContainer
         canvasContainer.appendChild(canvas);
 
-        // Добавляем canvasContainer в основной контейнер
+        const strokeText = Html.strokeText();
+
+        strokeText.element.style.transform = "translate(10px, -40px)";
+        strokeText.element.style.opacity = "0.8";
+        this.infoTextChange = strokeText.changeText;
+
+        canvasContainer.appendChild(strokeText.element);
+
         methodContainer.appendChild(canvasContainer);
 
-        const mainCanvas = document.getElementById("canvas") as HTMLCanvasElement;
 
-        // Пример использования
         this.tight3to4CanvasManager = Tight3to4CanvasManager.getInstance(canvas, mainCanvas);
 
-        // Теперь можно использовать canvasManager для работы с canvas
-        // this.tight3to4CanvasManager.copyFromMain();
-        // this.tight3to4CanvasManager.drawRectangle(10, 10, 10, 10);
-        // this.tight3to4CanvasManager.drawText("Hello, Canvas!", 50, 50);
 
-        this.infoTextLabel = document.createElement('div');
-        this.infoTextLabel.innerText = "";
-        methodContainer.appendChild(this.infoTextLabel);
 
-        const button = document.createElement('div');
-        button.style.marginTop = "auto";
-        button.classList.add('control-margin-top-2', 'custom-button');
-        button.textContent = "generate blueprint!";
-
-        methodContainer.appendChild(button);
-
-        button.addEventListener('click', () => {
+        const button = Html.createButton("generate blueprint!", () => {
             this.exportJson(this.makeJson());
         });
+        methodContainer.appendChild(button);
+
         while (this.optionsContainer.firstChild) {
             this.optionsContainer.removeChild(this.optionsContainer.firstChild);
         }
@@ -100,18 +120,26 @@ export default class tight3to4Method extends Method {
     }
 
     destroy(): void {
+        if (this.tight3to4CanvasManager) {
+            Tight3to4CanvasManager.destroyInstance();
+            this.tight3to4CanvasManager = null;
+        }
 
+        while (this.optionsContainer.firstChild) {
+            this.optionsContainer.removeChild(this.optionsContainer.firstChild);
+        }
     }
 
     update(options: updateOptions): void {
-        this.infoTextLabel!.innerText = this.tight3to4CanvasManager?.update(options.frameCount) ?? "";
+        const infotext = this.tight3to4CanvasManager?.update(options.frameCount) ?? "";
+        this.infoTextChange?.(infotext);
     }
 
     //#region makeJson
     makeJson(): string {
 
         const gifData = this.canvasManager.getGifBitmap();
-        const preparedGifData = this.gifDataTopreparedGifData(gifData);
+        const preparedGifData = this.gifDataToPreparedGifData(gifData);
 
 
         const blueprint = new Blueprint();
@@ -516,7 +544,7 @@ export default class tight3to4Method extends Method {
     /////////////////////////////////////////
     //#region stuff functions
 
-    gifDataTopreparedGifData(gifData: GifBitmap): _gifData {
+    gifDataToPreparedGifData(gifData: GifBitmap): _gifData {
 
         const preparedGifData: _gifData = {
             rows: [],
@@ -585,6 +613,7 @@ export default class tight3to4Method extends Method {
         }
         return [number1, number2, number3];
     }
+
     //#endregion
 
 }

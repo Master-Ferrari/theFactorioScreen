@@ -22,7 +22,7 @@ export default class ImageProcessor {
         this.fps = 15;
         this.method = null;
         this.canvas = document.getElementById("canvas");
-        this.ctx = this.canvas.getContext("2d");
+        this.ctx = this.canvas.getContext("2d", { willReadFrequently: true });
         this.ctx.imageSmoothingEnabled = false;
         this.ctx.mozImageSmoothingEnabled = false;
         this.ctx.webkitImageSmoothingEnabled = false;
@@ -87,7 +87,7 @@ export default class ImageProcessor {
             self.canvas.style.width = canvasWidth + 'px';
             self.canvas.style.height = canvasHeight + 'px';
             if (self.myPng.frame?.image) {
-                const ctx = self.canvas.getContext("2d");
+                const ctx = self.canvas.getContext("2d", { willReadFrequently: true });
                 ctx.drawImage(self.myPng.frame.image, 0, 0, imageWidth, imageHeight);
             }
             self.onLoadCallback?.(self._mode);
@@ -112,7 +112,7 @@ export default class ImageProcessor {
                     const canvas = document.createElement('canvas');
                     canvas.width = this.width;
                     canvas.height = this.height;
-                    const ctx = canvas.getContext("2d");
+                    const ctx = canvas.getContext("2d", { willReadFrequently: true });
                     ctx.drawImage(img, 0, 0);
                     canvas.ctx = ctx; // Привязываем контекст к canvas
                     // Инициализируем frame для PNG
@@ -389,7 +389,7 @@ export default class ImageProcessor {
             const canvas = document.createElement('canvas');
             canvas.width = gif.width;
             canvas.height = gif.height;
-            canvas.ctx = canvas.getContext("2d");
+            canvas.ctx = canvas.getContext("2d", { willReadFrequently: true });
             frame.image = canvas;
             const ct = frame.localColourTableFlag ? frame.localColourTable : gif.globalColourTable;
             if (gif.lastFrame === null) {

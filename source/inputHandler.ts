@@ -1,6 +1,8 @@
 import jsonToBlueprint from "./blueprintEncoder.js";
 import { DropdownOption, Dropdown } from "./dropdown.js";
 import ImageProcessor from "./imageProcessor.js";
+import { Method } from "./method.js";
+import getMethods from "./methodsManager.js";
 import tight3to4Method from "./tight3to4Method.js";
 
 // Обработчики событий
@@ -39,13 +41,88 @@ const scaleMinusSVG = document.getElementById('scaleMinusSVG') as HTMLButtonElem
 
 export default class InputHandler {
     private canvasManager: ImageProcessor;
-    constructor(canvasManager: ImageProcessor) {
-        this.canvasManager = canvasManager;
+
+    private static instance: InputHandler;
+
+    static getInstance() {
+        if (!this.instance) {
+            this.instance = new InputHandler();
+        }
+        return this.instance;
     }
 
-    addEventListeners() {
+    private constructor() {
+
+        //#region callbacks
+
+
         const self = this;
-        // Обработчик выбора файла
+
+        const mainControls = document.getElementById('mainControls') as HTMLButtonElement;
+        const canvasControls = document.getElementById('canvasControls') as HTMLButtonElement;
+        const copyButton = document.getElementById('copyButton') as HTMLButtonElement;
+
+        const methodSelect = document.getElementById('methodSelect') as HTMLElement;
+        const textOutput = document.getElementById('textOutput') as HTMLElement;
+        const blueprintOptions = document.getElementById('blueprintOptions') as HTMLButtonElement;
+
+        function onBlueprint(text: string) {
+            textOutput.innerText = text;
+        }
+
+        const methods = getMethods(blueprintOptions, onBlueprint);
+        let currentMethod: Method | null = null;
+
+        const onMethodSelect = (index: number | null) => {
+            currentMethod?.destroy();
+            if (index === null) { return; }
+            currentMethod = methods.getById(index);
+            if (currentMethod === null) { return; }
+
+            currentMethod.init();
+            this.canvasManager?.changeMethod(currentMethod);
+        }
+
+        const modeDropdown = new Dropdown({
+            dropdownElement: methodSelect,
+            optionsList: methods.getList(null),
+            onSelectCallback: onMethodSelect,
+            defaultText: "method select",
+            selectedPrefix: "selected: "
+        });
+
+        function baseControlsVisability(hide: boolean = false) {
+            if (hide) {
+                mainControls.style.display = 'none';
+                canvasControls.style.display = 'none';
+                copyButton.classList.add('hidden');
+            }
+            else {
+                mainControls.style.display = 'grid';
+                canvasControls.style.display = 'flex';
+                copyButton.classList.remove('hidden');
+            }
+        }
+
+        this.canvasManager = ImageProcessor.getInstance();
+
+
+
+        function onLoad() {
+            modeDropdown.updateOptions(methods.getList(self.canvasManager.mode));
+            baseControlsVisability(false);
+        };
+
+        this.canvasManager.setOnLoadCallback(onLoad);
+
+
+
+
+        //#endregion
+
+
+
+        //#region Afqkgbrth
         fileInput.addEventListener('change', function (event: Event) {
             const target = event.target as HTMLInputElement;
             const file = target.files?.[0];
@@ -94,7 +171,9 @@ export default class InputHandler {
 
 
         });
+        //#endregion
 
+        //#region кнопачки
         // Кнопка зеркального отображения
         mirrorCanvasButton.addEventListener('click', function () {
             self.canvasManager.mirror();
@@ -192,6 +271,7 @@ export default class InputHandler {
             self.canvasManager.updateFrameRate();
         });
         // Декодер и проигрыватель GIF для использования с Canvas API
+        //#endregion
 
     }
 

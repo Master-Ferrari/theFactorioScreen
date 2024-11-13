@@ -8,11 +8,16 @@ export default class ImageMethod extends Method {
     readonly value = "one frame image";
     readonly supportedModes: Mode[] = ["png", "gif"];
 
-    private infoTextLabel: HTMLElement;
+    private infoTextLabel: HTMLElement | null = null;
 
     constructor(optionsContainer: HTMLElement, blueprintGetter: blueprintGetter) {
         super(optionsContainer, blueprintGetter);
 
+
+    }
+
+    init(): void {
+        
         const methodContainer = document.createElement('div');
         methodContainer.style.display = 'flex';
         methodContainer.style.height = '100%';
@@ -41,10 +46,6 @@ export default class ImageMethod extends Method {
         }
 
         this.optionsContainer.appendChild(methodContainer);
-
-    }
-
-    init(): void {
     }
 
     makeJson(): string {
@@ -75,5 +76,9 @@ export default class ImageMethod extends Method {
         }
     }
 
-    destroy(): void { }
+    destroy(): void {
+        while (this.optionsContainer.firstChild) {
+            this.optionsContainer.removeChild(this.optionsContainer.firstChild);
+        }
+    }
 }
