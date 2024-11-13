@@ -66,7 +66,7 @@ export default class InputHandler {
             optionsList: methods.getList(null),
             onSelectCallback: onMethodSelect,
             defaultText: "method select",
-            selectedPrefix: "selected: "
+            selectedPrefix: "selected method: "
         });
         function baseControlsVisability(hide = false) {
             if (hide) {
@@ -126,6 +126,7 @@ export default class InputHandler {
             else if (mode === 'png') {
                 gifInputs.forEach(element => element.classList.add('hidden'));
             }
+            modeDropdown.selectByName(null);
         });
         //#endregion
         //#region кнопачки

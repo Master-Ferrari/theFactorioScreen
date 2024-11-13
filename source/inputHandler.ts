@@ -88,7 +88,7 @@ export default class InputHandler {
             optionsList: methods.getList(null),
             onSelectCallback: onMethodSelect,
             defaultText: "method select",
-            selectedPrefix: "selected: "
+            selectedPrefix: "selected method: "
         });
 
         function baseControlsVisability(hide: boolean = false) {
@@ -169,7 +169,7 @@ export default class InputHandler {
                 gifInputs.forEach(element => element.classList.add('hidden'));
             }
 
-
+            modeDropdown.selectByName(null);
         });
         //#endregion
 

@@ -124,4 +124,18 @@ export class Dropdown {
             this.closeOptions();
         }
     }
+
+    selectByName(name: string | null): void {
+        if (!name) {
+            this.dropdownTrigger.innerText = this.defaultText;
+            this.selectedOption = null;
+            this.onSelectCallback(null);
+            return;
+        }
+
+        const option = this.optionsList.find((option) => option.name === name);
+        if (option) {
+            this.selectOption(option, this.optionsList.indexOf(option));
+        }
+    }
 }

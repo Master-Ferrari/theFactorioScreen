@@ -23,14 +23,14 @@ export class HtmlCreator {
         return input;
     }
 
-    static addCheckbox(id: string): HTMLLabelElement {
+    static addCheckbox(id: string, checked: boolean = true): HTMLLabelElement {
         const toggleSwitch = document.createElement('label');
         toggleSwitch.className = 'toggle-switch';
 
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.id = id;
-        checkbox.checked = true;
+        checkbox.checked = checked;
 
         const slider = document.createElement('span');
         slider.className = 'slider';

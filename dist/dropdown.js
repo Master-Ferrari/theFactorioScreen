@@ -87,5 +87,17 @@ export class Dropdown {
             this.closeOptions();
         }
     }
+    selectByName(name) {
+        if (!name) {
+            this.dropdownTrigger.innerText = this.defaultText;
+            this.selectedOption = null;
+            this.onSelectCallback(null);
+            return;
+        }
+        const option = this.optionsList.find((option) => option.name === name);
+        if (option) {
+            this.selectOption(option, this.optionsList.indexOf(option));
+        }
+    }
 }
 //# sourceMappingURL=dropdown.js.map

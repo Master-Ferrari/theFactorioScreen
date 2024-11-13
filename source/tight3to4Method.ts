@@ -20,7 +20,7 @@ type _gifData = { rows: _row[], height: number };
 
 export default class tight3to4Method extends Method {
     readonly name = "tight3to4";
-    readonly value = "tight video player";
+    readonly value = "\"tight3to4\" video player";
     readonly supportedModes: Mode[] = ["gif"];
 
     private canvasManager: ImageProcessor;
@@ -50,7 +50,7 @@ export default class tight3to4Method extends Method {
         const controlsContainer = Html.createControlsContainer();
 
         const gridLabel = Html.addLabel("power substations grid");
-        const gridCheckbox = Html.addCheckbox("gridCheckbox");
+        const gridCheckbox = Html.addCheckbox("gridCheckbox", false);
 
         controlsContainer.appendChild(gridLabel);
         controlsContainer.appendChild(gridCheckbox);
