@@ -223,4 +223,3 @@ export default class InputHandler {
         return `${start}...${end}`; // соединяем с троеточием
     }
 }
-//# sourceMappingURL=inputHandler.js.map

@@ -16,6 +16,8 @@ export class Tight3to4CanvasManager {
 
     private mainWidth = 1;
     private mainHeight = 1;
+
+    private gaps = 0;
     // private targetWidth = 1;
     // private targetHeight = 1;
     // private xOffset = 0;
@@ -86,25 +88,133 @@ export class Tight3to4CanvasManager {
     }
 
 
-    update(frameCount: number): string {
+    update(frameCount: number, gridIsEnabled: boolean, substationsQuality: number, gridOffset: { x: number, y: number }): string {
         if (!this.context) return "";
+
+        let decoderGaps = 0;
+        let frameGaps = 0;
+
+        const gridGap = [16, 18, 20, 22, 26][substationsQuality];
 
         this.resetInterToMain(); // бновить промежуток
 
         const drawer = new CanvasDrawer(this.intermediateContext); // рисуем
-        drawer.addStripe({ width: 26, direction: "left", color: "rgb(150, 150, 150)" }); //декодер
-        // drawer.addStripe({ width: 1, direction: "left", color: "rgba(0, 0, 0, 0)" }); // хз
-        drawer.addStripe({ width: 3 * frameCount, direction: "left", color: "rgb(170, 170, 170)" }); // кадры
-        drawer.addStripe({ width: 2, direction: "bottom", color: "rgb(120, 220, 120)", lenght: 4, offsetFrom: "end", offset: this.mainCanvas.width + 26 }); // осцилятор
+        let oscilatorGap = 0;
 
+        if (gridIsEnabled) {
+            for (let i = 0; i < 13; i++) {
+                this.addLogicLineToLeft(drawer, 2, "rgb(150, 150, 150)", gridIsEnabled, gridGap, gridOffset); //декодер
+            }
+            decoderGaps = this.intermediateCanvas.width - this.mainCanvas.width - 26;
+            oscilatorGap = this.isNeedGap(3, gridGap, gridOffset) ?? 0;
+            for (let i = 0; i < frameCount; i++) {
+                this.addLogicLineToLeft(drawer, 1, "rgb(200, 200, 200)", gridIsEnabled, gridGap, gridOffset); // кадры
+                this.addLogicLineToLeft(drawer, 2, "rgb(170, 170, 170)", gridIsEnabled, gridGap, gridOffset);
+            }
+            // frameGaps = this.gaps - decoderGaps;
+        } else {
+            drawer.addStripe({ width: 26, direction: "left", color: "rgb(150, 150, 150)" }); //декодер
+            drawer.addStripe({ width: 3 * frameCount, direction: "left", color: "rgb(170, 170, 170)" }); // кадры
+        }
+
+
+        drawer.addStripe({ width: 2, direction: "bottom", color: "rgb(120, 220, 120)", lenght: 4, offsetFrom: "end", offset: this.mainCanvas.width + 26 + decoderGaps + oscilatorGap }); // осцилятор
+
+        this.makeGrid(drawer, gridIsEnabled, gridGap, { x: gridOffset.x - this.gaps, y: gridOffset.y });
 
         this.placeInside(this.intermediateCanvas, this.intermediateCanvas.width, this.intermediateCanvas.height); // вкорячиваем куда надо
 
+        // this.gaps = 0; // сбрасываем gaps
         return "total size: " + this.intermediateCanvas.width + "*" + this.intermediateCanvas.height;
 
     }
-}
 
-function makeGrid(drawer: CanvasDrawer, gridGap: number, xOffset: number, yOffset: number) {
+    private addLogicLineToLeft(drawer: CanvasDrawer, width: number, color: string, gridIsEnabled: boolean, gridGap: number, gridOffset: { x: number, y: number }) {
+        // const canvas = this.intermediateCanvas.width + 2;
+        // let intra = (canvas + gridOffset.x - 2) % gridGap;
+        // let extra = gridGap - intra;
+        // if (extra > 0 && extra < width) {
 
+        // const realStartOfCurrentBlock = this.intermediateCanvas.width;
+        // let gap;
+
+        let offset = gridOffset.x;
+        if (offset < 0) { offset = gridGap - Math.abs(offset) % gridGap; }
+
+        const canvas = this.intermediateCanvas.width;
+        let intra = (canvas + offset) % gridGap;
+        let extra = gridGap - intra;
+
+        if (intra == 0) { extra = 0; } // нюанс расчётов. иначе вместо ноль будет gap.
+
+        if (extra >= 0 && extra < width) {
+            let gap = extra % width; // это короче как далеко слева лэп
+            gap = gap == 0 ? width : width + extra; // если вот прям лэп
+            gap = gap < 2 ? 2 : gap; // отступ должен быть не короче лэпа
+            // this.gaps += gap;
+            drawer.addStripe({ width: gap, direction: "left", color: "rgba(0, 0, 0, 0)" });
+        } else if (intra < 2) {
+            let gap = 2 - intra;
+            // this.gaps += gap;
+            drawer.addStripe({ width: gap, direction: "left", color: "rgba(0, 0, 0, 0)" });
+        }
+
+        drawer.addStripe({ width: width, direction: "left", color: color });
+    }
+
+
+    isNeedGap(width: number, gridGap: number, gridOffset: { x: number, y: number }): number | null {
+
+        let offset = gridOffset.x;
+        if (offset < 0) { offset = gridGap - Math.abs(offset) % gridGap; }
+
+        const canvas = this.intermediateCanvas.width;
+        let intra = (canvas + offset) % gridGap;
+        let extra = gridGap - intra;
+
+        if (intra == 0) { extra = 0; } // нюанс расчётов. иначе вместо ноль будет gap.
+
+        if (extra >= 0 && extra < width) {
+            let gap = extra % width; // это короче как далеко слева лэп
+            gap = gap == 0 ? width : width + extra; // если вот прям лэп
+            gap = gap < 2 ? 2 : gap; // отступ должен быть не короче лэпа
+            return gap;
+        } else if (intra < 2) {
+            let gap = 2 - intra;
+            return gap;
+        }
+        return null;
+    }
+
+    // private checkLeftSideOnGridIntersection(gridGap: number, gridOffset: { x: number, y: number }, width: number): number {
+    //     // const checkStripe = this.intermediateCanvas.width + gridGap * 2;
+
+    //     let neededOffset = 0;
+    //     const offset = gridOffset.x % gridGap;
+
+    //     for (let wX = 0; wX < width; wX++) {
+
+    //         const rCount = Math.floor((this.intermediateCanvas.width) / gridGap);
+
+
+    //         console.log("offset - wX - gridGap * rCount", offset - wX - gridGap * rCount);
+
+    //         if (offset - wX - gridGap * rCount == -this.intermediateCanvas.width) {
+    //             neededOffset = wX;
+    //         }
+    //     }
+
+    //     return neededOffset;
+    // }
+
+    private makeGrid(drawer: CanvasDrawer, gridIsEnabled: boolean, gridGap: number, gridOffset: { x: number, y: number }) {
+        if (!gridIsEnabled) { return; }
+
+        for (let x = this.intermediateCanvas.width + gridGap * 4 - 2; x >= -gridGap * 4 - 2; x -= gridGap) {
+            for (let y = -gridGap * 4; y < this.intermediateCanvas.height + gridGap * 4; y += gridGap) {
+                drawer.drawSquare(x + gridOffset.x, y + gridOffset.y, 2, 2, "rgb(255, 38, 0)");
+            }
+        }
+
+    }
 }

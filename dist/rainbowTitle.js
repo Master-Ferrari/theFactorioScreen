@@ -53,4 +53,3 @@ window.addEventListener('resize', function () {
     resizeMainContent();
 });
 resizeMainContent();
-//# sourceMappingURL=rainbowTitle.js.map

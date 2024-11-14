@@ -5,4 +5,3 @@ import InputHandler from "./inputHandler.js";
 // todo: нужно выкинуть отсюда всякое в инпут хэндлер
 // update: выкинул))
 const input = InputHandler.getInstance();
-//# sourceMappingURL=index.js.map

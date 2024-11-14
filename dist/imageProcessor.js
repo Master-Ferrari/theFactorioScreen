@@ -789,4 +789,3 @@ export default class ImageProcessor {
         }
     }
 }
-//# sourceMappingURL=imageProcessor.js.map

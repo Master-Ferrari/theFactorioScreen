@@ -20,16 +20,23 @@ type _gifData = { rows: _row[], height: number };
 
 export default class tight3to4Method extends Method {
     readonly name = "tight3to4";
-    readonly value = "\"tight3to4\" video player";
+    readonly value = "tight video player";
     readonly supportedModes: Mode[] = ["gif"];
 
     private canvasManager: ImageProcessor;
 
     private infoTextChange: ((text: string) => void) | null = null;
 
-
     private tight3to4CanvasManager: Tight3to4CanvasManager | null = null;
 
+    private gridIsEnabled: boolean = false;
+    private substationsQuality: number = 0;
+    private gridOffset: { x: number, y: number } = { x: 0, y: 0 };
+
+    // private frameCount: number = 1;
+    // private currentFrame: number = 0;
+    // private mode: Mode = "gif";
+    private options: updateOptions | null = null;
 
     constructor(optionsContainer: HTMLElement, blueprintGetter: blueprintGetter) {
         super(optionsContainer, blueprintGetter);
@@ -40,6 +47,8 @@ export default class tight3to4Method extends Method {
     }
 
     init(): void {
+        //#region inputs
+        const self = this;
         const mainCanvas = document.getElementById("canvas") as HTMLCanvasElement;
 
         const methodContainer = Html.createCenterContainer();
@@ -52,20 +61,28 @@ export default class tight3to4Method extends Method {
         const gridLabel = Html.addLabel("power substations grid");
         const gridCheckbox = Html.addCheckbox("gridCheckbox", false);
 
+        gridCheckbox.element.addEventListener('change', function () {
+            self.gridIsEnabled = this.checked;
+            self.canvasUpdate();
+        });
+
         controlsContainer.appendChild(gridLabel);
-        controlsContainer.appendChild(gridCheckbox);
+        controlsContainer.appendChild(gridCheckbox.container);
 
         const gridGapLabel = Html.addLabel("substation quality");
         // const gridGapInput = Html.createNumberInput("lepQuality", 1, 5, 1);
         const gridQuality = Html.createDropdown({
             optionsList: [
-                { name: "1", value: "normal", isActive: true },
-                { name: "2", value: "uncommon", isActive: true },
-                { name: "3", value: "rare", isActive: true },
-                { name: "4", value: "epic", isActive: true },
-                { name: "5", value: "legendary", isActive: true },
+                { name: "0", value: "normal", isActive: true },
+                { name: "1", value: "uncommon", isActive: true },
+                { name: "2", value: "rare", isActive: true },
+                { name: "3", value: "epic", isActive: true },
+                { name: "4", value: "legendary", isActive: true },
             ],
-            onSelectCallback: () => { },
+            onSelectCallback: (index) => {
+                this.substationsQuality = index ?? 0;
+                self.canvasUpdate();
+            },
             defaultText: "normal",
             selectedPrefix: "",
             id: "substationQuality"
@@ -80,8 +97,18 @@ export default class tight3to4Method extends Method {
         );
         const offsetLabel = Html.addLabel("offset");
 
+        offsetContainer.xInput.addEventListener('input', function () {
+            self.gridOffset.x = parseInt(this.value);
+            self.canvasUpdate();
+        });
+        offsetContainer.yInput.addEventListener('input', function () {
+            self.gridOffset.y = parseInt(this.value);
+            self.canvasUpdate();
+        });
+
+
         controlsContainer.appendChild(offsetLabel);
-        controlsContainer.appendChild(offsetContainer);
+        controlsContainer.appendChild(offsetContainer.container);
 
         canvasContainer.appendChild(controlsContainer);
 
@@ -89,6 +116,7 @@ export default class tight3to4Method extends Method {
         canvas.style.display = 'block';
         canvas.style.margin = "15px auto"
         canvas.id = 'canvas';
+        // canvas.style.imageRendering = 'auto';
 
         canvasContainer.appendChild(canvas);
 
@@ -105,9 +133,8 @@ export default class tight3to4Method extends Method {
 
         this.tight3to4CanvasManager = Tight3to4CanvasManager.getInstance(canvas, mainCanvas);
 
-
-
         const button = Html.createButton("generate blueprint!", () => {
+            console.log("LoL")
             this.exportJson(this.makeJson());
         });
         methodContainer.appendChild(button);
@@ -117,6 +144,7 @@ export default class tight3to4Method extends Method {
         }
 
         this.optionsContainer.appendChild(methodContainer);
+        //#endregion
     }
 
     destroy(): void {
@@ -131,7 +159,15 @@ export default class tight3to4Method extends Method {
     }
 
     update(options: updateOptions): void {
-        const infotext = this.tight3to4CanvasManager?.update(options.frameCount) ?? "";
+        // this.frameCount = options.frameCount;
+        // this.currentFrame = options.currentFrame;
+        // this.mode = options.mode;
+        this.options = options;
+        this.canvasUpdate(options);
+    }
+
+    canvasUpdate(options: updateOptions = this.options ?? { frameCount: 1, currentFrame: 0, mode: "gif" }): void {
+        const infotext = this.tight3to4CanvasManager?.update(options.frameCount, this.gridIsEnabled, this.substationsQuality, this.gridOffset) ?? "";
         this.infoTextChange?.(infotext);
     }
 

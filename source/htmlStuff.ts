@@ -23,7 +23,7 @@ export class HtmlCreator {
         return input;
     }
 
-    static addCheckbox(id: string, checked: boolean = true): HTMLLabelElement {
+    static addCheckbox(id: string, checked: boolean = true): { container: HTMLLabelElement, element: HTMLInputElement } {
         const toggleSwitch = document.createElement('label');
         toggleSwitch.className = 'toggle-switch';
 
@@ -38,7 +38,7 @@ export class HtmlCreator {
         toggleSwitch.appendChild(checkbox);
         toggleSwitch.appendChild(slider);
 
-        return toggleSwitch;
+        return {container: toggleSwitch, element: checkbox};
     }
 
     static createControlsContainer(): HTMLElement {
@@ -63,6 +63,7 @@ export class HtmlCreator {
         button.style.marginTop = "auto";
         button.classList.add('control-margin-top-2', 'custom-button');
         button.textContent = "generate blueprint!";
+        button.onclick = onClick;
         return button;
     }
 
@@ -112,7 +113,7 @@ export class HtmlCreator {
         };
     }
 
-    static createXYInput(x: inputOptions, y: inputOptions): HTMLDivElement {
+    static createXYInput(x: inputOptions, y: inputOptions): { container: HTMLDivElement, xInput: HTMLInputElement, yInput: HTMLInputElement } {
 
         const offsetContainer = document.createElement('div');
         offsetContainer.className = 'resolution-inputs';
@@ -125,7 +126,7 @@ export class HtmlCreator {
         offsetContainer.appendChild(xLabel);
         offsetContainer.appendChild(offsetYInput);
 
-        return offsetContainer;
+        return { container: offsetContainer, xInput: offsetXInput, yInput: offsetYInput };
     }
 
 }

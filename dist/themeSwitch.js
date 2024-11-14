@@ -10,4 +10,3 @@ themeSwitch.addEventListener('change', () => {
     body.classList.toggle('light-theme', !isDark);
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
 });
-//# sourceMappingURL=themeSwitch.js.map

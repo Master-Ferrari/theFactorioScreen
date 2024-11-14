@@ -87,5 +87,11 @@ export class CanvasDrawer {
                 lenghtOrNull ?? canvas.width, stripeWidth
             );
         }
+
+    }
+
+    drawSquare(x: number, y: number, width: number, height: number, color: string){
+        this.context.fillStyle = color;
+        this.context.fillRect(x, y, width, height);
     }
 }
