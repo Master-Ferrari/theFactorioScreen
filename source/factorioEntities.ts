@@ -12,6 +12,17 @@ function sizeAdapter(x: number, y: number, w: number, h: number, direction: Dir)
     return { x: x, y: y };
 }
 
+export type Quality = "normal" | "uncommon" | "rare" | "epic" | "legendary";
+export const quality = { normal: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 };
+export enum qualityEnum {
+    normal = 0,
+    uncommon = 1,
+    rare = 2,
+    epic = 3,
+    legendary = 4
+}
+export const qualityArr = ["normal", "uncommon", "rare", "epic", "legendary"]
+export const gapsSizes = [16, 18, 20, 22, 26];
 
 export type RgbSignalsNames = { rName: string, gName: string, bName: string };
 
@@ -92,6 +103,24 @@ export class factorioEntities {
             ...(options?.playerDescription && { player_description: options.playerDescription })
         }
     }
+
+    static substation(index: number, x: number, y: number, quality: Quality | qualityEnum): any {
+        let qualityName: string = "normal";
+
+        if (typeof quality === "number") {
+            qualityName = qualityArr[quality] || "normal";
+        } else {
+            qualityName = quality;
+        }
+
+        console.log(quality, qualityName);
+        return {
+            entity_number: index,
+            name: "substation",
+            position: sizeAdapter(x, y, 2, 2, 1),
+            ...(qualityName != "normal" && { quality: qualityName })
+        }
+    }
 }
 
 
@@ -124,7 +153,8 @@ export enum Wire {
     redIn = 1,
     greenIn = 2,
     redOut = 3,
-    greenOut = 4
+    greenOut = 4,
+    coper = 5
 }
 
 export type Entities = any[];
@@ -148,9 +178,9 @@ export class CoordinateCursor {
     get y() { return this._y; }
     get xy() { return { x: this._x, y: this._y }; }
 
-    setxy(x: number, y: number): void;
-    setxy(xy: { x: number, y: number }): void;
-    setxy(x: number | { x: number, y: number }, y?: number): void {
+    sxy(x: number, y: number): void;
+    sxy(xy: { x: number, y: number }): void;
+    sxy(x: number | { x: number, y: number }, y?: number): void {
         if (typeof x === 'object') {
             this._x = x.x;
             this._y = x.y;
@@ -196,6 +226,15 @@ export class CoordinateCursor {
         return this
     }
 
+    sy(y: number): (number) {
+        this._y = y;
+        return y;
+    }
+
+    sx(x: number): (number) {
+        this._x = x;
+        return x;
+    }
 }
 
 export class indexIterator {
@@ -216,6 +255,10 @@ export class indexIterator {
     next(): number {
         this._index += 1;
         return this._index;
+    }
+    pnext(): number {
+        this._index += 1;
+        return this._index - 1;
     }
     look(number: number): number {
         return this._index + number;

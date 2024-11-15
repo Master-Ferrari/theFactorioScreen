@@ -11,6 +11,8 @@ export class Tight3to4CanvasManager {
     private intermediateCanvas: HTMLCanvasElement;
     private intermediateContext: CanvasRenderingContext2D;
 
+    private intermediateSize: { width: number, height: number } = { width: 0, height: 0 };
+
     private readonly ElementWidth = 406;
     private readonly ElementHeight = 150;
 
@@ -88,13 +90,11 @@ export class Tight3to4CanvasManager {
     }
 
 
-    update(frameCount: number, gridIsEnabled: boolean, substationsQuality: number, gridOffset: { x: number, y: number }): string {
+    update(frameCount: number, gridIsEnabled: boolean, gridGap: number, gridOffset: { x: number, y: number }): string {
         if (!this.context) return "";
 
         let decoderGaps = 0;
         let frameGaps = 0;
-
-        const gridGap = [16, 18, 20, 22, 26][substationsQuality];
 
         this.resetInterToMain(); // бновить промежуток
 
@@ -119,6 +119,8 @@ export class Tight3to4CanvasManager {
 
 
         drawer.addStripe({ width: 2, direction: "bottom", color: "rgb(120, 220, 120)", lenght: 4, offsetFrom: "end", offset: this.mainCanvas.width + 26 + decoderGaps + oscilatorGap }); // осцилятор
+
+        this.intermediateSize = { width: this.intermediateCanvas.width, height: this.intermediateCanvas.height };
 
         this.makeGrid(drawer, gridIsEnabled, gridGap, { x: gridOffset.x - this.gaps, y: gridOffset.y });
 
@@ -206,6 +208,10 @@ export class Tight3to4CanvasManager {
 
     //     return neededOffset;
     // }
+
+    getSize(): { width: number, height: number } {
+        return { width: this.intermediateSize.width ?? 0, height: this.intermediateSize.height ?? 0 };
+    }
 
     private makeGrid(drawer: CanvasDrawer, gridIsEnabled: boolean, gridGap: number, gridOffset: { x: number, y: number }) {
         if (!gridIsEnabled) { return; }

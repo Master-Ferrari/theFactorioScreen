@@ -1,6 +1,6 @@
 import { Method, blueprintGetter, updateOptions } from "./method.js";
 import ImageProcessor, { GifBitmap, Mode } from "./imageProcessor.js";
-import { factorioEntities as f, Blueprint, CoordinateCursor, Dir, Entities, entitiesAndWires, indexIterator, Wire, Wires, RgbSignalsNames, Signals, makeSignals, makeSignalSections } from "./factorioEntities.js";
+import { factorioEntities as f, Blueprint, CoordinateCursor, Dir, Entities, entitiesAndWires, indexIterator, Wire, Wires, RgbSignalsNames, Signals, makeSignals, makeSignalSections, gapsSizes } from "./factorioEntities.js";
 // import { group } from "console";
 import { allSignals, getTypeByName } from "./allSignals.js";
 // import { constants } from "buffer";
@@ -23,26 +23,25 @@ export default class tight3to4Method extends Method {
     readonly value = "tight video player";
     readonly supportedModes: Mode[] = ["gif"];
 
-    private canvasManager: ImageProcessor;
+    private imageProcessor: ImageProcessor;
 
     private infoTextChange: ((text: string) => void) | null = null;
 
     private tight3to4CanvasManager: Tight3to4CanvasManager | null = null;
 
     private gridIsEnabled: boolean = false;
+    private gridGap: number = gapsSizes[0];
+    private gridPlus: number = this.gridGap + 2;
     private substationsQuality: number = 0;
     private gridOffset: { x: number, y: number } = { x: 0, y: 0 };
 
-    // private frameCount: number = 1;
-    // private currentFrame: number = 0;
-    // private mode: Mode = "gif";
     private options: updateOptions | null = null;
 
     constructor(optionsContainer: HTMLElement, blueprintGetter: blueprintGetter) {
         super(optionsContainer, blueprintGetter);
 
 
-        this.canvasManager = ImageProcessor.getInstance();
+        this.imageProcessor = ImageProcessor.getInstance();
 
     }
 
@@ -81,6 +80,8 @@ export default class tight3to4Method extends Method {
             ],
             onSelectCallback: (index) => {
                 this.substationsQuality = index ?? 0;
+                this.gridGap = [16, 18, 20, 22, 26][index ?? 0];
+                this.gridPlus = this.gridGap + 2;
                 self.canvasUpdate();
             },
             defaultText: "normal",
@@ -167,20 +168,30 @@ export default class tight3to4Method extends Method {
     }
 
     canvasUpdate(options: updateOptions = this.options ?? { frameCount: 1, currentFrame: 0, mode: "gif" }): void {
-        const infotext = this.tight3to4CanvasManager?.update(options.frameCount, this.gridIsEnabled, this.substationsQuality, this.gridOffset) ?? "";
+        const infotext = this.tight3to4CanvasManager?.update(options.frameCount, this.gridIsEnabled, this.gridGap, this.gridOffset) ?? "";
         this.infoTextChange?.(infotext);
     }
 
     //#region makeJson
     makeJson(): string {
 
-        const gifData = this.canvasManager.getGifBitmap();
+        const gifData = this.imageProcessor.getGifBitmap();
         const preparedGifData = this.gifDataToPreparedGifData(gifData);
 
+        // надо бы тут короче сделать сетку из лэпов и придумать массив координат для обхода
+
+        // а лучше
+        // режим избегания в курсоре
+        // включается когда надо избегать
+        // пропускает координаты
+        // точнее просто подрубает формулу
 
         const blueprint = new Blueprint();
         const cc = new CoordinateCursor(0, 0);
         const ii = new indexIterator(0);
+
+        const imageWidth = preparedGifData.rows[0].width;
+
 
         ii.shift(1);
 
@@ -195,13 +206,23 @@ export default class tight3to4Method extends Method {
             const row = this.makeRow(ii, cc, rowData.frames, rowData.frames[0], rowData.width, isItLastRow, isItFirstRow);
 
             blueprint.addEntitiesAndWires(row);
-            cc.setxy({ x: oldCC.x, y: oldCC.y + 1 });
+            cc.sxy({ x: oldCC.x, y: oldCC.y + 1 });
         }
 
         // cc.dx(-2);
         const framesCount = preparedGifData.rows[0].frames.length;
         const Sequencer = this.makeSequencer(ii, cc.dxycc({ x: -3, y: 0 }), gifData.tpf, framesCount);
         blueprint.addEntitiesAndWires(Sequencer);
+
+
+
+        /////////////////
+        console.log("sadsdfsd", cc.xy);
+        cc.sxy({ x: 26 + imageWidth - 2 + (this.gridOffset.x) % this.gridGap, y: (this.gridOffset.y) % this.gridGap });
+        blueprint.addEntities([f.substation(ii.next(), cc.x, cc.y, this.substationsQuality)]);
+        const test = this.makeElectricGrid(ii, cc);
+        blueprint.addEntitiesAndWires(test);
+
 
         const frameDecidersPairs = ii.getpairs("frame decider combinator");
         console.log("test20-frameDecidersPairs", frameDecidersPairs);
@@ -212,18 +233,51 @@ export default class tight3to4Method extends Method {
         const mainClockWire = ii.getpairs("main clock")[0];
         blueprint.addWires([[mainClockWire[0], Wire.redIn, mainClockWire[1], Wire.redOut]]);
 
+        console.log(this.gridIsEnabled, this.gridGap, this.gridOffset);
+        console.log({ x: 26 + imageWidth + this.gridOffset.x, y: this.gridOffset.y });
+
+
+
         return blueprint.json();
     }
     //#endregion
 
     //#region subblueprints
+
+    makeElectricGrid(ii: indexIterator, cc: CoordinateCursor): entitiesAndWires {
+        let block: Entities = [];
+        let wires: Wires = [];
+
+        const xim = Math.ceil(((this.tight3to4CanvasManager?.getSize().width ?? 0) + (this.gridPlus / 2)) / this.gridPlus);
+        const yim = Math.ceil(((this.tight3to4CanvasManager?.getSize().height ?? 0) + (this.gridPlus / 2)) / this.gridPlus);
+
+        // ii.shift(-1);
+
+
+        const startC = cc.xy;
+
+        for (let yi = 0; yi < yim; yi++) {
+            for (let xi = 0; xi < xim; xi++) {
+
+                block.push(f.substation(ii.next(), cc.sx(startC.x - this.gridPlus * xi), cc.sy(startC.y + this.gridPlus * yi), xi == yi && xi == 0 ? 4 : this.substationsQuality));
+
+                if (xi < xim - 1) wires.push([ii.i, Wire.coper, ii.look(1), Wire.coper]);
+
+                if (yi < yim - 1) wires.push([ii.i, Wire.coper, ii.look(xim), Wire.coper]);
+            }
+        }
+
+        return { entities: block, wires: wires };
+    }
+
+
     makeRow(ii: indexIterator, cc: CoordinateCursor, frames: Signals[], currentFrame: Signals, width: number, isItLastRow: boolean, isItFirstRow: boolean): entitiesAndWires {
         let block: Entities = [];
         let wires: Wires = [];
 
         const beforeFrameBlock = cc.xy;
         const makeFramesBlock = this.makeFrames(ii, cc, frames, isItLastRow, isItFirstRow);
-        cc.setxy(beforeFrameBlock);
+        cc.sxy(beforeFrameBlock);
         ii.shift(1);
         const bytesShiftBlock = this.makeByteGrid(ii, cc);
 
