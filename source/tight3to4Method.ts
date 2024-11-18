@@ -57,7 +57,7 @@ export default class tight3to4Method extends Method {
 
         const controlsContainer = Html.createControlsContainer();
 
-        const gridLabel = Html.addLabel("power substations grid");
+        const gridLabel = Html.addLabel("electric grid");
         const gridCheckbox = Html.addCheckbox("gridCheckbox", false);
 
         gridCheckbox.element.addEventListener('change', function () {
@@ -193,6 +193,18 @@ export default class tight3to4Method extends Method {
         const imageWidth = preparedGifData.rows[0].width;
 
 
+        // electric grid
+        if (this.gridIsEnabled) {
+            const oldXY = cc.xy;
+            console.log("sadsdfsd", cc.xy);
+            cc.sxy({ x: 26 + imageWidth - 2 + (this.gridOffset.x) % this.gridGap, y: (this.gridOffset.y) % this.gridGap });
+            // blueprint.addEntities([f.substation(ii.next(), cc.x, cc.y, this.substationsQuality)]);
+            const electricGrid = this.makeElectricGrid(ii, cc);
+            blueprint.addEntitiesAndWires(electricGrid);
+            cc.sxy(oldXY);
+        }
+
+
         ii.shift(1);
 
 
@@ -213,16 +225,6 @@ export default class tight3to4Method extends Method {
         const framesCount = preparedGifData.rows[0].frames.length;
         const Sequencer = this.makeSequencer(ii, cc.dxycc({ x: -3, y: 0 }), gifData.tpf, framesCount);
         blueprint.addEntitiesAndWires(Sequencer);
-
-
-
-        /////////////////
-        console.log("sadsdfsd", cc.xy);
-        cc.sxy({ x: 26 + imageWidth - 2 + (this.gridOffset.x) % this.gridGap, y: (this.gridOffset.y) % this.gridGap });
-        blueprint.addEntities([f.substation(ii.next(), cc.x, cc.y, this.substationsQuality)]);
-        const test = this.makeElectricGrid(ii, cc);
-        blueprint.addEntitiesAndWires(test);
-
 
         const frameDecidersPairs = ii.getpairs("frame decider combinator");
         console.log("test20-frameDecidersPairs", frameDecidersPairs);
@@ -267,6 +269,11 @@ export default class tight3to4Method extends Method {
             }
         }
 
+        for (let xi = 0; xi < xim; xi++) {
+            cc.addRestrictedColumns([(startC.x - this.gridGap * xi), ((startC.x - this.gridGap * (xi) - 1))]);
+            console.log("restricted", (startC.x - this.gridGap * xi), ((startC.x - this.gridGap * (xi) - 1)));
+        }
+
         return { entities: block, wires: wires };
     }
 
@@ -275,17 +282,21 @@ export default class tight3to4Method extends Method {
         let block: Entities = [];
         let wires: Wires = [];
 
+        cc.restrictProtection = false;
         const beforeFrameBlock = cc.xy;
         const makeFramesBlock = this.makeFrames(ii, cc, frames, isItLastRow, isItFirstRow);
         cc.sxy(beforeFrameBlock);
         ii.shift(1);
-        const bytesShiftBlock = this.makeByteGrid(ii, cc);
+        const bytesShiftBlock = this.makeDecoder(ii, cc);
+        cc.restrictProtection = true;
 
         const lamps = this.makeLamps(ii, cc, currentFrame, width);
         ii.shift(1);
 
 
 
+        // block.push(...makeFramesBlock.entities);
+        // wires.push(...makeFramesBlock.wires);
         block.push(...makeFramesBlock.entities, ...bytesShiftBlock.entities, ...lamps.entities);
         wires.push(...makeFramesBlock.wires, ...bytesShiftBlock.wires, ...lamps.wires);
 
@@ -495,7 +506,7 @@ export default class tight3to4Method extends Method {
         return { entities: block, wires: wires };
     }
 
-    makeByteGrid(ii: indexIterator, cc: CoordinateCursor): entitiesAndWires {
+    makeDecoder(ii: indexIterator, cc: CoordinateCursor): entitiesAndWires {
         let block: Entities = [];
         let wires: Wires = [];
 

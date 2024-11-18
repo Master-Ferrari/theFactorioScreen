@@ -168,6 +168,9 @@ const ololo: Wires = [[1, 2, 3, 4]]
 export class CoordinateCursor {
     private _x: number;
     private _y: number;
+    restrictedColumns: number[] = [];
+
+    restrictProtection: boolean = true;
 
     constructor(x: number, y: number) {
         this._x = x;
@@ -176,7 +179,21 @@ export class CoordinateCursor {
 
     get x() { return this._x; }
     get y() { return this._y; }
-    get xy() { return { x: this._x, y: this._y }; }
+    get xy() { return { x: this.x, y: this.y }; }
+
+    // set x(value: number) {
+    //     console.log("x", value);
+    //     if (!this.restrictProtection && this.restrictedColumns.includes(value)) {
+    //         console.log("вместо " + value + " пишем " + (value - 1));
+    //         this.dx(-1);
+    //     }
+    //     else { this._x = value; }
+    // }
+    // set y(value: number) { this._y = value; }
+    // set xy(value: { x: number, y: number }) {
+    //     this.x = value.x;
+    //     this.y = value.y;
+    // }
 
     sxy(x: number, y: number): void;
     sxy(xy: { x: number, y: number }): void;
@@ -191,33 +208,33 @@ export class CoordinateCursor {
     }
 
     dx(number: number): number { // delta 
-        const x = this._x + number;
+        const x = this.x + number;
         this._x = x;
         return x;
     }
 
     dy(number: number): number { // delta 
-        const y = this._y + number;
+        const y = this.y + number;
         this._y = y;
         return y;
     }
 
     px(number: number): (number) { // post change
-        const old = this._x;
+        const old = this.x;
         this._x += number;
         return old;
     }
 
     py(number: number): (number) { // post change
-        const old = this._y;
-        this._y += number;
+        const old = this.y;
+        this._x += number;
         return old;
     }
 
     dxy(xy: { x: number, y: number }): { x: number, y: number } {
         this._x += xy.x;
         this._y += xy.y;
-        return { x: this._x, y: this._y }
+        return { x: this.x, y: this.y }
     }
 
     dxycc(xy: { x: number, y: number }): CoordinateCursor {
@@ -234,6 +251,20 @@ export class CoordinateCursor {
     sx(x: number): (number) {
         this._x = x;
         return x;
+    }
+
+    checkRestriction(width: number) {
+        for (let w = 0; w < width; w++) {
+            if (this.restrictedColumns.includes(this.x + w)) {
+                this.dx(-w-1);
+            }
+        }
+    }
+
+    addRestrictedColumns(columns: number[]) {
+        for (const column of columns) {
+            this.restrictedColumns.push(column);
+        }
     }
 }
 

@@ -108,8 +108,8 @@ export class Tight3to4CanvasManager {
             decoderGaps = this.intermediateCanvas.width - this.mainCanvas.width - 26;
             oscilatorGap = this.isNeedGap(3, gridGap, gridOffset) ?? 0;
             for (let i = 0; i < frameCount; i++) {
-                this.addLogicLineToLeft(drawer, 1, "rgb(200, 200, 200)", gridIsEnabled, gridGap, gridOffset); // кадры
-                this.addLogicLineToLeft(drawer, 2, "rgb(170, 170, 170)", gridIsEnabled, gridGap, gridOffset);
+                this.addLogicLineToLeft(drawer, 2, "rgb(170, 170, 170)", gridIsEnabled, gridGap, gridOffset); // кадры
+                this.addLogicLineToLeft(drawer, 1, "rgb(200, 200, 200)", gridIsEnabled, gridGap, gridOffset);
             }
             // frameGaps = this.gaps - decoderGaps;
         } else {
