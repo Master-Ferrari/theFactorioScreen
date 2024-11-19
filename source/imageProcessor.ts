@@ -1,5 +1,6 @@
 import { parse } from "path";
-import { Method } from "./method";
+import { Method } from "./method.js";
+import { AlertManager } from "./alertManager.js";
 
 type Bitmap = number[][];
 type FrameBitmap = { width: number, height: number, bitmap: Bitmap };
@@ -59,8 +60,12 @@ type LoaderTypes = {
 } | {
     mode: "png",
     arrayBuffer: ArrayBuffer
+} | {
+    mode: "pngSequence",
+    arrayBuffers: ArrayBuffer[]
 }
-export type Mode = "gif" | "png" | null;
+
+export type Mode = "gif" | "png" | "pngSequence" | null;
 type OnLoadCallback = (mode: Mode) => void;
 
 
@@ -104,7 +109,9 @@ export default class ImageProcessor {
     private frameRateInput: HTMLInputElement;
     private frameRateDisplay: HTMLElement;
     private preserveAspectCheckbox: HTMLInputElement;
-    private alertBox: HTMLElement;
+
+    private alertManager: AlertManager = AlertManager.getInstance();
+    // private alertBox: HTMLElement;
 
     private method: Method | null = null;
 
@@ -127,7 +134,9 @@ export default class ImageProcessor {
         this.frameRateInput = document.getElementById("frameRateInput") as HTMLInputElement;
         this.frameRateDisplay = document.getElementById("frameRateDisplay") as HTMLElement;
         this.preserveAspectCheckbox = document.getElementById("preserveAspectCheckbox") as HTMLInputElement;
-        this.alertBox = document.getElementById("alert") as HTMLElement;
+
+
+        // this.alertBox = document.getElementById("alert") as HTMLElement;
 
         // this.frameRatioCalc();
     }
@@ -847,13 +856,9 @@ export default class ImageProcessor {
         const widthUserInput = parseInt(this.widthInput.value, 10);
         const framesUserInput = parseInt(this.frameCountInput.value, 10);
 
-        const signals = widthUserInput * 0.25 * 3 * framesUserInput;
+        const signals = Math.floor(widthUserInput * 3 / 4);
 
-        if (signals > 400) {
-            this.alertBox.style.display = "block";
-        } else {
-            this.alertBox.style.display = "none";
-        }
+        this.alertManager.setAlert("toMuch", (signals > 579));
     }
 
     private ratioCalc(width: number, height: number, zoomed: boolean = this.zoomed): [number, number] {

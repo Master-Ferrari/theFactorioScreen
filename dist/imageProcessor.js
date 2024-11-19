@@ -1,3 +1,4 @@
+import { AlertManager } from "./alertManager.js";
 export default class ImageProcessor {
     get mode() { return this._mode; }
     constructor() {
@@ -20,6 +21,8 @@ export default class ImageProcessor {
         this.frameRatio = 1;
         this.tpf = 4;
         this.fps = 15;
+        this.alertManager = AlertManager.getInstance();
+        // private alertBox: HTMLElement;
         this.method = null;
         this.canvas = document.getElementById("canvas");
         this.ctx = this.canvas.getContext("2d", { willReadFrequently: true });
@@ -35,7 +38,7 @@ export default class ImageProcessor {
         this.frameRateInput = document.getElementById("frameRateInput");
         this.frameRateDisplay = document.getElementById("frameRateDisplay");
         this.preserveAspectCheckbox = document.getElementById("preserveAspectCheckbox");
-        this.alertBox = document.getElementById("alert");
+        // this.alertBox = document.getElementById("alert") as HTMLElement;
         // this.frameRatioCalc();
     }
     loader(options) {
@@ -652,13 +655,8 @@ export default class ImageProcessor {
     checkAlert() {
         const widthUserInput = parseInt(this.widthInput.value, 10);
         const framesUserInput = parseInt(this.frameCountInput.value, 10);
-        const signals = widthUserInput * 0.25 * 3 * framesUserInput;
-        if (signals > 400) {
-            this.alertBox.style.display = "block";
-        }
-        else {
-            this.alertBox.style.display = "none";
-        }
+        const signals = Math.floor(widthUserInput * 3 / 4);
+        this.alertManager.setAlert("toMuch", (signals > 579));
     }
     ratioCalc(width, height, zoomed = this.zoomed) {
         const ratio = width / height;

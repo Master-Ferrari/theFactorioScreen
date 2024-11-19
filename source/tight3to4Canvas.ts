@@ -1,3 +1,4 @@
+import { AlertManager } from "./alertManager.js";
 import { CanvasDrawer } from "./canvasDrawer.js";
 
 export class Tight3to4CanvasManager {
@@ -18,6 +19,8 @@ export class Tight3to4CanvasManager {
 
     private mainWidth = 1;
     private mainHeight = 1;
+
+    private alertManager: AlertManager = AlertManager.getInstance();
 
     private gaps = 0;
     // private targetWidth = 1;
@@ -91,6 +94,8 @@ export class Tight3to4CanvasManager {
 
 
     update(frameCount: number, gridIsEnabled: boolean, gridGap: number, gridOffset: { x: number, y: number }): string {
+        let alert: boolean = false;
+
         if (!this.context) return "";
 
         let decoderGaps = 0;
@@ -102,17 +107,28 @@ export class Tight3to4CanvasManager {
         let oscilatorGap = 0;
 
         if (gridIsEnabled) {
+            let gap: null | number = null;
             for (let i = 0; i < 13; i++) {
-                this.addLogicLineToLeft(drawer, 2, "rgb(150, 150, 150)", gridIsEnabled, gridGap, gridOffset); //декодер
+
+                gap = this.isNeedGap(2, gridGap, gridOffset);
+                this.addLogicLineToLeft(drawer, 2, gap, "rgb(150, 150, 150)", gridIsEnabled, gridGap, gridOffset); //декодер
+
+                if (i < 4 && gap !== null && gap >= 3) {
+                    alert = true;
+                }
             }
             decoderGaps = this.intermediateCanvas.width - this.mainCanvas.width - 26;
             oscilatorGap = this.isNeedGap(3, gridGap, gridOffset) ?? 0;
             for (let i = 0; i < frameCount; i++) {
-                this.addLogicLineToLeft(drawer, 2, "rgb(170, 170, 170)", gridIsEnabled, gridGap, gridOffset); // кадры
-                this.addLogicLineToLeft(drawer, 1, "rgb(200, 200, 200)", gridIsEnabled, gridGap, gridOffset);
+                gap = this.isNeedGap(2, gridGap, gridOffset);
+                this.addLogicLineToLeft(drawer, 2, gap, "rgb(170, 170, 170)", gridIsEnabled, gridGap, gridOffset); // кадры
+                gap = this.isNeedGap(1, gridGap, gridOffset);
+                this.addLogicLineToLeft(drawer, 1, gap, "rgb(200, 200, 200)", gridIsEnabled, gridGap, gridOffset);
             }
-            // frameGaps = this.gaps - decoderGaps;
+
         } else {
+            this.alertManager.setAlert("wrongXOffset", false);
+
             drawer.addStripe({ width: 26, direction: "left", color: "rgb(150, 150, 150)" }); //декодер
             drawer.addStripe({ width: 3 * frameCount, direction: "left", color: "rgb(170, 170, 170)" }); // кадры
         }
@@ -126,44 +142,19 @@ export class Tight3to4CanvasManager {
 
         this.placeInside(this.intermediateCanvas, this.intermediateCanvas.width, this.intermediateCanvas.height); // вкорячиваем куда надо
 
-        // this.gaps = 0; // сбрасываем gaps
-        return "total size: " + this.intermediateCanvas.width + "*" + this.intermediateCanvas.height;
 
+        this.alertManager.setAlert("wrongXOffset", alert);
+
+        return "total size: " + this.intermediateCanvas.width + "*" + this.intermediateCanvas.height;
     }
 
-    private addLogicLineToLeft(drawer: CanvasDrawer, width: number, color: string, gridIsEnabled: boolean, gridGap: number, gridOffset: { x: number, y: number }) {
-        // const canvas = this.intermediateCanvas.width + 2;
-        // let intra = (canvas + gridOffset.x - 2) % gridGap;
-        // let extra = gridGap - intra;
-        // if (extra > 0 && extra < width) {
-
-        // const realStartOfCurrentBlock = this.intermediateCanvas.width;
-        // let gap;
-
-        let offset = gridOffset.x;
-        if (offset < 0) { offset = gridGap - Math.abs(offset) % gridGap; }
-
-        const canvas = this.intermediateCanvas.width;
-        let intra = (canvas + offset) % gridGap;
-        let extra = gridGap - intra;
-
-        if (intra == 0) { extra = 0; } // нюанс расчётов. иначе вместо ноль будет gap.
-
-        if (extra >= 0 && extra < width) {
-            let gap = extra % width; // это короче как далеко слева лэп
-            gap = gap == 0 ? width : width + extra; // если вот прям лэп
-            gap = gap < 2 ? 2 : gap; // отступ должен быть не короче лэпа
-            // this.gaps += gap;
-            drawer.addStripe({ width: gap, direction: "left", color: "rgba(0, 0, 0, 0)" });
-        } else if (intra < 2) {
-            let gap = 2 - intra;
-            // this.gaps += gap;
+    private addLogicLineToLeft(drawer: CanvasDrawer, width: number, gap: number | null, color: string, gridIsEnabled: boolean, gridGap: number, gridOffset: { x: number, y: number }) {
+        // const gap = this.isNeedGap(width, gridGap, gridOffset);
+        if (gap !== null) {
             drawer.addStripe({ width: gap, direction: "left", color: "rgba(0, 0, 0, 0)" });
         }
-
         drawer.addStripe({ width: width, direction: "left", color: color });
     }
-
 
     isNeedGap(width: number, gridGap: number, gridOffset: { x: number, y: number }): number | null {
 
@@ -221,6 +212,7 @@ export class Tight3to4CanvasManager {
                 drawer.drawSquare(x + gridOffset.x, y + gridOffset.y, 2, 2, "rgb(255, 38, 0)");
             }
         }
-
     }
+
+
 }

@@ -1,6 +1,7 @@
+import { AlertManager } from "./alertManager.js";
 import jsonToBlueprint from "./blueprintEncoder.js";
 import { DropdownOption, Dropdown } from "./dropdown.js";
-import ImageProcessor from "./imageProcessor.js";
+import ImageProcessor, { Mode } from "./imageProcessor.js";
 import { Method } from "./method.js";
 import getMethods from "./methodsManager.js";
 import tight3to4Method from "./tight3to4Method.js";
@@ -43,6 +44,8 @@ export default class InputHandler {
     private canvasManager: ImageProcessor;
 
     private static instance: InputHandler;
+
+    private alertManager: AlertManager = AlertManager.getInstance();
 
     static getInstance() {
         if (!this.instance) {
@@ -125,34 +128,47 @@ export default class InputHandler {
         //#region Afqkgbrth
         fileInput.addEventListener('change', function (event: Event) {
             const target = event.target as HTMLInputElement;
-            const file = target.files?.[0];
+            const files = target.files;
 
-            if (!file) {
-                alert('Пожалуйста, выберите файл.');
+            // Проверяем, выбраны ли файлы
+            if (!files || files.length === 0) {
+                self.alertManager.setAlert("fileError", true);
                 return;
             }
 
-            fileNameLabel.textContent = "selected: " + self.shortLabel(file.name, 10);
+            // Определяем типы файлов
+            const fileTypes = Array.from(files).map(file => file.type);
+            const isSingleGif = files.length === 1 && fileTypes[0] === 'image/gif';
+            const isSinglePng = files.length === 1 && fileTypes[0] === 'image/png';
+            const multiplePngs = files.length > 1 && fileTypes.every(type => type === 'image/png');
 
-            // Определяем режим (gif или png) и проверяем тип файла
-            const mode = file.type === 'image/gif' ? 'gif' : file.type === 'image/png' ? 'png' : null;
+            // Определяем режим на основе выбранных файлов
+            let mode: Mode = null;
+            if (isSingleGif) {
+                mode = 'gif';
+            } else if (multiplePngs) {
+                mode = 'pngSequence';
+            } else if (isSinglePng) {
+                mode = 'png';
+            }
 
             if (!mode) {
-                alert('Пожалуйста, выберите файл GIF или PNG.');
+                self.alertManager.setAlert("fileError", true);
                 return;
             }
 
-            methodSelect.classList.remove('hidden');
+            self.alertManager.setAlert("fileError", false);
 
-            const reader = new FileReader();
-            reader.onload = function (e: ProgressEvent<FileReader>) {
-                const arrayBuffer = e.target?.result as ArrayBuffer;
-                self.canvasManager.loader({ mode, arrayBuffer });
-            };
-            reader.readAsArrayBuffer(file);
+            // Обновляем метку с именем выбранного файла(ов)
+            if (files.length === 1) {
+                fileNameLabel.textContent = "selected: " + self.shortLabel(files[0].name, 10);
+            } else {
+                fileNameLabel.textContent = `selected: ${files.length} files`;
+            }
 
+            modeDropdown.selectByName(null); // сброс метода
 
-            const gifInputs = [
+            const gifInputs = [ // гуи для гифок
                 frameCountInput,
                 frameCountLabel,
                 frameInput,
@@ -165,11 +181,74 @@ export default class InputHandler {
 
             if (mode === 'gif') {
                 gifInputs.forEach(element => element.classList.remove('hidden'));
+                // Чтение одного GIF-файла
+                readFileAsArrayBuffer(files[0]).then(arrayBuffer => {
+                    self.canvasManager.loader({ mode, arrayBuffer });
+                }).catch(error => {
+                    console.error('Ошибка при чтении файла', error);
+                });
+
+            } else if (mode === 'pngSequence') {
+                // Чтение нескольких PNG-файлов
+                readFilesAsArrayBuffers(files).then(arrayBuffers => {
+                    self.canvasManager.loader({ mode, arrayBuffers });
+                }).catch(error => {
+                    console.error('Ошибка при чтении файлов', error);
+                });
+
             } else if (mode === 'png') {
                 gifInputs.forEach(element => element.classList.add('hidden'));
+                // Чтение одного PNG-файла
+                readFileAsArrayBuffer(files[0]).then(arrayBuffer => {
+                    self.canvasManager.loader({ mode, arrayBuffer });
+                }).catch(error => {
+                    console.error('Ошибка при чтении файла', error);
+                });
             }
 
-            modeDropdown.selectByName(null);
+
+            // Функции для чтения файлов
+            function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = function (e: ProgressEvent<FileReader>) {
+                        const arrayBuffer = e.target?.result as ArrayBuffer;
+                        resolve(arrayBuffer);
+                    };
+                    reader.onerror = function (e) {
+                        reject(e);
+                    };
+                    reader.readAsArrayBuffer(file);
+                });
+            }
+
+            function readFilesAsArrayBuffers(files: FileList): Promise<ArrayBuffer[]> {
+                return Promise.all(Array.from(files).map(file => readFileAsArrayBuffer(file)));
+            }
+
+
+
+            // methodSelect.classList.remove('hidden');
+            // const reader = new FileReader();
+            // reader.onload = function (e: ProgressEvent<FileReader>) {
+            //     const arrayBuffer = e.target?.result as ArrayBuffer;
+            //     self.canvasManager.loader({ mode, arrayBuffer });
+            // };
+            // reader.readAsArrayBuffer(file);
+
+            // const gifInputs = [
+            //     frameCountInput,
+            //     frameCountLabel,
+            //     frameInput,
+            //     frameLabel,
+            //     frameRateContainer,
+            //     frameRateLabel,
+            //     autoPlayContainer,
+            //     autoPlayLabel,
+            // ];
+
+
+
         });
         //#endregion
 

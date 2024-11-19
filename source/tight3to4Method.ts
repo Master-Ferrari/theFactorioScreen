@@ -6,6 +6,7 @@ import { allSignals, getTypeByName } from "./allSignals.js";
 // import { constants } from "buffer";
 import { Tight3to4CanvasManager } from "./tight3to4Canvas.js";
 import { HtmlCreator as Html } from "./htmlStuff.js";
+import { AlertManager } from "./alertManager.js";
 // import { Dropdown } from "./dropdown.js";
 
 type pixel = { r: number, g: number, b: number };
@@ -22,6 +23,8 @@ export default class tight3to4Method extends Method {
     readonly name = "tight3to4";
     readonly value = "tight video player";
     readonly supportedModes: Mode[] = ["gif"];
+
+    private alertManager: AlertManager = AlertManager.getInstance();
 
     private imageProcessor: ImageProcessor;
 
@@ -159,6 +162,8 @@ export default class tight3to4Method extends Method {
         while (this.optionsContainer.firstChild) {
             this.optionsContainer.removeChild(this.optionsContainer.firstChild);
         }
+
+        this.alertManager.setAlert("wrongXOffset", false);
     }
 
     update(options: updateOptions): void {
