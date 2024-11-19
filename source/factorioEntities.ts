@@ -1,13 +1,24 @@
 import { CursorPos } from "readline";
 import { getTypeByName } from "./allSignals.js";
 
-function sizeAdapter(x: number, y: number, w: number, h: number, direction: Dir): { x: number, y: number } { // пу умолчанию блок смотрит вверх
-    if (direction == Dir.north || direction == Dir.south) {
-        x = x + w / 2;
-        y = y + h / 2;
-    } else {
-        x = x + h / 2;
-        y = y + w / 2;
+function sizeAdapter(x: number, y: number, w: number, h: number, direction: Dir, order: Order): { x: number, y: number } { // пу умолчанию блок смотрит вверх
+    if (order == "normal") {
+        if (direction == Dir.north || direction == Dir.south) {
+            x = x + w / 2;
+            y = y + h / 2;
+        } else {
+            x = x + h / 2;
+            y = y + w / 2;
+        }
+    }
+    else {
+        if (direction == Dir.north || direction == Dir.south) {
+            x = x - w / 2;
+            y = y + h / 2;
+        } else {
+            x = x - h / 2;
+            y = y + w / 2;
+        }
     }
     return { x: x, y: y };
 }
@@ -26,12 +37,14 @@ export const gapsSizes = [16, 18, 20, 22, 26];
 
 export type RgbSignalsNames = { rName: string, gName: string, bName: string };
 
+type Order = "normal" | "reverse";
+
 export class factorioEntities {
-    static simpleLamp(index: number, x: number, y: number, r: number, g: number, b: number): any {
+    static simpleLamp(index: number, x: number, y: number, r: number, g: number, b: number, options?: { entityStartPos?: Order }): any {
         return {
             entity_number: index,
             name: "small-lamp",
-            position: sizeAdapter(x, y, 1, 1, Dir.south),
+            position: sizeAdapter(x, y, 1, 1, Dir.south, options?.entityStartPos ?? "normal"),
             color: {
                 r: r / 255,
                 g: g / 255,
@@ -41,11 +54,11 @@ export class factorioEntities {
             always_on: true
         };
     }
-    static rgbLamp(index: number, x: number, y: number, names: RgbSignalsNames): any {
+    static rgbLamp(index: number, x: number, y: number, names: RgbSignalsNames, options?: { entityStartPos?: Order }): any {
         return {
             entity_number: index,
             name: "small-lamp",
-            position: sizeAdapter(x, y, 1, 1, Dir.south),
+            position: sizeAdapter(x, y, 1, 1, Dir.south, options?.entityStartPos ?? "normal"),
 
             control_behavior: {
                 use_colors: true,
@@ -67,11 +80,11 @@ export class factorioEntities {
         };
     }
 
-    static arithmeticCombinator(index: number, x: number, y: number, direction: Dir, arithmetic_conditions: any, options?: { playerDescription?: string }): any {
+    static arithmeticCombinator(index: number, x: number, y: number, direction: Dir, arithmetic_conditions: any, options?: { playerDescription?: string, entityStartPos?: Order }): any {
         return {
             entity_number: index,
             name: "arithmetic-combinator",
-            position: sizeAdapter(x, y, 1, 2, direction),
+            position: sizeAdapter(x, y, 1, 2, direction, options?.entityStartPos ?? "normal"),
             direction: direction,
             control_behavior: {
                 arithmetic_conditions: arithmetic_conditions
@@ -79,11 +92,11 @@ export class factorioEntities {
             ...(options?.playerDescription && { player_description: options.playerDescription })
         };
     }
-    static deciderCombinator(index: number, x: number, y: number, direction: Dir, decider_conditions: any, options?: { playerDescription?: string }): any {
+    static deciderCombinator(index: number, x: number, y: number, direction: Dir, decider_conditions: any, options?: { playerDescription?: string, entityStartPos?: Order }): any {
         return {
             entity_number: index,
             name: "decider-combinator",
-            position: sizeAdapter(x, y, 1, 2, direction),
+            position: sizeAdapter(x, y, 1, 2, direction, options?.entityStartPos ?? "normal"),
             direction: direction,
             control_behavior: {
                 decider_conditions: decider_conditions
@@ -93,18 +106,18 @@ export class factorioEntities {
     }
 
 
-    static constantCombinator(index: number, x: number, y: number, direction: Dir, signalsOrSections: any, options?: { playerDescription?: string }): any {
+    static constantCombinator(index: number, x: number, y: number, direction: Dir, signalsOrSections: any, options?: { playerDescription?: string, entityStartPos?: Order }): any {
         return {
             entity_number: index,
             name: "constant-combinator",
-            position: sizeAdapter(x, y, 1, 1, direction),
+            position: sizeAdapter(x, y, 1, 1, direction, options?.entityStartPos ?? "normal"),
             direction: direction,
             control_behavior: { sections: { sections: signalsOrSections } },
             ...(options?.playerDescription && { player_description: options.playerDescription })
         }
     }
 
-    static substation(index: number, x: number, y: number, quality: Quality | qualityEnum): any {
+    static substation(index: number, x: number, y: number, quality: Quality | qualityEnum, options?: { entityStartPos?: Order }): any {
         let qualityName: string = "normal";
 
         if (typeof quality === "number") {
@@ -117,7 +130,7 @@ export class factorioEntities {
         return {
             entity_number: index,
             name: "substation",
-            position: sizeAdapter(x, y, 2, 2, 1),
+            position: sizeAdapter(x, y, 2, 2, 1, options?.entityStartPos ?? "normal"),
             ...(qualityName != "normal" && { quality: qualityName })
         }
     }
@@ -168,9 +181,9 @@ const ololo: Wires = [[1, 2, 3, 4]]
 export class CoordinateCursor {
     private _x: number;
     private _y: number;
-    restrictedColumns: number[] = [];
 
-    restrictProtection: boolean = true;
+    private restrictedColumns: number[] = [];
+    private restrictedRows: number[] = [];
 
     constructor(x: number, y: number) {
         this._x = x;
@@ -180,20 +193,6 @@ export class CoordinateCursor {
     get x() { return this._x; }
     get y() { return this._y; }
     get xy() { return { x: this.x, y: this.y }; }
-
-    // set x(value: number) {
-    //     console.log("x", value);
-    //     if (!this.restrictProtection && this.restrictedColumns.includes(value)) {
-    //         console.log("вместо " + value + " пишем " + (value - 1));
-    //         this.dx(-1);
-    //     }
-    //     else { this._x = value; }
-    // }
-    // set y(value: number) { this._y = value; }
-    // set xy(value: { x: number, y: number }) {
-    //     this.x = value.x;
-    //     this.y = value.y;
-    // }
 
     sxy(x: number, y: number): void;
     sxy(xy: { x: number, y: number }): void;
@@ -253,17 +252,35 @@ export class CoordinateCursor {
         return x;
     }
 
-    checkRestriction(width: number) {
+    checkRestrictionAndMove(width: number) {
+        let magic = -5;
+        if(width==1) {magic = -4;}
         for (let w = 0; w < width; w++) {
-            if (this.restrictedColumns.includes(this.x + w)) {
-                this.dx(-w-1);
+            console.log("test3 ", this._x, this.restrictedColumns.includes(this._x + w));
+            if (this.restrictedColumns.includes(this._x + w + magic)) {
+                console.log("test3 ===== -1 ");
+                this._x--;
+                this.checkRestrictionAndMove(width);
+                break;
             }
         }
     }
 
+    checkLampsRestriction(lookX: number = 0): boolean { //-2 +2
+        return this.restrictedColumns.includes(this._x + lookX - 4) && this.restrictedRows.includes(this._y -2);
+    }
+
     addRestrictedColumns(columns: number[]) {
         for (const column of columns) {
-            this.restrictedColumns.push(column);
+            console.log("test4-restricted", column);
+            this.restrictedColumns.push(column - 2);
+        }
+    }
+
+    addRestrictedRows(rows: number[]) {
+        for (const row of rows) {
+            console.log("test4-restricted", row);
+            this.restrictedRows.push(row - 2);
         }
     }
 }

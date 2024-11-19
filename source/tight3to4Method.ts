@@ -37,6 +37,8 @@ export default class tight3to4Method extends Method {
 
     private options: updateOptions | null = null;
 
+    private sequencerStartXY = { x: 0, y: 0 };
+
     constructor(optionsContainer: HTMLElement, blueprintGetter: blueprintGetter) {
         super(optionsContainer, blueprintGetter);
 
@@ -168,7 +170,7 @@ export default class tight3to4Method extends Method {
     }
 
     canvasUpdate(options: updateOptions = this.options ?? { frameCount: 1, currentFrame: 0, mode: "gif" }): void {
-        const infotext = this.tight3to4CanvasManager?.update(options.frameCount, this.gridIsEnabled, this.gridGap, this.gridOffset) ?? "";
+        const infotext = this.tight3to4CanvasManager?.update(options.frameCount, this.gridIsEnabled, this.gridGap + 2, this.gridOffset) ?? "";
         this.infoTextChange?.(infotext);
     }
 
@@ -197,8 +199,7 @@ export default class tight3to4Method extends Method {
         if (this.gridIsEnabled) {
             const oldXY = cc.xy;
             console.log("sadsdfsd", cc.xy);
-            cc.sxy({ x: 26 + imageWidth - 2 + (this.gridOffset.x) % this.gridGap, y: (this.gridOffset.y) % this.gridGap });
-            // blueprint.addEntities([f.substation(ii.next(), cc.x, cc.y, this.substationsQuality)]);
+            cc.sxy({ x: (this.gridOffset.x) % this.gridGap - 1, y: (this.gridOffset.y) % this.gridGap });
             const electricGrid = this.makeElectricGrid(ii, cc);
             blueprint.addEntitiesAndWires(electricGrid);
             cc.sxy(oldXY);
@@ -208,7 +209,7 @@ export default class tight3to4Method extends Method {
         ii.shift(1);
 
 
-        for (let y = 0; y < preparedGifData.rows.length; y++) {
+        for (let y = 0; y < preparedGifData.rows.length; y++) { // строчки всего вместе
             const rowData = preparedGifData.rows[y];
             const oldCC = cc.xy;
 
@@ -221,22 +222,22 @@ export default class tight3to4Method extends Method {
             cc.sxy({ x: oldCC.x, y: oldCC.y + 1 });
         }
 
-        // cc.dx(-2);
-        const framesCount = preparedGifData.rows[0].frames.length;
-        const Sequencer = this.makeSequencer(ii, cc.dxycc({ x: -3, y: 0 }), gifData.tpf, framesCount);
-        blueprint.addEntitiesAndWires(Sequencer);
-
-        const frameDecidersPairs = ii.getpairs("frame decider combinator");
+        const frameDecidersPairs = ii.getpairs("frame decider combinator"); // вертикальный проводочек
         console.log("test20-frameDecidersPairs", frameDecidersPairs);
         frameDecidersPairs.forEach(pair => {
             blueprint.addWires([[pair[0], Wire.redIn, pair[1], Wire.redIn]]);
         })
 
-        const mainClockWire = ii.getpairs("main clock")[0];
-        blueprint.addWires([[mainClockWire[0], Wire.redIn, mainClockWire[1], Wire.redOut]]);
 
-        console.log(this.gridIsEnabled, this.gridGap, this.gridOffset);
-        console.log({ x: 26 + imageWidth + this.gridOffset.x, y: this.gridOffset.y });
+        const framesCount = preparedGifData.rows[0].frames.length; // секвенсер
+        console.log("test6-this.sequencerStartXY", this.sequencerStartXY);
+        cc.sxy(this.sequencerStartXY); cc.dx(2);
+        cc.checkRestrictionAndMove(4);
+        const Sequencer = this.makeSequencer(ii, cc, gifData.tpf, framesCount);
+        blueprint.addEntitiesAndWires(Sequencer);
+
+        const mainClockWire = ii.getpairs("main clock")[0]; // проводочек секвенсора
+        blueprint.addWires([[mainClockWire[0], Wire.redIn, mainClockWire[1], Wire.redOut]]);
 
 
 
@@ -266,12 +267,12 @@ export default class tight3to4Method extends Method {
                 if (xi < xim - 1) wires.push([ii.i, Wire.coper, ii.look(1), Wire.coper]);
 
                 if (yi < yim - 1) wires.push([ii.i, Wire.coper, ii.look(xim), Wire.coper]);
-            }
-        }
 
-        for (let xi = 0; xi < xim; xi++) {
-            cc.addRestrictedColumns([(startC.x - this.gridGap * xi), ((startC.x - this.gridGap * (xi) - 1))]);
-            console.log("restricted", (startC.x - this.gridGap * xi), ((startC.x - this.gridGap * (xi) - 1)));
+                if (yi == 0) {
+                    cc.addRestrictedColumns([(startC.x - this.gridPlus * xi), ((startC.x - this.gridPlus * xi - 1))]);
+                }
+            }
+            cc.addRestrictedRows([(startC.y + this.gridPlus * yi), ((startC.y + this.gridPlus * yi + 1))]);
         }
 
         return { entities: block, wires: wires };
@@ -282,23 +283,27 @@ export default class tight3to4Method extends Method {
         let block: Entities = [];
         let wires: Wires = [];
 
-        cc.restrictProtection = false;
-        const beforeFrameBlock = cc.xy;
-        const makeFramesBlock = this.makeFrames(ii, cc, frames, isItLastRow, isItFirstRow);
-        cc.sxy(beforeFrameBlock);
-        ii.shift(1);
-        const bytesShiftBlock = this.makeDecoder(ii, cc);
-        cc.restrictProtection = true;
-
         const lamps = this.makeLamps(ii, cc, currentFrame, width);
-        ii.shift(1);
+
+
+        const bytesShiftBlock = this.makeDecoder(ii, cc);
+        // cc.restrictProtection = false;
+        // const beforeFrameBlock = cc.xy;
+        const makeFramesBlock = this.makeFrames(ii, cc, frames, isItLastRow, isItFirstRow);
+        // cc.sxy(beforeFrameBlock);
+        // ii.shift(1);
+        // cc.restrictProtection = true;
+
+
+        // ii.shift(1);
 
 
 
-        // block.push(...makeFramesBlock.entities);
-        // wires.push(...makeFramesBlock.wires);
-        block.push(...makeFramesBlock.entities, ...bytesShiftBlock.entities, ...lamps.entities);
-        wires.push(...makeFramesBlock.wires, ...bytesShiftBlock.wires, ...lamps.wires);
+        block.push(...lamps.entities, ...bytesShiftBlock.entities, ...makeFramesBlock.entities,);
+        wires.push(...lamps.wires, ...bytesShiftBlock.wires, ...makeFramesBlock.wires,);
+
+        // block.push(...makeFramesBlock.entities, ...bytesShiftBlock.entities, ...lamps.entities);
+        // wires.push(...makeFramesBlock.wires, ...bytesShiftBlock.wires, ...lamps.wires);
 
 
 
@@ -417,23 +422,22 @@ export default class tight3to4Method extends Method {
         ]);
 
         //building
+        block.push(f.constantCombinator(ii.next(), cc.px(-1), cc.dy(2), Dir.south, sections, { playerDescription: "Media control", entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(3), Wire.greenIn]);
+        wires.push([ii.i, Wire.redIn, ii.look(2), Wire.redIn]);
 
-        block.push(f.deciderCombinator(ii.next(), cc.px(1), cc.y, Dir.north, deciderFrameCount(framesCount)));
+        block.push(f.deciderCombinator(ii.next(), cc.px(-1), cc.dy(-1), Dir.north, deciderFrameCount(framesCount), { entityStartPos: "reverse" }));
         wires.push([ii.i, Wire.greenIn, ii.i, Wire.greenOut]);
         wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenOut]);
         wires.push([ii.i, Wire.redIn, ii.look(1), Wire.redIn]);
 
         ii.addPairMember("main clock", ii.i);
 
-        block.push(f.deciderCombinator(ii.next(), cc.px(1), cc.y, Dir.north, deciderReset()));
+        block.push(f.deciderCombinator(ii.next(), cc.px(-1), cc.y, Dir.north, deciderReset(), { entityStartPos: "reverse" }));
         wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenOut]);
-        wires.push([ii.i, Wire.redIn, ii.look(2), Wire.redIn]);
 
-        block.push(f.deciderCombinator(ii.next(), cc.px(1), cc.y, Dir.north, deciderFrameLenght(tpf)));
+        block.push(f.deciderCombinator(ii.next(), cc.px(-1), cc.y, Dir.north, deciderFrameLenght(tpf), { entityStartPos: "reverse" }));
         wires.push([ii.i, Wire.greenIn, ii.i, Wire.greenOut]);
-        wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenIn]);
-
-        block.push(f.constantCombinator(ii.next(), cc.px(1), cc.dy(1), Dir.south, sections, { playerDescription: "Media control" }));
 
         return { entities: block, wires: wires };
     }
@@ -471,36 +475,34 @@ export default class tight3to4Method extends Method {
 
 
         //building
-        cc.dx(-frames.length * 3);
-
-
-        ii.shift(-1);
-        for (let index = 0; index < frames.length; index++) {
+        for (let index = frames.length - 1; index >= 0; index--) {
             const itIsLastFrame = index >= frames.length - 1;
+            const itIsFirstFrame = index <= 0;
 
-            // console.log("test22-makeSignalsConstantCombinator", f.constantCombinator(ii.next(), cc.px(1), cc.y, Dir.east, makeSignals(frames[index])));
-
-            block.push(f.constantCombinator(ii.next(), cc.px(1), cc.y, Dir.east, makeSignals(frames[index])));
+            cc.checkRestrictionAndMove(2);
+            block.push(f.deciderCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, deciderFrameSelector(index), { entityStartPos: "reverse" }));
             wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenIn]);
 
-            block.push(f.deciderCombinator(ii.next(), cc.px(2), cc.y, Dir.east, deciderFrameSelector(index)));
+            if (itIsLastFrame) {
+                ii.addPairMember("frame decider combinator", ii.i); // вертикальный перенос сигнала кадра
+                if (!isItFirstRow) { // нужно делать по два раза. чтобы ну. провод вести. но последний раз не надо.
+                    ii.addPairMember("frame decider combinator", ii.i);
+                }
+            }
 
-            if (!itIsLastFrame) {
+            if (!itIsFirstFrame) { // это провода налево. но левее первого кадра нету.
                 wires.push([ii.i, Wire.greenOut, ii.look(2), Wire.greenOut]);
                 wires.push([ii.i, Wire.redIn, ii.look(2), Wire.redIn]);
-            } else {
-
-                ii.addPairMember("frame decider combinator", ii.i); // вертикальный перенос сигнала кадра
-                if (!isItFirstRow) {
-                    ii.addPairMember("frame decider combinator", ii.i); // повторяем чтобы ну... короче блин,, да
-                }
-
-                if (isItLastRow) {
-                    ii.addPairMember("main clock", ii.i);
-                }
-
-                wires.push([ii.i, Wire.greenOut, ii.look(1), Wire.greenIn]);
             }
+
+            if (isItLastRow && itIsLastFrame) {
+                ii.addPairMember("main clock", ii.i);
+                this.sequencerStartXY = cc.xy;
+            }
+
+            cc.checkRestrictionAndMove(1);
+            block.push(f.constantCombinator(ii.next(), cc.px(-1), cc.y, Dir.east, makeSignals(frames[index]), { entityStartPos: "reverse" }));
+
         }
 
         return { entities: block, wires: wires };
@@ -561,45 +563,58 @@ export default class tight3to4Method extends Method {
             ]
         };
 
-        //building
+        //buildingd
 
-        block.push(f.arithmeticCombinator(ii.i, cc.px(2), cc.y, Dir.east, arithmeticGetByte));
+        cc.checkRestrictionAndMove(2);
+        block.push(f.arithmeticCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, arithmeticGetByte, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(4), Wire.greenOut]);
+
+        cc.checkRestrictionAndMove(2);
+        block.push(f.deciderCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, deciderCord, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(4), Wire.greenOut]);
+
+        cc.checkRestrictionAndMove(2);
+        block.push(f.deciderCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, deciderCord, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(4), Wire.greenOut]);
+
+        cc.checkRestrictionAndMove(2);
+        block.push(f.deciderCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, deciderCord, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(4), Wire.greenOut]);
+
+        cc.checkRestrictionAndMove(2);
+        block.push(f.arithmeticCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, arithmeticShiftByte, { entityStartPos: "reverse" }));
         wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenIn]);
-        wires.push([ii.i, Wire.greenOut, ii.look(2), Wire.greenIn]);
 
-        block.push(f.arithmeticCombinator(ii.next(), cc.px(2), cc.y, Dir.east, arithmeticShiftByte));
-        wires.push([ii.i, Wire.greenOut, ii.look(2), Wire.greenIn]);
+        cc.checkRestrictionAndMove(2);
+        block.push(f.arithmeticCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, arithmeticGetByte, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(3), Wire.greenOut]);
 
-        block.push(f.deciderCombinator(ii.next(), cc.px(2), cc.y, Dir.east, deciderCord));
-        wires.push([ii.i, Wire.greenOut, ii.look(3), Wire.greenIn]);
+        cc.checkRestrictionAndMove(2);
+        block.push(f.deciderCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, deciderCord, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(3), Wire.greenOut]);
 
-        block.push(f.arithmeticCombinator(ii.next(), cc.px(2), cc.y, Dir.east, arithmeticGetByte));
+        cc.checkRestrictionAndMove(2);
+        block.push(f.deciderCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, deciderCord, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(3), Wire.greenOut]);
+
+        cc.checkRestrictionAndMove(2);
+        block.push(f.arithmeticCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, arithmeticShiftByte, { entityStartPos: "reverse" }));
         wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenIn]);
-        wires.push([ii.i, Wire.greenOut, ii.look(3), Wire.greenIn]);
 
-        block.push(f.arithmeticCombinator(ii.next(), cc.px(2), cc.y, Dir.east, arithmeticShiftByte));
-        wires.push([ii.i, Wire.greenOut, ii.look(3), Wire.greenIn]);
+        block.push(f.arithmeticCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, arithmeticGetByte, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(2), Wire.greenOut]);
 
-        block.push(f.deciderCombinator(ii.next(), cc.px(2), cc.y, Dir.east, deciderCord));
-        wires.push([ii.i, Wire.greenOut, ii.look(4), Wire.greenIn]);
+        cc.checkRestrictionAndMove(2);
+        block.push(f.deciderCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, deciderCord, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(2), Wire.greenOut]);
 
-        block.push(f.deciderCombinator(ii.next(), cc.px(2), cc.y, Dir.east, deciderCord));
-        wires.push([ii.i, Wire.greenOut, ii.look(4), Wire.greenIn]);
-
-        block.push(f.arithmeticCombinator(ii.next(), cc.px(2), cc.y, Dir.east, arithmeticGetByte));
+        cc.checkRestrictionAndMove(2);
+        block.push(f.arithmeticCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, arithmeticShiftByte, { entityStartPos: "reverse" }));
         wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenIn]);
-        wires.push([ii.i, Wire.greenOut, ii.look(4), Wire.greenIn]);
 
-        block.push(f.arithmeticCombinator(ii.next(), cc.px(2), cc.y, Dir.east, arithmeticShiftByte));
-        wires.push([ii.i, Wire.greenOut, ii.look(4), Wire.greenIn]);
-
-        block.push(f.deciderCombinator(ii.next(), cc.px(2), cc.y, Dir.east, deciderCord));
-
-        block.push(f.deciderCombinator(ii.next(), cc.px(2), cc.y, Dir.east, deciderCord));
-
-        block.push(f.deciderCombinator(ii.next(), cc.px(2), cc.y, Dir.east, deciderCord));
-
-        block.push(f.arithmeticCombinator(ii.next(), cc.px(2), cc.y, Dir.east, arithmeticGetByte));
+        cc.checkRestrictionAndMove(2);
+        block.push(f.arithmeticCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, arithmeticGetByte, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenOut]);
 
         return { entities: block, wires: wires };
     }
@@ -622,18 +637,38 @@ export default class tight3to4Method extends Method {
             });
         }
 
-        let e = 0;
-        cc.dx(-1);
-        for (let i = 0; i < width; i++) {
+        cc.dx(1);
+        for (let i = width - 1; i >= 0; i--) {
             const packIndex = Math.floor(i / 4);
 
-            block.push(f.rgbLamp(ii.next(), cc.dx(1), cc.y, signalNamesRgbGroups[packIndex]));
+            if (!cc.checkLampsRestriction()) {
+                let look = 4; // чек дырки в соседе слева
+                if (cc.checkLampsRestriction(-4)) {
+                    look = 6;
+                    // cc.dx(-1);
+                    // continue;
+                }
 
-            if (packIndex == 0) {
-                wires.push([ii.i, Wire.greenIn, ii.look(-4), Wire.greenOut]);
+                if (cc.checkLampsRestriction(-2)) {
+                    look = 2;
+                }
+
+                
+                block.push(f.rgbLamp(ii.next(), cc.px(-1), cc.y, signalNamesRgbGroups[packIndex], { entityStartPos: "reverse" }));
+
+
+                if (packIndex == 0) { // если коннект не к лампе
+                    wires.push([ii.i, Wire.greenIn, ii.look(look), Wire.greenOut]);
+                } else {
+                    wires.push([ii.i, Wire.greenIn, ii.look(look), Wire.greenIn]);
+                }
+
             } else {
-                wires.push([ii.i, Wire.greenIn, ii.look(-4), Wire.greenIn]);
+                cc.dx(-1);
+                // ii.next();
+                // i--;
             }
+
         }
 
 
@@ -641,9 +676,10 @@ export default class tight3to4Method extends Method {
     }
 
 
-    //#endregion
+    //#endregions
     /////////////////////////////////////////
     //#region stuff functions
+
 
     gifDataToPreparedGifData(gifData: GifBitmap): _gifData {
 
