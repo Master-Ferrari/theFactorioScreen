@@ -30,4 +30,3 @@ export default function getMethods(optionsContainer, blueprintGetter) {
     ]);
     return methods;
 }
-//# sourceMappingURL=methodsManager.js.map

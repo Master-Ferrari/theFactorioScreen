@@ -110,7 +110,7 @@ body {
 .icons path,
 .icons rect {
     /* stroke: var(--back-text-color); */
-    stroke-width: 1px ;
+    stroke-width: 1px;
 }
 
 .theme-toggle {
@@ -354,10 +354,22 @@ canvas {
     border: 1px solid var(--border-color);
     border-radius: var(--large-radius);
     margin-top: 20px;
-    max-width: 336px;
-    max-height: 336px;
+    /* max-width: 336px;
+    max-height: 336px; */
     height: 100%;
     image-rendering: pixelated;
+}
+
+.method-canvas {
+    /* width: 330px;
+    height: 330px; */
+
+}
+
+.method-canvas-container {
+    display: flex;
+    align-items: center;
+    justify-self: flex-start;
 }
 
 #textOutput {
@@ -453,11 +465,30 @@ canvas {
     align-items: center;
 }
 
-#mainControls {
+.controls-grid {
+    display: grid;
     margin-top: var(--control-margin);
-    display: none;
     grid-template-columns: 50% 50%;
     justify-items: start;
+    align-items: center;
+}
+
+.stroke-text {
+    position: absolute;
+    color: transparent;
+    -webkit-text-stroke: 5px var(--container-bg);
+    -webkit-text-fill-color: transparent;
+}
+
+.fill-text {
+    position: absolute;
+    color: var(--text-color);
+    user-select: none;
+}
+
+.stroke-text-container {
+    position: absolute;
+    width: -webkit-fill-available;
 }
 
 .control-title {
@@ -465,7 +496,6 @@ canvas {
     height: 45px;
 }
 
-/* Styles for buttons under canvas */
 #canvasControls {
     margin-top: 10px;
     display: none;
@@ -480,8 +510,8 @@ canvas {
 #canvas {
     margin: auto;
     border-radius: var(--small-radius);
-    max-width: 330px;
-    max-height: 330px;
+    /* max-width: 330px;
+    max-height: 330px; */
 }
 
 /* Стили для бегунка */
@@ -546,6 +576,7 @@ canvas {
     width: 100%;
     /* font-weight: bold; */
     text-align: center;
+    align-content: center;
     border-radius: var(--small-radius);
     padding: 3px 2px;
     height: var(--control-height);
@@ -582,8 +613,10 @@ canvas {
 }
 
 .dropdown-options {
+    z-index: 100;
+
     position: absolute;
-    top: 100%;
+    top: auto;
     left: 0;
 
     border-radius: var(--large-radius);

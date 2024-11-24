@@ -1,13 +1,14 @@
 import { Method } from "./method.js";
-import CanvasManager from "./imageProcessor.js";
+import ImageProcessor from "./imageProcessor.js";
 import { Blueprint, factorioEntities as f } from "./factorioEntities.js";
-const canvasManager = CanvasManager.init();
+const canvasManager = ImageProcessor.getInstance();
 export default class ImageMethod extends Method {
     constructor(optionsContainer, blueprintGetter) {
         super(optionsContainer, blueprintGetter);
         this.name = "image";
         this.value = "one frame image";
-        this.supportedModes = ["png", "gif"];
+        this.supportedModes = ["png", "gif", "pngSequence"];
+        this.infoTextLabel = null;
     }
     init() {
         const methodContainer = document.createElement('div');
@@ -18,6 +19,10 @@ export default class ImageMethod extends Method {
         const button = document.createElement('div');
         button.classList.add('control-margin-top-2', 'custom-button');
         button.textContent = "generate blueprint!";
+        this.infoTextLabel = document.createElement('div');
+        this.infoTextLabel.classList.add('info-text');
+        this.infoTextLabel.textContent = "";
+        methodContainer.appendChild(this.infoTextLabel);
         methodContainer.appendChild(button);
         button.addEventListener('click', () => {
             this.exportJson(this.makeJson());
@@ -41,5 +46,17 @@ export default class ImageMethod extends Method {
         blueprint.addEntities(entities);
         return blueprint.json();
     }
+    update(options) {
+        if (options.mode == "gif") {
+            this.infoTextLabel.innerText = "selected frame: " + options.currentFrame.toString();
+        }
+        else {
+            this.infoTextLabel.innerText = "";
+        }
+    }
+    destroy() {
+        while (this.optionsContainer.firstChild) {
+            this.optionsContainer.removeChild(this.optionsContainer.firstChild);
+        }
+    }
 }
-//# sourceMappingURL=imageMethod.js.map

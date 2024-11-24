@@ -1,4 +1,5 @@
-export default class CanvasManager {
+import { AlertManager } from "./alertManager.js";
+export default class ImageProcessor {
     get mode() { return this._mode; }
     constructor() {
         this._mode = null;
@@ -12,16 +13,20 @@ export default class CanvasManager {
         this.originalCanvasHeight = 1;
         this.originalImageWidth = 1;
         this.originalImageHeight = 1;
-        this.myGif = this.parseGif();
-        this.myPng = this.parsePng();
+        this.myGif = null;
+        this.myPng = null;
+        this.myPngSequence = null;
         this.autoPlayInterval = 1;
         this.currentOriginFrame = 0;
         this.currentLocalFrame = 0;
         this.frameRatio = 1;
         this.tpf = 4;
         this.fps = 15;
+        this.alertManager = AlertManager.getInstance();
+        // private alertBox: HTMLElement;
+        this.method = null;
         this.canvas = document.getElementById("canvas");
-        this.ctx = this.canvas.getContext("2d");
+        this.ctx = this.canvas.getContext("2d", { willReadFrequently: true });
         this.ctx.imageSmoothingEnabled = false;
         this.ctx.mozImageSmoothingEnabled = false;
         this.ctx.webkitImageSmoothingEnabled = false;
@@ -34,28 +39,36 @@ export default class CanvasManager {
         this.frameRateInput = document.getElementById("frameRateInput");
         this.frameRateDisplay = document.getElementById("frameRateDisplay");
         this.preserveAspectCheckbox = document.getElementById("preserveAspectCheckbox");
-        this.alertBox = document.getElementById("alert");
+        // this.alertBox = document.getElementById("alert") as HTMLElement;
         // this.frameRatioCalc();
     }
     loader(options) {
         this._mode = options.mode;
         this.verticalScale = 1;
         this.rotationAngle = 0;
+        this.method = null;
         if (options.mode === "gif") {
             this.loadGif(options.arrayBuffer);
         }
         else if (options.mode === "png") {
             this.loadPng(options.arrayBuffer);
         }
+        else if (options.mode === "pngSequence") {
+            this.loadPngSequence(options.arrayBuffers);
+        }
     }
     setOnLoadCallback(callback) {
         this.onLoadCallback = callback;
     }
-    static init() {
-        if (!CanvasManager.instance) {
-            CanvasManager.instance = new CanvasManager();
+    static getInstance() {
+        if (!ImageProcessor.instance) {
+            ImageProcessor.instance = new ImageProcessor();
         }
-        return CanvasManager.instance;
+        return ImageProcessor.instance;
+    }
+    changeMethod(newMethod) {
+        this.method = newMethod;
+        this.checkAlert();
     }
     loadPng(arrayBuffer) {
         this.myPng = this.parsePng();
@@ -83,7 +96,7 @@ export default class CanvasManager {
             self.canvas.style.width = canvasWidth + 'px';
             self.canvas.style.height = canvasHeight + 'px';
             if (self.myPng.frame?.image) {
-                const ctx = self.canvas.getContext("2d");
+                const ctx = self.canvas.getContext("2d", { willReadFrequently: true });
                 ctx.drawImage(self.myPng.frame.image, 0, 0, imageWidth, imageHeight);
             }
             self.onLoadCallback?.(self._mode);
@@ -108,7 +121,7 @@ export default class CanvasManager {
                     const canvas = document.createElement('canvas');
                     canvas.width = this.width;
                     canvas.height = this.height;
-                    const ctx = canvas.getContext("2d");
+                    const ctx = canvas.getContext("2d", { willReadFrequently: true });
                     ctx.drawImage(img, 0, 0);
                     canvas.ctx = ctx; // Привязываем контекст к canvas
                     // Инициализируем frame для PNG
@@ -385,7 +398,7 @@ export default class CanvasManager {
             const canvas = document.createElement('canvas');
             canvas.width = gif.width;
             canvas.height = gif.height;
-            canvas.ctx = canvas.getContext("2d");
+            canvas.ctx = canvas.getContext("2d", { willReadFrequently: true });
             frame.image = canvas;
             const ct = frame.localColourTableFlag ? frame.localColourTable : gif.globalColourTable;
             if (gif.lastFrame === null) {
@@ -506,11 +519,141 @@ export default class CanvasManager {
         };
         return gif;
     }
+    loadPngSequence(arrayBuffers) {
+        this.myPngSequence = this.parsePngSequence();
+        const self = this;
+        this.myPngSequence.onload = function () {
+            if (!self.myPngSequence)
+                return;
+            // Переменные
+            let imageWidth = self.myPngSequence.width;
+            let imageHeight = self.myPngSequence.height;
+            let [canvasWidth, canvasHeight] = self.ratioCalc(imageWidth, imageHeight);
+            // Оригинальные размеры
+            self.originalAspectRatio = imageWidth / imageHeight;
+            self.originalImageWidth = imageWidth;
+            self.originalImageHeight = imageHeight;
+            self.originalCanvasWidth = canvasWidth;
+            self.originalCanvasHeight = canvasHeight;
+            // Обновление полей ввода
+            self.widthInput.value = imageWidth.toString();
+            self.heightInput.value = imageHeight.toString();
+            // Размеры canvas
+            self.canvas.width = imageWidth;
+            self.canvas.height = imageHeight;
+            self.canvas.style.width = canvasWidth + 'px';
+            self.canvas.style.height = canvasHeight + 'px';
+            // Установка количества кадров
+            const totalFrames = self.myPngSequence.frames.length;
+            self.frameCountInput.max = totalFrames.toString();
+            self.frameCountInput.value = totalFrames.toString();
+            self.frameInput.max = (totalFrames - 1).toString();
+            self.frameInput.value = '0';
+            self.displayFrame(0);
+            if (self.autoPlayCheckbox.checked) {
+                self.startAutoPlay();
+            }
+            self.onLoadCallback?.(self._mode);
+            self.checkAlert();
+            self.alertManager.setAlert("wrongSequence", self.myPngSequence.isWrong);
+        };
+        this.myPngSequence.loadFromArrayBuffers(arrayBuffers);
+    }
+    parsePngSequence() {
+        const pngSequence = {
+            onload: null,
+            onerror: null,
+            loading: true,
+            width: 0,
+            height: 0,
+            frames: [],
+            frameCount: 0,
+            image: null,
+            isWrong: false,
+            loadFromArrayBuffers: function (arrayBuffers) {
+                let loadedImages = 0;
+                const totalImages = arrayBuffers.length;
+                const self = this;
+                self.isWrong = false;
+                for (let i = 0; i < totalImages; i++) {
+                    const arrayBuffer = arrayBuffers[i];
+                    const img = new Image();
+                    img.onload = () => {
+                        const frameWidth = img.width;
+                        const frameHeight = img.height;
+                        if (self.width === 0 && self.height === 0) { // первый кадр запоминаем размер
+                            self.width = frameWidth;
+                            self.height = frameHeight;
+                        }
+                        else if (frameWidth !== self.width || frameHeight !== self.height) { // второй и дальше - сверяем
+                            self.isWrong = true;
+                        }
+                        // // Проверяем, что все изображения имеют одинаковые размеры
+                        // if (frameWidth !== self.width || frameHeight !== self.height) {
+                        //     if (typeof self.onerror === "function") {
+                        //         self.onerror("Размеры изображений не совпадают");
+                        //     }
+                        //     return;
+                        // }
+                        // Создаем canvas для изображения
+                        const canvas = document.createElement('canvas');
+                        canvas.width = frameWidth;
+                        canvas.height = frameHeight;
+                        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+                        ctx.drawImage(img, 0, 0);
+                        canvas.ctx = ctx;
+                        // Создаем кадр
+                        const frame = {
+                            disposalMethod: 0,
+                            time: 0,
+                            delay: 0,
+                            leftPos: 0,
+                            topPos: 0,
+                            width: frameWidth,
+                            height: frameHeight,
+                            localColourTableFlag: false,
+                            interlaced: false,
+                            image: canvas
+                        };
+                        self.frames.push(frame);
+                        loadedImages++;
+                        if (loadedImages === totalImages) {
+                            // Все изображения загружены
+                            self.loading = false;
+                            self.frameCount = self.frames.length;
+                            self.image = self.frames[0].image;
+                            if (typeof self.onload === "function") {
+                                self.onload();
+                            }
+                        }
+                    };
+                    img.onerror = () => {
+                        self.loading = false;
+                        if (typeof self.onerror === "function") {
+                            self.onerror("Ошибка загрузки изображения с индексом " + i);
+                        }
+                    };
+                    const blob = new Blob([arrayBuffer], { type: 'image/png' });
+                    img.src = URL.createObjectURL(blob);
+                }
+            }
+        };
+        return pngSequence;
+    }
+    getAnimationData() {
+        if (this.mode == "gif") {
+            return this.myGif;
+        }
+        else if (this.mode == "pngSequence") {
+            return this.myPngSequence;
+        }
+        return null;
+    }
     // Применяет трансформации кадра на канвасе
     applyFrameTransforms(frameNumber) {
         let image;
-        if (this.mode == "gif") {
-            image = this.myGif.frames[frameNumber].image;
+        if (this.mode == "gif" || this.mode == "pngSequence") {
+            image = this.getAnimationData().frames[frameNumber].image;
         }
         else {
             image = this.myPng.image;
@@ -533,23 +676,21 @@ export default class CanvasManager {
     }
     frameRatioCalc() {
         const localCount = parseInt(this.frameCountInput.value, 10);
-        const originCount = this.myGif.frames.length;
+        const originCount = this.mode == "gif" || this.mode == "pngSequence" ? this.getAnimationData().frameCount : 1;
         this.frameRatio = originCount / localCount;
     }
     originToLocal(originFrame) {
-        if (!this.myGif)
-            return 0;
+        const originCount = this.mode == "gif" || this.mode == "pngSequence" ? this.getAnimationData().frames.length : 1;
         return Math.floor(originFrame / this.frameRatio);
     }
     localToOrigin(local) {
-        if (!this.myGif)
-            return 0;
         return Math.floor(local * this.frameRatio);
     }
     displayFrame(frameNumber = this.currentOriginFrame) {
-        if (this.myGif && this.myGif.frames.length > 0 || this.myPng) {
-            const totalFrames = this._mode == "gif" ? this.myGif.frames.length : 1;
-            // чек границ по кадрам
+        if ((this.myGif && this.myGif.frames.length > 0) || (this.myPngSequence && this.myPngSequence.frames.length > 0) || this.myPng) {
+            const totalFrames = this._mode == "gif" ? this.myGif.frames.length :
+                this._mode == "pngSequence" ? this.myPngSequence.frames.length : 1;
+            // Проверка границ кадров
             let specifiedFrameCount = parseInt(this.frameCountInput.value, 10);
             if (isNaN(specifiedFrameCount) || specifiedFrameCount < 1) {
                 specifiedFrameCount = totalFrames;
@@ -563,14 +704,14 @@ export default class CanvasManager {
             this.currentLocalFrame = this.originToLocal(frameNumber);
             this.applyFrameTransforms(frameNumber);
         }
-        else if (this.myPng) {
-            this.currentOriginFrame = 0;
-            this.currentLocalFrame = 0;
-            this.applyFrameTransforms(0);
-        }
         else {
             alert('Файл не загружен или содержит ошибки.');
         }
+        this.method?.update({
+            frameCount: parseInt(this.frameCountInput.value, 10),
+            currentFrame: this.currentLocalFrame,
+            mode: this.mode
+        });
     }
     rotate(angle) {
         angle = this.verticalScale == 1 ? angle : -angle; // так надо
@@ -599,9 +740,9 @@ export default class CanvasManager {
     }
     // Извлекает битмап кадра после применения трансформаций
     getBitmap(frame) {
-        if ((!this.myGif || frame < 0 || frame >= this.myGif.frames.length) && (!this.myPng)) {
-            throw new Error("Недопустимый номер кадра");
-        }
+        // if ((!this.myGif || frame < 0 || frame >= this.myGif.frames.length) && (!this.myPng)) {
+        //     throw new Error("Недопустимый номер кадра");
+        // }
         if (frame != this.currentOriginFrame) { // перерендер если надо
             this.displayFrame(frame);
         }
@@ -625,31 +766,30 @@ export default class CanvasManager {
             bitmap: bitmap
         };
     }
-    getGifBitmap() {
-        const bitmaps = [];
-        const actualFrameArray = this.getLocalFrameArray();
-        for (let i = 0; i < actualFrameArray.length; i++) {
-            bitmaps.push(this.getBitmap(actualFrameArray[i]));
+    getSequenceBitmap() {
+        if (this.mode == "gif" || this.mode == "pngSequence") {
+            const bitmaps = [];
+            const actualFrameArray = this.getLocalFrameArray();
+            for (let i = 0; i < actualFrameArray.length; i++) {
+                bitmaps.push(this.getBitmap(actualFrameArray[i]));
+            }
+            const framesCount = this.mode == "gif" || this.mode == "pngSequence" ? this.getAnimationData().frames.length : this.myPngSequence.frames.length;
+            return {
+                width: this.ctx.canvas.width,
+                height: this.ctx.canvas.height,
+                framesCount: framesCount,
+                fps: this.fps,
+                tpf: this.tpf,
+                frames: bitmaps
+            };
         }
-        return {
-            width: this.ctx.canvas.width,
-            height: this.ctx.canvas.height,
-            framesCount: this.myGif.frames.length,
-            fps: this.fps,
-            tpf: this.tpf,
-            frames: bitmaps
-        };
+        return { width: 0, height: 0, framesCount: 0, fps: 0, tpf: 0, frames: [] };
     }
     checkAlert() {
         const widthUserInput = parseInt(this.widthInput.value, 10);
         const framesUserInput = parseInt(this.frameCountInput.value, 10);
-        const signals = widthUserInput * 0.25 * 3 * framesUserInput;
-        if (signals > 400) {
-            this.alertBox.style.display = "block";
-        }
-        else {
-            this.alertBox.style.display = "none";
-        }
+        const signals = Math.ceil(widthUserInput * 3 / 4);
+        this.alertManager.setAlert("toMuch", (signals > 192 && this.method?.name == "tight3to4")); // я хз почему так мало! todo
     }
     ratioCalc(width, height, zoomed = this.zoomed) {
         const ratio = width / height;
@@ -693,6 +833,8 @@ export default class CanvasManager {
         }
         this.checkAlert();
     }
+    calculateWomanQuality(size) {
+    }
     updateFrameInput() {
         if (this._mode === "png") {
             this.frameInput.value = '0';
@@ -703,10 +845,10 @@ export default class CanvasManager {
         }
     }
     updateFrameCount() {
-        if (!this.myGif)
+        if (!this.myGif && !this.myPngSequence)
             return;
         let specifiedFrameCount = parseInt(this.frameCountInput.value, 10);
-        const totalFrames = this.myGif.frames.length;
+        const totalFrames = this.mode === "gif" || this.mode === "pngSequence" ? this.getAnimationData().frames.length : 1;
         if (isNaN(specifiedFrameCount) || specifiedFrameCount < 1) {
             specifiedFrameCount = totalFrames;
             this.frameCountInput.value = specifiedFrameCount.toString();
@@ -722,9 +864,7 @@ export default class CanvasManager {
         this.frameRatioCalc();
     }
     getLocalFrameArray() {
-        if (!this.myGif)
-            return [0];
-        const totalFrames = this.myGif.frames.length;
+        const totalFrames = this.mode == "gif" || this.mode == "pngSequence" ? this.getAnimationData().frames.length : 1;
         let userFrameCount = parseInt(this.frameCountInput.value, 10);
         userFrameCount = isNaN(userFrameCount) || userFrameCount < 1
             ? totalFrames : userFrameCount;
@@ -735,7 +875,7 @@ export default class CanvasManager {
         return outFrames;
     }
     startAutoPlay() {
-        if (!this.myGif)
+        if (!this.myGif && !this.myPngSequence)
             return;
         clearInterval(this.autoPlayInterval);
         let fps = this.fps;
@@ -744,18 +884,18 @@ export default class CanvasManager {
         let frameIndex = this.localToOrigin(parseInt(this.frameInput.value, 10)) || 0;
         let actualFrameArray = this.getLocalFrameArray();
         this.autoPlayInterval = window.setInterval(() => {
-            if (parseInt(this.frameCountInput.value, 10) != oldFrameCount) { // кеширование или типа того
+            if (parseInt(this.frameCountInput.value, 10) != oldFrameCount) {
                 actualFrameArray = this.getLocalFrameArray();
             }
-            if (fps != this.fps) { // тож самое
+            if (fps != this.fps) {
                 fps = this.fps;
                 interval = 1000 / (60 / this.tpf);
             }
-            frameIndex = (frameIndex + 1) % actualFrameArray.length; //типа цикл
+            frameIndex = (frameIndex + 1) % actualFrameArray.length;
             const newFrame = actualFrameArray[frameIndex];
             this.currentOriginFrame = newFrame;
             this.currentLocalFrame = this.originToLocal(newFrame);
-            this.frameInput.value = this.originToLocal(newFrame).toString();
+            this.frameInput.value = this.currentLocalFrame.toString();
             this.displayFrame(newFrame);
         }, interval);
     }
@@ -780,4 +920,3 @@ export default class CanvasManager {
         }
     }
 }
-//# sourceMappingURL=imageProcessor.js.map

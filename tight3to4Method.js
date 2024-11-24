@@ -1,77 +1,233 @@
 import { Method } from "./method.js";
-import CanvasManager from "./imageProcessor.js";
-import { factorioEntities as f, Blueprint, CoordinateCursor, Dir, indexIterator, Wire, makeSignals, makeSignalSections } from "./factorioEntities.js";
+import ImageProcessor from "./imageProcessor.js";
+import { factorioEntities as f, Blueprint, CoordinateCursor, Dir, indexIterator, Wire, makeSignals, makeSignalSections, gapsSizes } from "./factorioEntities.js";
+// import { group } from "console";
 import { allSignals } from "./allSignals.js";
-const canvasManager = CanvasManager.init();
+// import { constants } from "buffer";
+import { defaultDridData, Tight3to4CanvasManager } from "./tight3to4Canvas.js";
+import { HtmlCreator as Html } from "./htmlStuff.js";
+import { AlertManager } from "./alertManager.js";
 export default class tight3to4Method extends Method {
     constructor(optionsContainer, blueprintGetter) {
         super(optionsContainer, blueprintGetter);
         this.name = "tight3to4";
         this.value = "tight video player";
-        this.supportedModes = ["gif"];
+        this.supportedModes = ["gif", "pngSequence"];
+        this.alertManager = AlertManager.getInstance();
+        this.infoTextChange = null;
+        this.tight3to4CanvasManager = null;
+        this.gridIsEnabled = false;
+        this.gridGap = gapsSizes[0];
+        this.gridPlus = this.gridGap + 2;
+        this.substationsQuality = 0;
+        this.gridOffset = { x: 0, y: 0 };
+        this.options = null;
+        this.sequencerStartXY = { x: 0, y: 0 };
+        this.imageProcessor = ImageProcessor.getInstance();
     }
     init() {
-        const methodContainer = document.createElement('div');
-        methodContainer.style.display = 'flex';
-        methodContainer.style.height = '100%';
-        methodContainer.style.flexDirection = 'column';
-        methodContainer.style.justifyContent = 'flex-end';
-        const button = document.createElement('div');
-        button.classList.add('control-margin-top-2', 'custom-button');
-        button.textContent = "generate blueprint!";
-        methodContainer.appendChild(button);
-        button.addEventListener('click', () => {
+        //#region inputs
+        const self = this;
+        const mainCanvas = document.getElementById("canvas");
+        const methodContainer = Html.createCenterContainer();
+        const canvasContainer = document.createElement('div');
+        canvasContainer.style.alignItems = 'center';
+        const controlsContainer = Html.createControlsContainer();
+        const gridLabel = Html.addLabel("electric grid");
+        const gridCheckbox = Html.addCheckbox("gridCheckbox", false);
+        gridCheckbox.element.addEventListener('change', function () {
+            self.gridIsEnabled = this.checked;
+            self.canvasUpdate();
+        });
+        controlsContainer.appendChild(gridLabel);
+        controlsContainer.appendChild(gridCheckbox.container);
+        const gridGapLabel = Html.addLabel("substation quality");
+        // const gridGapInput = Html.createNumberInput("lepQuality", 1, 5, 1);
+        const gridQuality = Html.createDropdown({
+            optionsList: [
+                { name: "0", value: "normal", isActive: true },
+                { name: "1", value: "uncommon", isActive: true },
+                { name: "2", value: "rare", isActive: true },
+                { name: "3", value: "epic", isActive: true },
+                { name: "4", value: "legendary", isActive: true },
+            ],
+            onSelectCallback: (index) => {
+                this.substationsQuality = index ?? 0;
+                this.gridGap = [16, 18, 20, 22, 26][index ?? 0];
+                this.gridPlus = this.gridGap + 2;
+                self.canvasUpdate();
+            },
+            defaultText: "normal",
+            selectedPrefix: "",
+            id: "substationQuality"
+        });
+        controlsContainer.appendChild(gridGapLabel);
+        controlsContainer.appendChild(gridQuality);
+        const offsetContainer = Html.createXYInput({ id: "offsetX", min: -100, max: 100, value: 0 }, { id: "offsetY", min: -100, max: 100, value: 0 });
+        const offsetLabel = Html.addLabel("offset");
+        offsetContainer.xInput.addEventListener('input', function () {
+            self.gridOffset.x = parseInt(this.value);
+            self.canvasUpdate();
+        });
+        offsetContainer.yInput.addEventListener('input', function () {
+            self.gridOffset.y = parseInt(this.value);
+            self.canvasUpdate();
+        });
+        controlsContainer.appendChild(offsetLabel);
+        controlsContainer.appendChild(offsetContainer.container);
+        canvasContainer.appendChild(controlsContainer);
+        const canvas = document.createElement('canvas');
+        canvas.style.display = 'block';
+        canvas.style.margin = "15px auto";
+        canvas.id = 'canvas';
+        // canvas.style.imageRendering = 'auto';
+        canvasContainer.appendChild(canvas);
+        const strokeText = Html.strokeText();
+        strokeText.element.style.transform = "translate(10px, -40px)";
+        strokeText.element.style.opacity = "0.8";
+        this.infoTextChange = strokeText.changeText;
+        canvasContainer.appendChild(strokeText.element);
+        methodContainer.appendChild(canvasContainer);
+        this.tight3to4CanvasManager = Tight3to4CanvasManager.getInstance(canvas, mainCanvas);
+        const button = Html.createButton("generate blueprint!", () => {
+            console.log("LoL");
             this.exportJson(this.makeJson());
         });
+        methodContainer.appendChild(button);
         while (this.optionsContainer.firstChild) {
             this.optionsContainer.removeChild(this.optionsContainer.firstChild);
         }
         this.optionsContainer.appendChild(methodContainer);
+        //#endregion
+    }
+    destroy() {
+        if (this.tight3to4CanvasManager) {
+            Tight3to4CanvasManager.destroyInstance();
+            this.tight3to4CanvasManager = null;
+        }
+        while (this.optionsContainer.firstChild) {
+            this.optionsContainer.removeChild(this.optionsContainer.firstChild);
+        }
+        this.alertManager.setAlert("wrongXOffset", false);
+    }
+    update(options) {
+        // this.frameCount = options.frameCount;
+        // this.currentFrame = options.currentFrame;
+        // this.mode = options.mode;
+        this.options = options;
+        this.canvasUpdate(options);
+    }
+    canvasUpdate(options = this.options ?? { frameCount: 1, currentFrame: 0, mode: "gif" }) {
+        const infotext = this.tight3to4CanvasManager?.update(options.frameCount, this.gridIsEnabled, this.gridGap + 2, this.gridOffset) ?? "";
+        this.infoTextChange?.(infotext);
     }
     //#region makeJson
     makeJson() {
-        const gifData = canvasManager.getGifBitmap();
-        const preparedGifData = this.gifDataTopreparedGifData(gifData);
+        const gifData = this.imageProcessor.getSequenceBitmap();
+        const preparedGifData = this.gifDataToPreparedGifData(gifData);
+        // надо бы тут короче сделать сетку из лэпов и придумать массив координат для обхода
+        // а лучше
+        // режим избегания в курсоре
+        // включается когда надо избегать
+        // пропускает координаты
+        // точнее просто подрубает формулу
         const blueprint = new Blueprint();
         const cc = new CoordinateCursor(0, 0);
         const ii = new indexIterator(0);
+        const imageWidth = preparedGifData.rows[0].width;
+        // electric grid
+        if (this.gridIsEnabled) {
+            const oldXY = cc.xy;
+            console.log("sadsdfsd", cc.xy);
+            // cc.sxy({ x: (this.gridOffset.x) % this.gridGap - 1, y: (this.gridOffset.y) % this.gridGap });
+            cc.sxy({ x: -1, y: 0 });
+            const electricGrid = this.makeElectricGrid(ii, cc);
+            blueprint.addEntitiesAndWires(electricGrid);
+            cc.sxy(oldXY);
+        }
         ii.shift(1);
-        for (let y = 0; y < preparedGifData.rows.length; y++) {
+        for (let y = 0; y < preparedGifData.rows.length; y++) { // строчки всего вместе
             const rowData = preparedGifData.rows[y];
             const oldCC = cc.xy;
             const isItLastRow = y == preparedGifData.rows.length - 1;
             const isItFirstRow = y == 0;
             const row = this.makeRow(ii, cc, rowData.frames, rowData.frames[0], rowData.width, isItLastRow, isItFirstRow);
             blueprint.addEntitiesAndWires(row);
-            cc.setxy({ x: oldCC.x, y: oldCC.y + 1 });
+            cc.sxy({ x: oldCC.x, y: oldCC.y + 1 });
         }
-        // cc.dx(-2);
-        const framesCount = preparedGifData.rows[0].frames.length;
-        const Sequencer = this.makeSequencer(ii, cc.dxycc({ x: -3, y: 0 }), gifData.tpf, framesCount);
-        blueprint.addEntitiesAndWires(Sequencer);
-        const frameDecidersPairs = ii.getpairs("frame decider combinator");
+        const frameDecidersPairs = ii.getpairs("frame decider combinator"); // вертикальный проводочек
         console.log("test20-frameDecidersPairs", frameDecidersPairs);
         frameDecidersPairs.forEach(pair => {
             blueprint.addWires([[pair[0], Wire.redIn, pair[1], Wire.redIn]]);
         });
-        const mainClockWire = ii.getpairs("main clock")[0];
+        const framesCount = preparedGifData.rows[0].frames.length; // секвенсер
+        console.log("test6-this.sequencerStartXY", this.sequencerStartXY);
+        cc.sxy(this.sequencerStartXY);
+        cc.dx(2);
+        cc.checkRestrictionAndMove(4);
+        const Sequencer = this.makeSequencer(ii, cc, gifData.tpf, framesCount);
+        blueprint.addEntitiesAndWires(Sequencer);
+        const mainClockWire = ii.getpairs("main clock")[0]; // проводочек секвенсора
         blueprint.addWires([[mainClockWire[0], Wire.redIn, mainClockWire[1], Wire.redOut]]);
         return blueprint.json();
     }
     //#endregion
     //#region subblueprints
+    makeElectricGrid(ii, cc) {
+        let block = [];
+        let wires = [];
+        const xim = Math.ceil((this.tight3to4CanvasManager?.getSize().width ?? 0) / this.gridPlus); //максимумы
+        const yim = Math.ceil((this.tight3to4CanvasManager?.getSize().height ?? 0) / this.gridPlus); // тут проблема в том что мы не знаем что будет максимумом на скамом деле. нужно брать координаты из канваса. иначе никак...
+        // ii.shift(-1);
+        const gridData = this.tight3to4CanvasManager?.gridArray ?? defaultDridData;
+        const startC = cc.xy;
+        console.log("test30-gridData", gridData);
+        gridData.y.forEach(dataY => {
+            const y = startC.y + dataY;
+            gridData.x.forEach(dataX => {
+                const x = startC.x + dataX - gridData.totalWidth + 2;
+                console.log("test30-x", x);
+                block.push(f.substation(ii.next(), cc.sx(x), cc.sy(y), this.substationsQuality));
+                if (dataX != gridData.xMax)
+                    wires.push([ii.i, Wire.coper, ii.look(1), Wire.coper]);
+                if (dataY != gridData.yMax)
+                    wires.push([ii.i, Wire.coper, ii.look(gridData.rowLenght), Wire.coper]);
+                cc.addRestrictedColumns([(x), (x - 1)]);
+            });
+            cc.addRestrictedRows([(y), (y + 1)]);
+        });
+        console.log("test31-restricted", cc.restrictedColumns, cc.restrictedRows);
+        // for (let yi = 0; yi < yim; yi++) {
+        //     const y = startC.y + this.gridPlus * yi;
+        //     for (let xi = 0; xi < xim; xi++) {
+        //         const x = startC.x - this.gridPlus * xi;
+        //         block.push(f.substation(ii.next(), cc.sx(x), cc.sy(y), this.substationsQuality));
+        //         if (xi < xim - 1) wires.push([ii.i, Wire.coper, ii.look(1), Wire.coper]);
+        //         if (yi < yim - 1) wires.push([ii.i, Wire.coper, ii.look(xim), Wire.coper]);
+        //         if (yi == 0) {
+        //             cc.addRestrictedColumns([(x), (x - 1)]);
+        //         }
+        //     }
+        //     cc.addRestrictedRows([(y), (y + 1)]);
+        // }
+        return { entities: block, wires: wires };
+    }
     makeRow(ii, cc, frames, currentFrame, width, isItLastRow, isItFirstRow) {
         let block = [];
         let wires = [];
-        const beforeFrameBlock = cc.xy;
-        const makeFramesBlock = this.makeFrames(ii, cc, frames, isItLastRow, isItFirstRow);
-        cc.setxy(beforeFrameBlock);
-        ii.shift(1);
-        const bytesShiftBlock = this.makeByteGrid(ii, cc);
         const lamps = this.makeLamps(ii, cc, currentFrame, width);
-        ii.shift(1);
-        block.push(...makeFramesBlock.entities, ...bytesShiftBlock.entities, ...lamps.entities);
-        wires.push(...makeFramesBlock.wires, ...bytesShiftBlock.wires, ...lamps.wires);
+        const bytesShiftBlock = this.makeDecoder(ii, cc);
+        // cc.restrictProtection = false;
+        // const beforeFrameBlock = cc.xy;
+        const makeFramesBlock = this.makeFrames(ii, cc, frames, isItLastRow, isItFirstRow);
+        // cc.sxy(beforeFrameBlock);
+        // ii.shift(1);
+        // cc.restrictProtection = true;
+        // ii.shift(1);
+        block.push(...lamps.entities, ...bytesShiftBlock.entities, ...makeFramesBlock.entities);
+        wires.push(...lamps.wires, ...bytesShiftBlock.wires, ...makeFramesBlock.wires);
+        // block.push(...makeFramesBlock.entities, ...bytesShiftBlock.entities, ...lamps.entities);
+        // wires.push(...makeFramesBlock.wires, ...bytesShiftBlock.wires, ...lamps.wires);
         return { entities: block, wires: wires };
     }
     makeSequencer(ii, cc, tpf, framesCount) {
@@ -183,18 +339,18 @@ export default class tight3to4Method extends Method {
             { signals: makeSignals({ "signal-red": 1 }), active: false, sectionName: "stop[virtual-signal=signal-red]" },
         ]);
         //building
-        block.push(f.deciderCombinator(ii.next(), cc.px(1), cc.y, Dir.north, deciderFrameCount(framesCount)));
+        block.push(f.constantCombinator(ii.next(), cc.px(-1), cc.dy(2), Dir.south, sections, { playerDescription: "Media control", entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(3), Wire.greenIn]);
+        wires.push([ii.i, Wire.redIn, ii.look(2), Wire.redIn]);
+        block.push(f.deciderCombinator(ii.next(), cc.px(-1), cc.dy(-1), Dir.north, deciderFrameCount(framesCount), { entityStartPos: "reverse" }));
         wires.push([ii.i, Wire.greenIn, ii.i, Wire.greenOut]);
         wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenOut]);
         wires.push([ii.i, Wire.redIn, ii.look(1), Wire.redIn]);
         ii.addPairMember("main clock", ii.i);
-        block.push(f.deciderCombinator(ii.next(), cc.px(1), cc.y, Dir.north, deciderReset()));
+        block.push(f.deciderCombinator(ii.next(), cc.px(-1), cc.y, Dir.north, deciderReset(), { entityStartPos: "reverse" }));
         wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenOut]);
-        wires.push([ii.i, Wire.redIn, ii.look(2), Wire.redIn]);
-        block.push(f.deciderCombinator(ii.next(), cc.px(1), cc.y, Dir.north, deciderFrameLenght(tpf)));
+        block.push(f.deciderCombinator(ii.next(), cc.px(-1), cc.y, Dir.north, deciderFrameLenght(tpf), { entityStartPos: "reverse" }));
         wires.push([ii.i, Wire.greenIn, ii.i, Wire.greenOut]);
-        wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenIn]);
-        block.push(f.constantCombinator(ii.next(), cc.px(1), cc.dy(1), Dir.south, sections, { playerDescription: "Media control" }));
         return { entities: block, wires: wires };
     }
     makeFrames(ii, cc, frames, isItLastRow, isItFirstRow) {
@@ -228,32 +384,32 @@ export default class tight3to4Method extends Method {
         }
         ;
         //building
-        cc.dx(-frames.length * 3);
-        ii.shift(-1);
-        for (let index = 0; index < frames.length; index++) {
+        for (let index = frames.length - 1; index >= 0; index--) {
             const itIsLastFrame = index >= frames.length - 1;
-            // console.log("test22-makeSignalsConstantCombinator", f.constantCombinator(ii.next(), cc.px(1), cc.y, Dir.east, makeSignals(frames[index])));
-            block.push(f.constantCombinator(ii.next(), cc.px(1), cc.y, Dir.east, makeSignals(frames[index])));
+            const itIsFirstFrame = index <= 0;
+            cc.checkRestrictionAndMove(2);
+            block.push(f.deciderCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, deciderFrameSelector(index), { entityStartPos: "reverse" }));
             wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenIn]);
-            block.push(f.deciderCombinator(ii.next(), cc.px(2), cc.y, Dir.east, deciderFrameSelector(index)));
-            if (!itIsLastFrame) {
+            if (itIsLastFrame) {
+                ii.addPairMember("frame decider combinator", ii.i); // вертикальный перенос сигнала кадра
+                if (!isItFirstRow) { // нужно делать по два раза. чтобы ну. провод вести. но последний раз не надо.
+                    ii.addPairMember("frame decider combinator", ii.i);
+                }
+            }
+            if (!itIsFirstFrame) { // это провода налево. но левее первого кадра нету.
                 wires.push([ii.i, Wire.greenOut, ii.look(2), Wire.greenOut]);
                 wires.push([ii.i, Wire.redIn, ii.look(2), Wire.redIn]);
             }
-            else {
-                ii.addPairMember("frame decider combinator", ii.i); // вертикальный перенос сигнала кадра
-                if (!isItFirstRow) {
-                    ii.addPairMember("frame decider combinator", ii.i); // повторяем чтобы ну... короче блин,, да
-                }
-                if (isItLastRow) {
-                    ii.addPairMember("main clock", ii.i);
-                }
-                wires.push([ii.i, Wire.greenOut, ii.look(1), Wire.greenIn]);
+            if (isItLastRow && itIsLastFrame) {
+                ii.addPairMember("main clock", ii.i);
+                this.sequencerStartXY = cc.xy;
             }
+            cc.checkRestrictionAndMove(1);
+            block.push(f.constantCombinator(ii.next(), cc.px(-1), cc.y, Dir.east, makeSignals(frames[index]), { entityStartPos: "reverse" }));
         }
         return { entities: block, wires: wires };
     }
-    makeByteGrid(ii, cc) {
+    makeDecoder(ii, cc) {
         let block = [];
         let wires = [];
         let arithmeticGetByte = {
@@ -303,32 +459,45 @@ export default class tight3to4Method extends Method {
                 }
             ]
         };
-        //building
-        block.push(f.arithmeticCombinator(ii.i, cc.px(2), cc.y, Dir.east, arithmeticGetByte));
+        //buildingd
+        cc.checkRestrictionAndMove(2);
+        block.push(f.arithmeticCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, arithmeticGetByte, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(4), Wire.greenOut]);
+        cc.checkRestrictionAndMove(2);
+        block.push(f.deciderCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, deciderCord, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(4), Wire.greenOut]);
+        cc.checkRestrictionAndMove(2);
+        block.push(f.deciderCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, deciderCord, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(4), Wire.greenOut]);
+        cc.checkRestrictionAndMove(2);
+        block.push(f.deciderCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, deciderCord, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(4), Wire.greenOut]);
+        cc.checkRestrictionAndMove(2);
+        block.push(f.arithmeticCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, arithmeticShiftByte, { entityStartPos: "reverse" }));
         wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenIn]);
-        wires.push([ii.i, Wire.greenOut, ii.look(2), Wire.greenIn]);
-        block.push(f.arithmeticCombinator(ii.next(), cc.px(2), cc.y, Dir.east, arithmeticShiftByte));
-        wires.push([ii.i, Wire.greenOut, ii.look(2), Wire.greenIn]);
-        block.push(f.deciderCombinator(ii.next(), cc.px(2), cc.y, Dir.east, deciderCord));
-        wires.push([ii.i, Wire.greenOut, ii.look(3), Wire.greenIn]);
-        block.push(f.arithmeticCombinator(ii.next(), cc.px(2), cc.y, Dir.east, arithmeticGetByte));
+        cc.checkRestrictionAndMove(2);
+        block.push(f.arithmeticCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, arithmeticGetByte, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(3), Wire.greenOut]);
+        cc.checkRestrictionAndMove(2);
+        block.push(f.deciderCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, deciderCord, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(3), Wire.greenOut]);
+        cc.checkRestrictionAndMove(2);
+        block.push(f.deciderCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, deciderCord, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(3), Wire.greenOut]);
+        cc.checkRestrictionAndMove(2);
+        block.push(f.arithmeticCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, arithmeticShiftByte, { entityStartPos: "reverse" }));
         wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenIn]);
-        wires.push([ii.i, Wire.greenOut, ii.look(3), Wire.greenIn]);
-        block.push(f.arithmeticCombinator(ii.next(), cc.px(2), cc.y, Dir.east, arithmeticShiftByte));
-        wires.push([ii.i, Wire.greenOut, ii.look(3), Wire.greenIn]);
-        block.push(f.deciderCombinator(ii.next(), cc.px(2), cc.y, Dir.east, deciderCord));
-        wires.push([ii.i, Wire.greenOut, ii.look(4), Wire.greenIn]);
-        block.push(f.deciderCombinator(ii.next(), cc.px(2), cc.y, Dir.east, deciderCord));
-        wires.push([ii.i, Wire.greenOut, ii.look(4), Wire.greenIn]);
-        block.push(f.arithmeticCombinator(ii.next(), cc.px(2), cc.y, Dir.east, arithmeticGetByte));
+        block.push(f.arithmeticCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, arithmeticGetByte, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(2), Wire.greenOut]);
+        cc.checkRestrictionAndMove(2);
+        block.push(f.deciderCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, deciderCord, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(2), Wire.greenOut]);
+        cc.checkRestrictionAndMove(2);
+        block.push(f.arithmeticCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, arithmeticShiftByte, { entityStartPos: "reverse" }));
         wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenIn]);
-        wires.push([ii.i, Wire.greenOut, ii.look(4), Wire.greenIn]);
-        block.push(f.arithmeticCombinator(ii.next(), cc.px(2), cc.y, Dir.east, arithmeticShiftByte));
-        wires.push([ii.i, Wire.greenOut, ii.look(4), Wire.greenIn]);
-        block.push(f.deciderCombinator(ii.next(), cc.px(2), cc.y, Dir.east, deciderCord));
-        block.push(f.deciderCombinator(ii.next(), cc.px(2), cc.y, Dir.east, deciderCord));
-        block.push(f.deciderCombinator(ii.next(), cc.px(2), cc.y, Dir.east, deciderCord));
-        block.push(f.arithmeticCombinator(ii.next(), cc.px(2), cc.y, Dir.east, arithmeticGetByte));
+        cc.checkRestrictionAndMove(2);
+        block.push(f.arithmeticCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, arithmeticGetByte, { entityStartPos: "reverse" }));
+        wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenOut]);
         return { entities: block, wires: wires };
     }
     makeLamps(ii, cc, frames, width) {
@@ -343,24 +512,39 @@ export default class tight3to4Method extends Method {
                 bName: keys[i + 2] ?? "wube-logo-space-platform"
             });
         }
-        let e = 0;
-        cc.dx(-1);
-        for (let i = 0; i < width; i++) {
+        cc.dx(1);
+        for (let i = width - 1; i >= 0; i--) {
             const packIndex = Math.floor(i / 4);
-            block.push(f.rgbLamp(ii.next(), cc.dx(1), cc.y, signalNamesRgbGroups[packIndex]));
-            if (packIndex == 0) {
-                wires.push([ii.i, Wire.greenIn, ii.look(-4), Wire.greenOut]);
+            if (!cc.checkLampsRestriction()) {
+                let look = 4; // чек дырки в соседе слева
+                if (cc.checkLampsRestriction(-4)) {
+                    look = 6;
+                    // cc.dx(-1);
+                    // continue;
+                }
+                if (cc.checkLampsRestriction(-2)) {
+                    look = 2;
+                }
+                block.push(f.rgbLamp(ii.next(), cc.px(-1), cc.y, signalNamesRgbGroups[packIndex], { entityStartPos: "reverse" }));
+                if (packIndex == 0) { // если коннект не к лампе
+                    wires.push([ii.i, Wire.greenIn, ii.look(look), Wire.greenOut]);
+                }
+                else {
+                    wires.push([ii.i, Wire.greenIn, ii.look(look), Wire.greenIn]);
+                }
             }
             else {
-                wires.push([ii.i, Wire.greenIn, ii.look(-4), Wire.greenIn]);
+                cc.dx(-1);
+                // ii.next();
+                // i--;
             }
         }
         return { entities: block, wires: wires };
     }
-    //#endregion
+    //#endregions
     /////////////////////////////////////////
     //#region stuff functions
-    gifDataTopreparedGifData(gifData) {
+    gifDataToPreparedGifData(gifData) {
         const preparedGifData = {
             rows: [],
             height: gifData.height
@@ -418,4 +602,3 @@ export default class tight3to4Method extends Method {
         return [number1, number2, number3];
     }
 }
-//# sourceMappingURL=tight3to4Method.js.map

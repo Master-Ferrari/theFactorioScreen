@@ -9,4 +9,3 @@ export class Method {
         // this.blueprintGetter(json);
     }
 }
-//# sourceMappingURL=method.js.map
