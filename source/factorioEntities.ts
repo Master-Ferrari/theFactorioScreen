@@ -182,8 +182,8 @@ export class CoordinateCursor {
     private _x: number;
     private _y: number;
 
-    private restrictedColumns: number[] = [];
-    private restrictedRows: number[] = [];
+    restrictedColumns: number[] = [];
+    restrictedRows: number[] = [];
 
     constructor(x: number, y: number) {
         this._x = x;
@@ -254,7 +254,7 @@ export class CoordinateCursor {
 
     checkRestrictionAndMove(width: number) {
         let magic = -5;
-        if(width==1) {magic = -4;}
+        if (width == 1) { magic = -4; }
         for (let w = 0; w < width; w++) {
             console.log("test3 ", this._x, this.restrictedColumns.includes(this._x + w));
             if (this.restrictedColumns.includes(this._x + w + magic)) {
@@ -267,20 +267,24 @@ export class CoordinateCursor {
     }
 
     checkLampsRestriction(lookX: number = 0): boolean { //-2 +2
-        return this.restrictedColumns.includes(this._x + lookX - 4) && this.restrictedRows.includes(this._y -2);
+        return this.restrictedColumns.includes(this._x + lookX - 4) && this.restrictedRows.includes(this._y - 2);
     }
 
     addRestrictedColumns(columns: number[]) {
         for (const column of columns) {
             console.log("test4-restricted", column);
-            this.restrictedColumns.push(column - 2);
+            if (!this.restrictedColumns.includes(column - 2)) {
+                this.restrictedColumns.push(column - 2);
+            }
         }
     }
 
     addRestrictedRows(rows: number[]) {
         for (const row of rows) {
             console.log("test4-restricted", row);
-            this.restrictedRows.push(row - 2);
+            if (!this.restrictedRows.includes(row - 2)) {
+                this.restrictedRows.push(row - 2);
+            }
         }
     }
 }

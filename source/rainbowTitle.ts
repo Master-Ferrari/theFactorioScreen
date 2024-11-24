@@ -3,14 +3,11 @@ let titleIndex = 0;
 
 const titleElement = document.getElementById('title') as HTMLElement;
 
-// const themeSwitch = document.getElementById('themeSwitch') as HTMLInputElement;
-
 
 function updateTitleText() {
-    titleElement.innerHTML = ''; // Очистим предыдущий текст
+    titleElement.innerHTML = '';
     const currentText = titleOptions[titleIndex];
 
-    // Отобразим текущий текст по буквам с анимацией
     currentText.split('').forEach((letter, index) => {
         const span = document.createElement('span');
         span.textContent = letter;
@@ -19,17 +16,23 @@ function updateTitleText() {
         titleElement.appendChild(span);
     });
 
-    // Увеличиваем индекс для следующего значения по кругу
     titleIndex = (titleIndex + 1) % titleOptions.length;
 }
 
+let timer: NodeJS.Timer | null = null;
+
 if (titleElement) {
+
+    if (timer) {
+        clearInterval(timer);
+    }
+
     updateTitleText();
 
     titleElement.addEventListener('click', updateTitleText);
 
     let hue = 0;
-    setInterval(() => {
+    timer = setInterval(() => {
         hue = (hue + 1) % 360;
         document.querySelectorAll('.letter').forEach((el, index) => {
             const letter = el as HTMLElement;
@@ -40,6 +43,7 @@ if (titleElement) {
             }
         });
     }, 100);
+
 }
 
 const mainContent = document.getElementById('mainContent');

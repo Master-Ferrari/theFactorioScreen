@@ -1,4 +1,4 @@
-export type AlertType = "toMuch" | "wrongXOffset" | "fileError";
+export type AlertType = "toMuch" | "wrongXOffset" | "fileError" | "wrongSequence";
 
 export class AlertManager {
     private static instance: AlertManager | null = null;
@@ -13,13 +13,15 @@ export class AlertManager {
     private alertTexts: Record<AlertType, string> = {
         toMuch: "the image is too wide.",
         wrongXOffset: "the substation interferes with screen connection. adjust the X offset.",
-        fileError: "it would have to be png, gif or png sequence."
+        fileError: "it would have to be png, gif or png sequence.",
+        wrongSequence: "all images in sequence have to be the same size."
     };
 
     private activeAlerts: Record<AlertType, boolean> = {
         toMuch: false,
         wrongXOffset: false,
-        fileError: false
+        fileError: false,
+        wrongSequence: false
     };
 
     private alertElement: HTMLElement;

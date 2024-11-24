@@ -1,6 +1,18 @@
 import { AlertManager } from "./alertManager.js";
 import { CanvasDrawer } from "./canvasDrawer.js";
 
+// type GridData = { x: number[], y: number[], xMax: number, yMax: number };
+type GridData = {
+    x: Set<number>;
+    y: Set<number>;
+    xMax: number;
+    yMax: number;
+    rowLenght: number;
+    totalWidth: number;
+};
+
+export const defaultDridData: GridData = { x: new Set(), y: new Set(), xMax: 0, yMax: 0, totalWidth: 0, rowLenght: 0 };
+
 export class Tight3to4CanvasManager {
     private static instance?: Tight3to4CanvasManager;
     private canvas: HTMLCanvasElement;
@@ -21,8 +33,13 @@ export class Tight3to4CanvasManager {
     private mainHeight = 1;
 
     private alertManager: AlertManager = AlertManager.getInstance();
+    private gridAlert: boolean = false;
 
     private gaps = 0;
+
+    private _gridArray: GridData = defaultDridData;
+    get gridArray() { return this._gridArray; }
+
     // private targetWidth = 1;
     // private targetHeight = 1;
     // private xOffset = 0;
@@ -94,7 +111,7 @@ export class Tight3to4CanvasManager {
 
 
     update(frameCount: number, gridIsEnabled: boolean, gridGap: number, gridOffset: { x: number, y: number }): string {
-        let alert: boolean = false;
+        this.gridAlert = false;
 
         if (!this.context) return "";
 
@@ -114,7 +131,7 @@ export class Tight3to4CanvasManager {
                 this.addLogicLineToLeft(drawer, 2, gap, "rgb(150, 150, 150)", gridIsEnabled, gridGap, gridOffset); //декодер
 
                 if (i < 4 && gap !== null && gap >= 3) {
-                    alert = true;
+                    this.gridAlert = true;
                 }
             }
             decoderGaps = this.intermediateCanvas.width - this.mainCanvas.width - 26;
@@ -127,7 +144,7 @@ export class Tight3to4CanvasManager {
             }
 
         } else {
-            this.alertManager.setAlert("wrongXOffset", false);
+            this.gridAlert = false;
 
             drawer.addStripe({ width: 26, direction: "left", color: "rgb(150, 150, 150)" }); //декодер
             drawer.addStripe({ width: 3 * frameCount, direction: "left", color: "rgb(170, 170, 170)" }); // кадры
@@ -143,7 +160,7 @@ export class Tight3to4CanvasManager {
         this.placeInside(this.intermediateCanvas, this.intermediateCanvas.width, this.intermediateCanvas.height); // вкорячиваем куда надо
 
 
-        this.alertManager.setAlert("wrongXOffset", alert);
+        this.alertManager.setAlert("wrongXOffset", this.gridAlert);
 
         return "total size: " + this.intermediateCanvas.width + "*" + this.intermediateCanvas.height;
     }
@@ -205,13 +222,89 @@ export class Tight3to4CanvasManager {
     }
 
     private makeGrid(drawer: CanvasDrawer, gridIsEnabled: boolean, gridGap: number, gridOffset: { x: number, y: number }) {
-        if (!gridIsEnabled) { return; }
 
-        for (let x = this.intermediateCanvas.width + gridGap * 4 - 2; x >= -gridGap * 4 - 2; x -= gridGap) {
-            for (let y = -gridGap * 4; y < this.intermediateCanvas.height + gridGap * 4; y += gridGap) {
-                drawer.drawSquare(x + gridOffset.x, y + gridOffset.y, 2, 2, "rgb(255, 38, 0)");
+        if (!gridIsEnabled) {
+            this._gridArray = defaultDridData;
+            return;
+        }
+
+        this._gridArray = defaultDridData;
+        this._gridArray.x = new Set();
+        this._gridArray.y = new Set();
+        this._gridArray.rowLenght = 0;
+
+        const gridArr: { x: number, y: number }[] = [];
+
+        for (let x = this.intermediateCanvas.width + gridGap * 6 - 2; x >= -gridGap * 6 - 2; x -= gridGap) {
+            for (let y = -gridGap * 4; y < this.intermediateCanvas.height + gridGap * 6; y += gridGap) {
+                gridArr.push({
+                    x: x + gridOffset.x,
+                    y: y + gridOffset.y
+                });
             }
         }
+
+        let firstY: number | null = null;
+
+
+        gridArr.forEach(point => {
+            if (point.x < 0 - gridGap / 2 || // короче для того чтобы всё-всё было залэпено
+                point.x > this.intermediateCanvas.width + gridGap / 2 - 2 ||
+                point.y < 0 - gridGap / 2 ||
+                point.y > this.intermediateCanvas.height + gridGap / 2 - 3
+            ) {
+                return;
+            }
+
+            if (firstY == null) {
+                firstY = point.y;
+            }
+            if (point.y == firstY) {
+                this._gridArray.rowLenght++; // считаем короче количество лэп в ряду
+            }
+
+
+            // const leftBorder = 0;
+            // const rightBorder = this.intermediateCanvas.width;
+            // const topBorder = 0;
+            // const bottomBorder = this.intermediateCanvas.height;
+
+
+
+            // this._gridArray.x.push(point.x);
+            this._gridArray.x.add(point.x);
+            this._gridArray.y.add(point.y);
+
+            drawer.drawSquare(point.x, point.y, 2, 2, "rgb(60, 200, 20)");
+
+            const leftImageBorderDistance = this.intermediateCanvas.width - this.mainCanvas.width - point.x
+            if (leftImageBorderDistance >= -1 && leftImageBorderDistance <= 1) { // один из двух самых левых пикселей, то алерт. алертXOffset сделать свойством класса.
+                // drawer.drawSquare(point.x, point.y, 2, 2, "rgb(255, 38, 0)");
+                this.gridAlert = true;
+            }
+        })
+
+
+        console.log("test32-rowLenght", this._gridArray.rowLenght);
+
+        this._gridArray.xMax = Array.from(this._gridArray.x).pop() ?? 0;
+        this._gridArray.yMax = Array.from(this._gridArray.y).pop() ?? 0;
+        this._gridArray.totalWidth = this.intermediateCanvas.width;
+
+        // shit generator use case:
+        // kakashkaGenerator();
+
+
+        // drawer.drawSquare(x + gridOffset.x, y + gridOffset.y, 2, 2, "rgb(255, 38, 0)");
+
+        // console.log("test7-x-widrh", -x, this.mainCanvas.width);
+        // if (-x == this.mainCanvas.width) { // один из двух самых левых пикселей, то алерт. алертXOffset сделать свойством класса.
+        //     this.gridAlert = true;
+        // }
+
+
+
+
     }
 
 

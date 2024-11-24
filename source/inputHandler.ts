@@ -157,6 +157,8 @@ export default class InputHandler {
                 return;
             }
 
+            methodSelect.classList.remove('hidden');
+
             self.alertManager.setAlert("fileError", false);
 
             // Обновляем метку с именем выбранного файла(ов)
@@ -168,7 +170,7 @@ export default class InputHandler {
 
             modeDropdown.selectByName(null); // сброс метода
 
-            const gifInputs = [ // гуи для гифок
+            const fileInputs = [ // гуи для гифок
                 frameCountInput,
                 frameCountLabel,
                 frameInput,
@@ -180,7 +182,7 @@ export default class InputHandler {
             ];
 
             if (mode === 'gif') {
-                gifInputs.forEach(element => element.classList.remove('hidden'));
+                fileInputs.forEach(element => element.classList.remove('hidden'));
                 // Чтение одного GIF-файла
                 readFileAsArrayBuffer(files[0]).then(arrayBuffer => {
                     self.canvasManager.loader({ mode, arrayBuffer });
@@ -197,7 +199,7 @@ export default class InputHandler {
                 });
 
             } else if (mode === 'png') {
-                gifInputs.forEach(element => element.classList.add('hidden'));
+                fileInputs.forEach(element => element.classList.add('hidden'));
                 // Чтение одного PNG-файла
                 readFileAsArrayBuffer(files[0]).then(arrayBuffer => {
                     self.canvasManager.loader({ mode, arrayBuffer });
@@ -206,6 +208,9 @@ export default class InputHandler {
                 });
             }
 
+            function readFilesAsArrayBuffers(files: FileList): Promise<ArrayBuffer[]> {
+                return Promise.all(Array.from(files).map(file => readFileAsArrayBuffer(file)));
+            }
 
             // Функции для чтения файлов
             function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
@@ -222,13 +227,7 @@ export default class InputHandler {
                 });
             }
 
-            function readFilesAsArrayBuffers(files: FileList): Promise<ArrayBuffer[]> {
-                return Promise.all(Array.from(files).map(file => readFileAsArrayBuffer(file)));
-            }
 
-
-
-            // methodSelect.classList.remove('hidden');
             // const reader = new FileReader();
             // reader.onload = function (e: ProgressEvent<FileReader>) {
             //     const arrayBuffer = e.target?.result as ArrayBuffer;

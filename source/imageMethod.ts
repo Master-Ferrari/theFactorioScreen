@@ -6,7 +6,7 @@ const canvasManager = ImageProcessor.getInstance();
 export default class ImageMethod extends Method {
     readonly name = "image";
     readonly value = "one frame image";
-    readonly supportedModes: Mode[] = ["png", "gif"];
+    readonly supportedModes: Mode[] = ["png", "gif", "pngSequence"];
 
     private infoTextLabel: HTMLElement | null = null;
 

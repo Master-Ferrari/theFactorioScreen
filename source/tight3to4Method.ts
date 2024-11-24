@@ -4,7 +4,7 @@ import { factorioEntities as f, Blueprint, CoordinateCursor, Dir, Entities, enti
 // import { group } from "console";
 import { allSignals, getTypeByName } from "./allSignals.js";
 // import { constants } from "buffer";
-import { Tight3to4CanvasManager } from "./tight3to4Canvas.js";
+import { defaultDridData, Tight3to4CanvasManager } from "./tight3to4Canvas.js";
 import { HtmlCreator as Html } from "./htmlStuff.js";
 import { AlertManager } from "./alertManager.js";
 // import { Dropdown } from "./dropdown.js";
@@ -22,7 +22,7 @@ type _gifData = { rows: _row[], height: number };
 export default class tight3to4Method extends Method {
     readonly name = "tight3to4";
     readonly value = "tight video player";
-    readonly supportedModes: Mode[] = ["gif"];
+    readonly supportedModes: Mode[] = ["gif", "pngSequence"];
 
     private alertManager: AlertManager = AlertManager.getInstance();
 
@@ -182,7 +182,7 @@ export default class tight3to4Method extends Method {
     //#region makeJson
     makeJson(): string {
 
-        const gifData = this.imageProcessor.getGifBitmap();
+        const gifData = this.imageProcessor.getSequenceBitmap();
         const preparedGifData = this.gifDataToPreparedGifData(gifData);
 
         // надо бы тут короче сделать сетку из лэпов и придумать массив координат для обхода
@@ -204,7 +204,8 @@ export default class tight3to4Method extends Method {
         if (this.gridIsEnabled) {
             const oldXY = cc.xy;
             console.log("sadsdfsd", cc.xy);
-            cc.sxy({ x: (this.gridOffset.x) % this.gridGap - 1, y: (this.gridOffset.y) % this.gridGap });
+            // cc.sxy({ x: (this.gridOffset.x) % this.gridGap - 1, y: (this.gridOffset.y) % this.gridGap });
+            cc.sxy({ x: -1, y: 0 });
             const electricGrid = this.makeElectricGrid(ii, cc);
             blueprint.addEntitiesAndWires(electricGrid);
             cc.sxy(oldXY);
@@ -256,29 +257,60 @@ export default class tight3to4Method extends Method {
         let block: Entities = [];
         let wires: Wires = [];
 
-        const xim = Math.ceil(((this.tight3to4CanvasManager?.getSize().width ?? 0) + (this.gridPlus / 2)) / this.gridPlus);
-        const yim = Math.ceil(((this.tight3to4CanvasManager?.getSize().height ?? 0) + (this.gridPlus / 2)) / this.gridPlus);
+        const xim = Math.ceil((this.tight3to4CanvasManager?.getSize().width ?? 0) / this.gridPlus); //максимумы
+        const yim = Math.ceil((this.tight3to4CanvasManager?.getSize().height ?? 0) / this.gridPlus); // тут проблема в том что мы не знаем что будет максимумом на скамом деле. нужно брать координаты из канваса. иначе никак...
 
         // ii.shift(-1);
 
+        const gridData = this.tight3to4CanvasManager?.gridArray ?? defaultDridData;
 
         const startC = cc.xy;
 
-        for (let yi = 0; yi < yim; yi++) {
-            for (let xi = 0; xi < xim; xi++) {
+        console.log("test30-gridData", gridData);
 
-                block.push(f.substation(ii.next(), cc.sx(startC.x - this.gridPlus * xi), cc.sy(startC.y + this.gridPlus * yi), xi == yi && xi == 0 ? 4 : this.substationsQuality));
+        gridData.y.forEach(dataY => {
+            const y = startC.y + dataY;
+            gridData.x.forEach(dataX => {
+                const x = startC.x + dataX - gridData.totalWidth + 2;
+                console.log("test30-x", x);
+                block.push(f.substation(ii.next(), cc.sx(x), cc.sy(y), this.substationsQuality));
 
-                if (xi < xim - 1) wires.push([ii.i, Wire.coper, ii.look(1), Wire.coper]);
+                if (dataX != gridData.xMax) wires.push([ii.i, Wire.coper, ii.look(1), Wire.coper]);
+                if (dataY != gridData.yMax) wires.push([ii.i, Wire.coper, ii.look(gridData.rowLenght), Wire.coper]);
 
-                if (yi < yim - 1) wires.push([ii.i, Wire.coper, ii.look(xim), Wire.coper]);
+                cc.addRestrictedColumns([(x), (x - 1)]);
+            });
+            cc.addRestrictedRows([(y), (y + 1)]);
 
-                if (yi == 0) {
-                    cc.addRestrictedColumns([(startC.x - this.gridPlus * xi), ((startC.x - this.gridPlus * xi - 1))]);
-                }
-            }
-            cc.addRestrictedRows([(startC.y + this.gridPlus * yi), ((startC.y + this.gridPlus * yi + 1))]);
-        }
+
+        });
+
+
+        console.log("test31-restricted", cc.restrictedColumns, cc.restrictedRows);
+
+
+
+
+
+
+        // for (let yi = 0; yi < yim; yi++) {
+        //     const y = startC.y + this.gridPlus * yi;
+        //     for (let xi = 0; xi < xim; xi++) {
+
+        //         const x = startC.x - this.gridPlus * xi;
+
+        //         block.push(f.substation(ii.next(), cc.sx(x), cc.sy(y), this.substationsQuality));
+
+        //         if (xi < xim - 1) wires.push([ii.i, Wire.coper, ii.look(1), Wire.coper]);
+
+        //         if (yi < yim - 1) wires.push([ii.i, Wire.coper, ii.look(xim), Wire.coper]);
+
+        //         if (yi == 0) {
+        //             cc.addRestrictedColumns([(x), (x - 1)]);
+        //         }
+        //     }
+        //     cc.addRestrictedRows([(y), (y + 1)]);
+        // }
 
         return { entities: block, wires: wires };
     }
@@ -658,7 +690,7 @@ export default class tight3to4Method extends Method {
                     look = 2;
                 }
 
-                
+
                 block.push(f.rgbLamp(ii.next(), cc.px(-1), cc.y, signalNamesRgbGroups[packIndex], { entityStartPos: "reverse" }));
 
 

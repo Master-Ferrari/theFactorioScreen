@@ -119,6 +119,7 @@ export default class InputHandler {
                 self.alertManager.setAlert("fileError", true);
                 return;
             }
+            methodSelect.classList.remove('hidden');
             self.alertManager.setAlert("fileError", false);
             // Обновляем метку с именем выбранного файла(ов)
             if (files.length === 1) {
@@ -128,7 +129,7 @@ export default class InputHandler {
                 fileNameLabel.textContent = `selected: ${files.length} files`;
             }
             modeDropdown.selectByName(null); // сброс метода
-            const gifInputs = [
+            const fileInputs = [
                 frameCountInput,
                 frameCountLabel,
                 frameInput,
@@ -139,7 +140,7 @@ export default class InputHandler {
                 autoPlayLabel,
             ];
             if (mode === 'gif') {
-                gifInputs.forEach(element => element.classList.remove('hidden'));
+                fileInputs.forEach(element => element.classList.remove('hidden'));
                 // Чтение одного GIF-файла
                 readFileAsArrayBuffer(files[0]).then(arrayBuffer => {
                     self.canvasManager.loader({ mode, arrayBuffer });
@@ -156,13 +157,16 @@ export default class InputHandler {
                 });
             }
             else if (mode === 'png') {
-                gifInputs.forEach(element => element.classList.add('hidden'));
+                fileInputs.forEach(element => element.classList.add('hidden'));
                 // Чтение одного PNG-файла
                 readFileAsArrayBuffer(files[0]).then(arrayBuffer => {
                     self.canvasManager.loader({ mode, arrayBuffer });
                 }).catch(error => {
                     console.error('Ошибка при чтении файла', error);
                 });
+            }
+            function readFilesAsArrayBuffers(files) {
+                return Promise.all(Array.from(files).map(file => readFileAsArrayBuffer(file)));
             }
             // Функции для чтения файлов
             function readFileAsArrayBuffer(file) {
@@ -178,10 +182,6 @@ export default class InputHandler {
                     reader.readAsArrayBuffer(file);
                 });
             }
-            function readFilesAsArrayBuffers(files) {
-                return Promise.all(Array.from(files).map(file => readFileAsArrayBuffer(file)));
-            }
-            // methodSelect.classList.remove('hidden');
             // const reader = new FileReader();
             // reader.onload = function (e: ProgressEvent<FileReader>) {
             //     const arrayBuffer = e.target?.result as ArrayBuffer;
