@@ -251,7 +251,7 @@ export default class tight3to4Method extends Method {
     }
 
     update(options: updateOptions): void {
-        this.updateFrameCount(options.frameCount);
+        this.updateInputs(options.frameCount);
 
         // this.frameCount = options.frameCount;
         // this.currentFrame = options.currentFrame;
@@ -261,7 +261,7 @@ export default class tight3to4Method extends Method {
     }
 
     canvasUpdate(options: updateOptions = this.options ?? { frameCount: 1, currentFrame: 0, mode: "gif" }): void {
-        const infotext = this.tight3to4CanvasManager?.update(options.frameCount, this.gridIsEnabled, this.gridGap + 2, this.gridOffset, this.onlyFrame, this.firstFrameClip, this.lastFrameClip) ?? "";
+        const infotext = this.tight3to4CanvasManager?.update(options.frameCount, this.gridIsEnabled, this.gridGap + 2, this.gridOffset, this.onlyFrame, this.disableSubstations, this.firstFrameClip, this.lastFrameClip) ?? "";
         this.infoTextChange?.(infotext);
     }
 
@@ -321,17 +321,19 @@ export default class tight3to4Method extends Method {
         })
 
 
-        const framesCount = preparedGifData.rows[0].frames.length; // секвенсер
-        console.log("test6-this.sequencerStartXY", this.sequencerStartXY);
-        cc.sxy(this.sequencerStartXY); cc.dx(2);
-        cc.checkRestrictionAndMove(4);
-        const Sequencer = this.makeSequencer(ii, cc, gifData.tpf, framesCount);
-        blueprint.addEntitiesAndWires(Sequencer);
+        if (!this.onlyFrame) {
+            const framesCount = preparedGifData.rows[0].frames.length; // секвенсер
+            console.log("test6-this.sequencerStartXY", this.sequencerStartXY);
+            cc.sxy(this.sequencerStartXY); cc.dx(2);
+            cc.checkRestrictionAndMove(4);
+            const Sequencer = this.makeSequencer(ii, cc, gifData.tpf, framesCount);
+            blueprint.addEntitiesAndWires(Sequencer);
 
-        const mainClockWire = ii.getpairs("main clock")[0]; // проводочек секвенсора
-        blueprint.addWires([[mainClockWire[0], Wire.redIn, mainClockWire[1], Wire.redOut]]);
-
-
+            const mainClockWire = ii.getpairs("main clock")[0]; // проводочек секвенсора
+            if (mainClockWire) {
+                blueprint.addWires([[mainClockWire[0], Wire.redIn, mainClockWire[1], Wire.redOut]]);
+            }
+        }
 
         return blueprint.json();
     }
@@ -359,10 +361,15 @@ export default class tight3to4Method extends Method {
             gridData.x.forEach(dataX => {
                 const x = startC.x + dataX - gridData.totalWidth + 2;
                 console.log("test30-x", x);
-                block.push(f.substation(ii.next(), cc.sx(x), cc.sy(y), this.substationsQuality));
 
-                if (dataX != gridData.xMax) wires.push([ii.i, Wire.coper, ii.look(1), Wire.coper]);
-                if (dataY != gridData.yMax) wires.push([ii.i, Wire.coper, ii.look(gridData.rowLenght), Wire.coper]);
+                if (!this.disableSubstations) {
+                    block.push(f.substation(ii.next(), cc.sx(x), cc.sy(y), this.substationsQuality));
+
+                    if (dataX != gridData.xMax) wires.push([ii.i, Wire.coper, ii.look(1), Wire.coper]);
+                    if (dataY != gridData.yMax) wires.push([ii.i, Wire.coper, ii.look(gridData.rowLenght), Wire.coper]);
+                } else {
+                    ii.next();
+                }
 
                 cc.addRestrictedColumns([(x), (x - 1)]);
             });
@@ -599,6 +606,24 @@ export default class tight3to4Method extends Method {
 
         //building
         for (let index = frames.length - 1; index >= 0; index--) {
+
+            const antiIndex = frames.length - 1 - index;
+            if (antiIndex < this.firstFrameClip || antiIndex >= this.lastFrameClip) {
+                console.log("test36-index-firstFrameClip-lastFrameClip", index, this.firstFrameClip, this.lastFrameClip);
+                console.log("test36-cc.x    до", cc.x);
+
+                cc.checkRestrictionAndMove(2);
+                cc.px(-2);
+                cc.checkRestrictionAndMove(1);
+                cc.px(-1);
+
+                console.log("test36-cc.x после", cc.x);
+
+                ii.next();
+                ii.next();
+                continue;
+            }
+
             const itIsLastFrame = index >= frames.length - 1;
             const itIsFirstFrame = index <= 0;
 
@@ -637,6 +662,14 @@ export default class tight3to4Method extends Method {
         let block: Entities = [];
         let wires: Wires = [];
 
+        if (this.onlyFrame) {
+            for (let i = 0; i < 13; i++) {
+                cc.checkRestrictionAndMove(2);
+                cc.dx(-2);
+            }
+            ii.shift(13);
+            return { entities: [], wires: [] };
+        }
 
         let arithmeticGetByte: any = { //LAST BYTE
             first_signal: {
@@ -750,6 +783,14 @@ export default class tight3to4Method extends Method {
         const block: Entities = [];
         const wires: Wires = [];
 
+        cc.dx(1);
+
+        if (this.onlyFrame) {
+            cc.dx(-width);
+            ii.shift(width);
+            return { entities: [], wires: [] };
+        }
+
         const signalNamesRgbGroups: RgbSignalsNames[] = [];
         const keys: string[] = Object.keys(frames);
 
@@ -762,7 +803,6 @@ export default class tight3to4Method extends Method {
             });
         }
 
-        cc.dx(1);
         for (let i = width - 1; i >= 0; i--) {
             const packIndex = Math.floor(i / 4);
 
@@ -876,7 +916,7 @@ export default class tight3to4Method extends Method {
         return [number1, number2, number3];
     }
 
-    updateFrameCount(frameCount: number) { // хуита чтобы инпуты адекватными были
+    updateInputs(frameCount: number) {
         if (this.firstFrameClipInput && this.lastFrameClipInput) {
 
             this.firstFrameClipInput.max = String(frameCount);

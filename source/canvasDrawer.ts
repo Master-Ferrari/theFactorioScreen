@@ -98,4 +98,8 @@ export class CanvasDrawer {
         this.context.fillStyle = color;
         this.context.fillRect(x, y, width, height);
     }
+
+    clearSquare(x: number, y: number, width: number, height: number){
+        this.context.clearRect(x, y, width, height);
+    }
 }

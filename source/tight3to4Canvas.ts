@@ -110,7 +110,7 @@ export class Tight3to4CanvasManager {
     }
 
 
-    update(frameCount: number, gridIsEnabled: boolean, gridGap: number, gridOffset: { x: number, y: number }, onlyFrame: boolean, firstFrameClip: number, lastFrameClip: number): string {
+    update(frameCount: number, gridIsEnabled: boolean, gridGap: number, gridOffset: { x: number, y: number }, onlyFrame: boolean, disableSubstations: boolean, firstFrameClip: number, lastFrameClip: number): string {
         this.gridAlert = false;
 
         if (!this.context) return "";
@@ -192,7 +192,7 @@ export class Tight3to4CanvasManager {
 
         this.intermediateSize = { width: this.intermediateCanvas.width, height: this.intermediateCanvas.height };
 
-        this.makeGrid(drawer, gridIsEnabled, gridGap, { x: gridOffset.x - this.gaps, y: gridOffset.y });
+        this.makeGrid(drawer, gridIsEnabled, disableSubstations, gridGap, { x: gridOffset.x - this.gaps, y: gridOffset.y });
 
         this.placeInside(this.intermediateCanvas, this.intermediateCanvas.width, this.intermediateCanvas.height); // вкорячиваем куда надо
 
@@ -258,12 +258,14 @@ export class Tight3to4CanvasManager {
         return { width: this.intermediateSize.width ?? 0, height: this.intermediateSize.height ?? 0 };
     }
 
-    private makeGrid(drawer: CanvasDrawer, gridIsEnabled: boolean, gridGap: number, gridOffset: { x: number, y: number }) {
+    private makeGrid(drawer: CanvasDrawer, gridIsEnabled: boolean, disableSubstations: boolean, gridGap: number, gridOffset: { x: number, y: number }) {
 
         if (!gridIsEnabled) {
             this._gridArray = defaultDridData;
             return;
         }
+
+        // const color = disableSubstations ? "rgba(0, 0, 0, 0)" : "rgb(120, 220, 120)"; //60, 200, 20
 
         this._gridArray = defaultDridData;
         this._gridArray.x = new Set();
@@ -312,7 +314,12 @@ export class Tight3to4CanvasManager {
             this._gridArray.x.add(point.x);
             this._gridArray.y.add(point.y);
 
-            drawer.drawSquare(point.x, point.y, 2, 2, "rgb(60, 200, 20)");
+            if (!disableSubstations) {
+                drawer.drawSquare(point.x, point.y, 2, 2, "rgb(120, 220, 120)");
+            } else {
+                drawer.clearSquare(point.x, point.y, 2, 2);
+            }
+
 
             const leftImageBorderDistance = this.intermediateCanvas.width - this.mainCanvas.width - point.x
             if (leftImageBorderDistance >= -1 && leftImageBorderDistance <= 1) { // один из двух самых левых пикселей, то алерт. алертXOffset сделать свойством класса.
