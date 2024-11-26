@@ -16,6 +16,10 @@ export class CanvasDrawer {
         this.context = context;
     }
 
+    clear() {
+        this.context.clearRect(0, 0, this.context.canvas.width, this.context.canvas.height);
+    }
+
     addStripe(options: AddStripeOptions): void {
         const canvas = this.context.canvas;
 

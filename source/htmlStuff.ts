@@ -12,13 +12,18 @@ export class HtmlCreator {
         return label;
     }
 
-    static createNumberInput(id: string, min: number, max: number, value: number): HTMLInputElement {
+    static createNumberInput(id: string, value: number, min?: number, max?: number): HTMLInputElement {
         const input = document.createElement('input');
         input.type = 'number';
         input.className = 'inputs';
         input.id = id;
-        input.min = min.toString();
-        input.max = max.toString();
+        console.log("test2", min);
+        if (min !== undefined) {
+            input.min = min.toString();
+        }
+        if (max !== undefined) {
+            input.max = max.toString();
+        }
         input.value = value.toString();
         return input;
     }
@@ -38,13 +43,20 @@ export class HtmlCreator {
         toggleSwitch.appendChild(checkbox);
         toggleSwitch.appendChild(slider);
 
-        return {container: toggleSwitch, element: checkbox};
+        return { container: toggleSwitch, element: checkbox };
     }
 
     static createControlsContainer(): HTMLElement {
         const container = document.createElement('div');
         container.id = 'tight3to4Controls';
         container.className = 'controls-grid';
+        return container;
+    }
+
+    static createScrollContainer(height: number): HTMLElement {
+        const container = document.createElement('div');
+        container.className = 'scroll-container sex-scrollbar';
+        container.style.height = `${height}px`;
         return container;
     }
 
@@ -67,12 +79,23 @@ export class HtmlCreator {
         return button;
     }
 
+    static createSeparator(marginBottom?: string): HTMLDivElement {
+        const separator = document.createElement('div');
+        separator.classList.add('separation-line');
+        if (marginBottom) {
+            separator.style.marginBottom = marginBottom;
+        }
+        return separator;
+    }
+
     static createDropdown(options: {
         optionsList: DropdownOption[],
         onSelectCallback: OptionSelectCallback,
         defaultText: string,
         selectedPrefix: string,
         id: string
+        width?: number
+        parent?: HTMLElement
     }): HTMLDivElement {
 
         const dropdownContainer = document.createElement('div');
@@ -83,7 +106,9 @@ export class HtmlCreator {
             optionsList: options.optionsList,
             onSelectCallback: options.onSelectCallback,
             defaultText: options.defaultText,
-            selectedPrefix: options.selectedPrefix
+            selectedPrefix: options.selectedPrefix,
+            width: options.width,
+            parent: options.parent
         });
 
         return dropdownContainer;
@@ -118,9 +143,9 @@ export class HtmlCreator {
         const offsetContainer = document.createElement('div');
         offsetContainer.className = 'resolution-inputs';
 
-        const offsetXInput = this.createNumberInput(x.id, x.min, x.max, x.value);
+        const offsetXInput = this.createNumberInput(x.id, x.value, x.min, x.max);
         const xLabel = document.createElement('div'); xLabel.innerText = "x"; xLabel.style.margin = "0 auto";
-        const offsetYInput = this.createNumberInput(y.id, y.min, y.max, y.value);
+        const offsetYInput = this.createNumberInput(y.id, y.value, y.min, y.max);
 
         offsetContainer.appendChild(offsetXInput);
         offsetContainer.appendChild(xLabel);
@@ -128,5 +153,55 @@ export class HtmlCreator {
 
         return { container: offsetContainer, xInput: offsetXInput, yInput: offsetYInput };
     }
+
+    static bindFixedElementToTarget(
+        targetElement: HTMLElement,
+        slaveElement: HTMLElement,
+        offset: { top: number; left: number },
+        transferWidth: boolean = false
+    ): () => void {
+        // Функция для обновления позиции фиксированного элемента
+        function updateFixedElementPosition() {
+            const targetRect = targetElement.getBoundingClientRect();
+
+            slaveElement.style.position = "fixed";
+            slaveElement.style.top = `${targetRect.top + offset.top}px`;
+            slaveElement.style.left = `${targetRect.left + offset.left}px`;
+
+            if (transferWidth) {
+                console.log("test33", targetRect.width);
+                slaveElement.style.width = `${targetRect.width}px`;
+            }
+        }
+
+        // Изначальное обновление позиции
+        updateFixedElementPosition();
+
+        // Обработчики для динамического обновления позиции
+        window.addEventListener("scroll", updateFixedElementPosition);
+        window.addEventListener("resize", updateFixedElementPosition);
+
+        // Удаление обработчиков при удалении элемента
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.removedNodes) {
+                    mutation.removedNodes.forEach((node) => {
+                        if (node === targetElement || node === slaveElement) {
+                            window.removeEventListener("scroll", updateFixedElementPosition);
+                            window.removeEventListener("resize", updateFixedElementPosition);
+                            observer.disconnect();
+                        }
+                    });
+                }
+            });
+        });
+
+        // Подключение наблюдателя
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        return updateFixedElementPosition;
+    }
+
+
 
 }

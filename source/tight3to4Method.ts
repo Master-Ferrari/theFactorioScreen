@@ -7,6 +7,8 @@ import { allSignals, getTypeByName } from "./allSignals.js";
 import { defaultDridData, Tight3to4CanvasManager } from "./tight3to4Canvas.js";
 import { HtmlCreator as Html } from "./htmlStuff.js";
 import { AlertManager } from "./alertManager.js";
+import { unsubscribe } from "diagnostics_channel";
+import { parseArgs } from "util";
 // import { Dropdown } from "./dropdown.js";
 
 type pixel = { r: number, g: number, b: number };
@@ -32,6 +34,13 @@ export default class tight3to4Method extends Method {
 
     private tight3to4CanvasManager: Tight3to4CanvasManager | null = null;
 
+    private onlyFrame: boolean = false;
+    private firstFrameClip: number = 0;
+    private lastFrameClip: number = 0;
+
+    private firstFrameClipInput: HTMLInputElement | null = null;
+    private lastFrameClipInput: HTMLInputElement | null = null;
+
     private gridIsEnabled: boolean = false;
     private gridGap: number = gapsSizes[0];
     private gridPlus: number = this.gridGap + 2;
@@ -52,6 +61,8 @@ export default class tight3to4Method extends Method {
 
     init(): void {
         //#region inputs
+        const scrollContainer = Html.createScrollContainer(140);
+
         const self = this;
         const mainCanvas = document.getElementById("canvas") as HTMLCanvasElement;
 
@@ -91,7 +102,8 @@ export default class tight3to4Method extends Method {
             },
             defaultText: "normal",
             selectedPrefix: "",
-            id: "substationQuality"
+            id: "substationQuality",
+            parent: scrollContainer
         });
 
         controlsContainer.appendChild(gridGapLabel);
@@ -116,7 +128,56 @@ export default class tight3to4Method extends Method {
         controlsContainer.appendChild(offsetLabel);
         controlsContainer.appendChild(offsetContainer.container);
 
-        canvasContainer.appendChild(controlsContainer);
+        const separator1 = Html.createSeparator("10px");
+        const separator2 = Html.createSeparator("10px");
+        controlsContainer.appendChild(separator1);
+        controlsContainer.appendChild(separator2);
+
+        const onlyFrameLabel = Html.addLabel("only frame data");
+        const onlyFrameCheckbox = Html.addCheckbox("onlyFrame", false);
+
+
+        onlyFrameCheckbox.element.addEventListener('change', function () {
+            self.onlyFrame = this.checked;
+            self.canvasUpdate();
+        });
+
+        controlsContainer.appendChild(onlyFrameLabel);
+        controlsContainer.appendChild(onlyFrameCheckbox.container);
+
+        scrollContainer.appendChild(controlsContainer);
+
+        const firstFrameClipLabel = Html.addLabel("first frame index");
+        const firstFrameClipInput = Html.createNumberInput("frameClip", 0, 0);
+        this.firstFrameClipInput = firstFrameClipInput;
+
+        firstFrameClipInput.addEventListener('input', function () {
+            self.firstFrameClip = parseInt(this.value);
+            self.canvasUpdate();
+        });
+
+        controlsContainer.appendChild(firstFrameClipLabel);
+        controlsContainer.appendChild(firstFrameClipInput);
+
+
+
+
+        const mnogo = 999999999999;
+
+        const lastFrameClipLabel = Html.addLabel("last frame index");
+        const lastFrameClipInput = Html.createNumberInput("frameClip", mnogo, 0, mnogo);
+        this.lastFrameClipInput = lastFrameClipInput;
+
+        lastFrameClipInput.addEventListener('input', function () {
+            self.lastFrameClip = parseInt(this.value);
+            self.canvasUpdate();
+        });
+        self.lastFrameClip = mnogo;
+
+        controlsContainer.appendChild(lastFrameClipLabel);
+        controlsContainer.appendChild(lastFrameClipInput);
+
+        canvasContainer.appendChild(scrollContainer);
 
         const canvas = document.createElement('canvas');
         canvas.style.display = 'block';
@@ -167,6 +228,8 @@ export default class tight3to4Method extends Method {
     }
 
     update(options: updateOptions): void {
+        this.updateFrameCount(options.frameCount);
+
         // this.frameCount = options.frameCount;
         // this.currentFrame = options.currentFrame;
         // this.mode = options.mode;
@@ -175,7 +238,7 @@ export default class tight3to4Method extends Method {
     }
 
     canvasUpdate(options: updateOptions = this.options ?? { frameCount: 1, currentFrame: 0, mode: "gif" }): void {
-        const infotext = this.tight3to4CanvasManager?.update(options.frameCount, this.gridIsEnabled, this.gridGap + 2, this.gridOffset) ?? "";
+        const infotext = this.tight3to4CanvasManager?.update(options.frameCount, this.gridIsEnabled, this.gridGap + 2, this.gridOffset, this.onlyFrame, this.firstFrameClip, this.lastFrameClip) ?? "";
         this.infoTextChange?.(infotext);
     }
 
@@ -516,8 +579,10 @@ export default class tight3to4Method extends Method {
             const itIsLastFrame = index >= frames.length - 1;
             const itIsFirstFrame = index <= 0;
 
+            const reversedIndex = frames.length - 1 - index;
+
             cc.checkRestrictionAndMove(2);
-            block.push(f.deciderCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, deciderFrameSelector(index), { entityStartPos: "reverse" }));
+            block.push(f.deciderCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, deciderFrameSelector(reversedIndex), { entityStartPos: "reverse" }));
             wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenIn]);
 
             if (itIsLastFrame) {
@@ -538,7 +603,7 @@ export default class tight3to4Method extends Method {
             }
 
             cc.checkRestrictionAndMove(1);
-            block.push(f.constantCombinator(ii.next(), cc.px(-1), cc.y, Dir.east, makeSignals(frames[index]), { entityStartPos: "reverse" }));
+            block.push(f.constantCombinator(ii.next(), cc.px(-1), cc.y, Dir.east, makeSignals(frames[reversedIndex]), { entityStartPos: "reverse" }));
 
         }
 
@@ -788,6 +853,20 @@ export default class tight3to4Method extends Method {
         return [number1, number2, number3];
     }
 
+    updateFrameCount(frameCount: number) { // хуита чтобы инпуты адекватными были
+        if (this.firstFrameClipInput && this.lastFrameClipInput) {
+
+            this.firstFrameClipInput.max = String(frameCount);
+            if (+this.firstFrameClipInput.value > frameCount) {
+                this.firstFrameClipInput.value = String(frameCount);
+            }
+
+            this.lastFrameClipInput.max = String(frameCount);
+            if (+this.lastFrameClipInput.value > frameCount) {
+                this.lastFrameClipInput.value = String(frameCount);
+            }
+        }
+    }
     //#endregion
 
 }

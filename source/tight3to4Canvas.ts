@@ -110,7 +110,7 @@ export class Tight3to4CanvasManager {
     }
 
 
-    update(frameCount: number, gridIsEnabled: boolean, gridGap: number, gridOffset: { x: number, y: number }): string {
+    update(frameCount: number, gridIsEnabled: boolean, gridGap: number, gridOffset: { x: number, y: number }, onlyFrame: boolean, firstFrameClip: number, lastFrameClip: number): string {
         this.gridAlert = false;
 
         if (!this.context) return "";
@@ -123,12 +123,18 @@ export class Tight3to4CanvasManager {
         const drawer = new CanvasDrawer(this.intermediateContext); // рисуем
         let oscilatorGap = 0;
 
+        console.log("test34", firstFrameClip, lastFrameClip);
+
         if (gridIsEnabled) {
             let gap: null | number = null;
             for (let i = 0; i < 13; i++) {
 
                 gap = this.isNeedGap(2, gridGap, gridOffset);
                 this.addLogicLineToLeft(drawer, 2, gap, "rgb(150, 150, 150)", gridIsEnabled, gridGap, gridOffset); //декодер
+
+                if (onlyFrame) {
+                    drawer.clear();
+                }
 
                 if (i < 4 && gap !== null && gap >= 3) {
                     this.gridAlert = true;
@@ -137,21 +143,52 @@ export class Tight3to4CanvasManager {
             decoderGaps = this.intermediateCanvas.width - this.mainCanvas.width - 26;
             oscilatorGap = this.isNeedGap(3, gridGap, gridOffset) ?? 0;
             for (let i = 0; i < frameCount; i++) {
+                let colors = { // для обрезалки
+                    light: "rgb(200, 200, 200)",
+                    gark: "rgb(170, 170, 170)"
+                };
+
+                if (i < firstFrameClip || i >= lastFrameClip) {
+                    colors.gark = "rgba(0, 0, 0, 0)";
+                    colors.light = "rgba(0, 0, 0, 0)";
+                }
+
                 gap = this.isNeedGap(2, gridGap, gridOffset);
-                this.addLogicLineToLeft(drawer, 2, gap, "rgb(170, 170, 170)", gridIsEnabled, gridGap, gridOffset); // кадры
+                this.addLogicLineToLeft(drawer, 2, gap, colors.gark, gridIsEnabled, gridGap, gridOffset); // кадры
                 gap = this.isNeedGap(1, gridGap, gridOffset);
-                this.addLogicLineToLeft(drawer, 1, gap, "rgb(200, 200, 200)", gridIsEnabled, gridGap, gridOffset);
+                this.addLogicLineToLeft(drawer, 1, gap, colors.light, gridIsEnabled, gridGap, gridOffset);
             }
 
         } else {
             this.gridAlert = false;
 
             drawer.addStripe({ width: 26, direction: "left", color: "rgb(150, 150, 150)" }); //декодер
-            drawer.addStripe({ width: 3 * frameCount, direction: "left", color: "rgb(170, 170, 170)" }); // кадры
+
+            if (onlyFrame) {
+                drawer.clear();
+            }
+
+            for (let i = 0; i < frameCount; i++) {
+                let colors = {
+                    light: "rgb(200, 200, 200)",
+                    gark: "rgb(170, 170, 170)"
+                };
+
+                if (i < firstFrameClip || i >= lastFrameClip) {
+                    colors.gark = "rgba(0, 0, 0, 0)";
+                    colors.light = "rgba(0, 0, 0, 0)";
+                }
+
+                drawer.addStripe({ width: 2, direction: "left", color: colors.gark }); // кадры
+                drawer.addStripe({ width: 1, direction: "left", color: colors.light });
+
+            }
         }
 
 
-        drawer.addStripe({ width: 2, direction: "bottom", color: "rgb(120, 220, 120)", lenght: 4, offsetFrom: "end", offset: this.mainCanvas.width + 26 + decoderGaps + oscilatorGap }); // осцилятор
+        if (!onlyFrame) {
+            drawer.addStripe({ width: 2, direction: "bottom", color: "rgb(120, 220, 120)", lenght: 4, offsetFrom: "end", offset: this.mainCanvas.width + 26 + decoderGaps + oscilatorGap }); // осцилятор
+        }
 
         this.intermediateSize = { width: this.intermediateCanvas.width, height: this.intermediateCanvas.height };
 

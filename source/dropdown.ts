@@ -1,3 +1,6 @@
+import { time } from "console";
+import { HtmlCreator } from "./htmlStuff.js";
+
 export type DropdownOption = { // стило бы сделат словарём
     name: string;
     value: string;
@@ -8,7 +11,8 @@ export type OptionSelectCallback = (index: number | null) => void;
 
 
 type options = {
-    dropdownElement: HTMLElement, optionsList: DropdownOption[], onSelectCallback: OptionSelectCallback, defaultText: string, selectedPrefix?: string
+    dropdownElement: HTMLElement, optionsList: DropdownOption[], onSelectCallback: OptionSelectCallback, defaultText: string, selectedPrefix?: string,
+    width?: number, parent?: HTMLElement
 }
 
 export class Dropdown {
@@ -22,7 +26,7 @@ export class Dropdown {
     private onSelectCallback: OptionSelectCallback;
     private defaultText: string;
 
-    constructor(opt: options,) {
+    constructor(opt: options) {
         this.dropdown = opt.dropdownElement;
         this.optionsList = opt.optionsList;
         this.isOpen = false;
@@ -35,10 +39,20 @@ export class Dropdown {
         this.dropdownOptions = this.createDropdownOptions();
 
         this.dropdown.appendChild(this.dropdownTrigger);
-        this.dropdown.appendChild(this.dropdownOptions);
 
         this.dropdownTrigger.addEventListener('mousedown', () => this.toggleOptions());
         document.addEventListener('mousedown', (event) => this.handleOutsideClick(event));
+        this.dropdown.appendChild(this.dropdownOptions);
+
+        if (opt.width) {
+            this.dropdown.style.width = `${opt.width}px`;
+            this.dropdownOptions.style.width = `${opt.width}px`;
+        }
+
+        setTimeout(() => {
+            const update = HtmlCreator.bindFixedElementToTarget(this.dropdownTrigger, this.dropdownOptions, { top: 35, left: 0 }, true);
+            opt.parent?.addEventListener("scroll", update);
+        }, 0);
     }
 
     updateOptions(newOptions: DropdownOption[]): void {
