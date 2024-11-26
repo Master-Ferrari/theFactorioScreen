@@ -35,6 +35,7 @@ export default class tight3to4Method extends Method {
     private tight3to4CanvasManager: Tight3to4CanvasManager | null = null;
 
     private onlyFrame: boolean = false;
+    private disableSubstations: boolean = false;
     private firstFrameClip: number = 0;
     private lastFrameClip: number = 0;
 
@@ -124,14 +125,24 @@ export default class tight3to4Method extends Method {
             self.canvasUpdate();
         });
 
-
         controlsContainer.appendChild(offsetLabel);
         controlsContainer.appendChild(offsetContainer.container);
 
+
         const separator1 = Html.createSeparator("10px");
         const separator2 = Html.createSeparator("10px");
+        const separator3 = document.createElement('div');
+        separator3.innerText = "additional stuff";
+        const separator4 = document.createElement('div');
+        const separator5 = Html.createSeparator("10px");
+        const separator6 = Html.createSeparator("10px");
         controlsContainer.appendChild(separator1);
         controlsContainer.appendChild(separator2);
+        controlsContainer.appendChild(separator3);
+        controlsContainer.appendChild(separator4);
+        controlsContainer.appendChild(separator5);
+        controlsContainer.appendChild(separator6);
+
 
         const onlyFrameLabel = Html.addLabel("only frame data");
         const onlyFrameCheckbox = Html.addCheckbox("onlyFrame", false);
@@ -144,6 +155,18 @@ export default class tight3to4Method extends Method {
 
         controlsContainer.appendChild(onlyFrameLabel);
         controlsContainer.appendChild(onlyFrameCheckbox.container);
+
+        const disableSubstationsLabel = Html.addLabel("also disable substations");
+        const disableSubstationsCheckbox = Html.addCheckbox("disableSubstations", false);
+
+
+        disableSubstationsCheckbox.element.addEventListener('change', function () {
+            self.disableSubstations = this.checked;
+            self.canvasUpdate();
+        });
+
+        controlsContainer.appendChild(disableSubstationsLabel);
+        controlsContainer.appendChild(disableSubstationsCheckbox.container);
 
         scrollContainer.appendChild(controlsContainer);
 
