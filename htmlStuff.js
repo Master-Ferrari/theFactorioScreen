@@ -7,13 +7,18 @@ export class HtmlCreator {
         label.htmlFor = 'powerPolesCheckbox';
         return label;
     }
-    static createNumberInput(id, min, max, value) {
+    static createNumberInput(id, value, min, max) {
         const input = document.createElement('input');
         input.type = 'number';
         input.className = 'inputs';
         input.id = id;
-        input.min = min.toString();
-        input.max = max.toString();
+        console.log("test2", min);
+        if (min !== undefined) {
+            input.min = min.toString();
+        }
+        if (max !== undefined) {
+            input.max = max.toString();
+        }
         input.value = value.toString();
         return input;
     }
@@ -36,6 +41,12 @@ export class HtmlCreator {
         container.className = 'controls-grid';
         return container;
     }
+    static createScrollContainer(height) {
+        const container = document.createElement('div');
+        container.className = 'scroll-container sex-scrollbar';
+        container.style.height = `${height}px`;
+        return container;
+    }
     static createCenterContainer() {
         const methodContainer = document.createElement('div');
         methodContainer.style.display = 'flex';
@@ -53,6 +64,14 @@ export class HtmlCreator {
         button.onclick = onClick;
         return button;
     }
+    static createSeparator(marginBottom) {
+        const separator = document.createElement('div');
+        separator.classList.add('separation-line');
+        if (marginBottom) {
+            separator.style.marginBottom = marginBottom;
+        }
+        return separator;
+    }
     static createDropdown(options) {
         const dropdownContainer = document.createElement('div');
         dropdownContainer.className = 'dropdown-select';
@@ -61,7 +80,9 @@ export class HtmlCreator {
             optionsList: options.optionsList,
             onSelectCallback: options.onSelectCallback,
             defaultText: options.defaultText,
-            selectedPrefix: options.selectedPrefix
+            selectedPrefix: options.selectedPrefix,
+            width: options.width,
+            parent: options.parent
         });
         return dropdownContainer;
     }
@@ -85,14 +106,49 @@ export class HtmlCreator {
     static createXYInput(x, y) {
         const offsetContainer = document.createElement('div');
         offsetContainer.className = 'resolution-inputs';
-        const offsetXInput = this.createNumberInput(x.id, x.min, x.max, x.value);
+        const offsetXInput = this.createNumberInput(x.id, x.value, x.min, x.max);
         const xLabel = document.createElement('div');
         xLabel.innerText = "x";
         xLabel.style.margin = "0 auto";
-        const offsetYInput = this.createNumberInput(y.id, y.min, y.max, y.value);
+        const offsetYInput = this.createNumberInput(y.id, y.value, y.min, y.max);
         offsetContainer.appendChild(offsetXInput);
         offsetContainer.appendChild(xLabel);
         offsetContainer.appendChild(offsetYInput);
         return { container: offsetContainer, xInput: offsetXInput, yInput: offsetYInput };
+    }
+    static bindFixedElementToTarget(targetElement, slaveElement, offset, transferWidth = false) {
+        // Функция для обновления позиции фиксированного элемента
+        function updateFixedElementPosition() {
+            const targetRect = targetElement.getBoundingClientRect();
+            slaveElement.style.position = "fixed";
+            slaveElement.style.top = `${targetRect.top + offset.top}px`;
+            slaveElement.style.left = `${targetRect.left + offset.left}px`;
+            if (transferWidth) {
+                console.log("test33", targetRect.width);
+                slaveElement.style.width = `${targetRect.width}px`;
+            }
+        }
+        // Изначальное обновление позиции
+        updateFixedElementPosition();
+        // Обработчики для динамического обновления позиции
+        window.addEventListener("scroll", updateFixedElementPosition);
+        window.addEventListener("resize", updateFixedElementPosition);
+        // Удаление обработчиков при удалении элемента
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.removedNodes) {
+                    mutation.removedNodes.forEach((node) => {
+                        if (node === targetElement || node === slaveElement) {
+                            window.removeEventListener("scroll", updateFixedElementPosition);
+                            window.removeEventListener("resize", updateFixedElementPosition);
+                            observer.disconnect();
+                        }
+                    });
+                }
+            });
+        });
+        // Подключение наблюдателя
+        observer.observe(document.body, { childList: true, subtree: true });
+        return updateFixedElementPosition;
     }
 }

@@ -1,3 +1,4 @@
+import { HtmlCreator } from "./htmlStuff.js";
 export class Dropdown {
     constructor(opt) {
         this.dropdown = opt.dropdownElement;
@@ -10,9 +11,17 @@ export class Dropdown {
         this.dropdownTrigger = this.createDropdownTrigger();
         this.dropdownOptions = this.createDropdownOptions();
         this.dropdown.appendChild(this.dropdownTrigger);
-        this.dropdown.appendChild(this.dropdownOptions);
         this.dropdownTrigger.addEventListener('mousedown', () => this.toggleOptions());
         document.addEventListener('mousedown', (event) => this.handleOutsideClick(event));
+        this.dropdown.appendChild(this.dropdownOptions);
+        if (opt.width) {
+            this.dropdown.style.width = `${opt.width}px`;
+            this.dropdownOptions.style.width = `${opt.width}px`;
+        }
+        setTimeout(() => {
+            const update = HtmlCreator.bindFixedElementToTarget(this.dropdownTrigger, this.dropdownOptions, { top: 35, left: 0 }, true);
+            opt.parent?.addEventListener("scroll", update);
+        }, 0);
     }
     updateOptions(newOptions) {
         this.optionsList.forEach((option, index) => {

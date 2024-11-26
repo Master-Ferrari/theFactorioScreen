@@ -16,6 +16,12 @@ export default class tight3to4Method extends Method {
         this.alertManager = AlertManager.getInstance();
         this.infoTextChange = null;
         this.tight3to4CanvasManager = null;
+        this.onlyFrame = false;
+        this.disableSubstations = false;
+        this.firstFrameClip = 0;
+        this.lastFrameClip = 0;
+        this.firstFrameClipInput = null;
+        this.lastFrameClipInput = null;
         this.gridIsEnabled = false;
         this.gridGap = gapsSizes[0];
         this.gridPlus = this.gridGap + 2;
@@ -27,6 +33,7 @@ export default class tight3to4Method extends Method {
     }
     init() {
         //#region inputs
+        const scrollContainer = Html.createScrollContainer(140);
         const self = this;
         const mainCanvas = document.getElementById("canvas");
         const methodContainer = Html.createCenterContainer();
@@ -59,7 +66,8 @@ export default class tight3to4Method extends Method {
             },
             defaultText: "normal",
             selectedPrefix: "",
-            id: "substationQuality"
+            id: "substationQuality",
+            parent: scrollContainer
         });
         controlsContainer.appendChild(gridGapLabel);
         controlsContainer.appendChild(gridQuality);
@@ -75,7 +83,57 @@ export default class tight3to4Method extends Method {
         });
         controlsContainer.appendChild(offsetLabel);
         controlsContainer.appendChild(offsetContainer.container);
-        canvasContainer.appendChild(controlsContainer);
+        const separator1 = Html.createSeparator("10px");
+        const separator2 = Html.createSeparator("10px");
+        const separator3 = document.createElement('div');
+        separator3.innerText = "additional stuff";
+        const separator4 = document.createElement('div');
+        const separator5 = Html.createSeparator("10px");
+        const separator6 = Html.createSeparator("10px");
+        controlsContainer.appendChild(separator1);
+        controlsContainer.appendChild(separator2);
+        controlsContainer.appendChild(separator3);
+        controlsContainer.appendChild(separator4);
+        controlsContainer.appendChild(separator5);
+        controlsContainer.appendChild(separator6);
+        const onlyFrameLabel = Html.addLabel("only frame data");
+        const onlyFrameCheckbox = Html.addCheckbox("onlyFrame", false);
+        onlyFrameCheckbox.element.addEventListener('change', function () {
+            self.onlyFrame = this.checked;
+            self.canvasUpdate();
+        });
+        controlsContainer.appendChild(onlyFrameLabel);
+        controlsContainer.appendChild(onlyFrameCheckbox.container);
+        const disableSubstationsLabel = Html.addLabel("also disable substations");
+        const disableSubstationsCheckbox = Html.addCheckbox("disableSubstations", false);
+        disableSubstationsCheckbox.element.addEventListener('change', function () {
+            self.disableSubstations = this.checked;
+            self.canvasUpdate();
+        });
+        controlsContainer.appendChild(disableSubstationsLabel);
+        controlsContainer.appendChild(disableSubstationsCheckbox.container);
+        scrollContainer.appendChild(controlsContainer);
+        const firstFrameClipLabel = Html.addLabel("first frame index");
+        const firstFrameClipInput = Html.createNumberInput("frameClip", 0, 0);
+        this.firstFrameClipInput = firstFrameClipInput;
+        firstFrameClipInput.addEventListener('input', function () {
+            self.firstFrameClip = parseInt(this.value);
+            self.canvasUpdate();
+        });
+        controlsContainer.appendChild(firstFrameClipLabel);
+        controlsContainer.appendChild(firstFrameClipInput);
+        const mnogo = 999999999999;
+        const lastFrameClipLabel = Html.addLabel("last frame index");
+        const lastFrameClipInput = Html.createNumberInput("frameClip", mnogo, 0, mnogo);
+        this.lastFrameClipInput = lastFrameClipInput;
+        lastFrameClipInput.addEventListener('input', function () {
+            self.lastFrameClip = parseInt(this.value);
+            self.canvasUpdate();
+        });
+        self.lastFrameClip = mnogo;
+        controlsContainer.appendChild(lastFrameClipLabel);
+        controlsContainer.appendChild(lastFrameClipInput);
+        canvasContainer.appendChild(scrollContainer);
         const canvas = document.createElement('canvas');
         canvas.style.display = 'block';
         canvas.style.margin = "15px auto";
@@ -111,6 +169,7 @@ export default class tight3to4Method extends Method {
         this.alertManager.setAlert("wrongXOffset", false);
     }
     update(options) {
+        this.updateFrameCount(options.frameCount);
         // this.frameCount = options.frameCount;
         // this.currentFrame = options.currentFrame;
         // this.mode = options.mode;
@@ -118,7 +177,7 @@ export default class tight3to4Method extends Method {
         this.canvasUpdate(options);
     }
     canvasUpdate(options = this.options ?? { frameCount: 1, currentFrame: 0, mode: "gif" }) {
-        const infotext = this.tight3to4CanvasManager?.update(options.frameCount, this.gridIsEnabled, this.gridGap + 2, this.gridOffset) ?? "";
+        const infotext = this.tight3to4CanvasManager?.update(options.frameCount, this.gridIsEnabled, this.gridGap + 2, this.gridOffset, this.onlyFrame, this.firstFrameClip, this.lastFrameClip) ?? "";
         this.infoTextChange?.(infotext);
     }
     //#region makeJson
@@ -387,8 +446,9 @@ export default class tight3to4Method extends Method {
         for (let index = frames.length - 1; index >= 0; index--) {
             const itIsLastFrame = index >= frames.length - 1;
             const itIsFirstFrame = index <= 0;
+            const reversedIndex = frames.length - 1 - index;
             cc.checkRestrictionAndMove(2);
-            block.push(f.deciderCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, deciderFrameSelector(index), { entityStartPos: "reverse" }));
+            block.push(f.deciderCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, deciderFrameSelector(reversedIndex), { entityStartPos: "reverse" }));
             wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenIn]);
             if (itIsLastFrame) {
                 ii.addPairMember("frame decider combinator", ii.i); // вертикальный перенос сигнала кадра
@@ -405,7 +465,7 @@ export default class tight3to4Method extends Method {
                 this.sequencerStartXY = cc.xy;
             }
             cc.checkRestrictionAndMove(1);
-            block.push(f.constantCombinator(ii.next(), cc.px(-1), cc.y, Dir.east, makeSignals(frames[index]), { entityStartPos: "reverse" }));
+            block.push(f.constantCombinator(ii.next(), cc.px(-1), cc.y, Dir.east, makeSignals(frames[reversedIndex]), { entityStartPos: "reverse" }));
         }
         return { entities: block, wires: wires };
     }
@@ -600,5 +660,17 @@ export default class tight3to4Method extends Method {
             number3 |= (b & 0xff) << (8 * (3 - i));
         }
         return [number1, number2, number3];
+    }
+    updateFrameCount(frameCount) {
+        if (this.firstFrameClipInput && this.lastFrameClipInput) {
+            this.firstFrameClipInput.max = String(frameCount);
+            if (+this.firstFrameClipInput.value > frameCount) {
+                this.firstFrameClipInput.value = String(frameCount);
+            }
+            this.lastFrameClipInput.max = String(frameCount);
+            if (+this.lastFrameClipInput.value > frameCount) {
+                this.lastFrameClipInput.value = String(frameCount);
+            }
+        }
     }
 }

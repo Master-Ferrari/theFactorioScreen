@@ -381,33 +381,27 @@ canvas {
     color: var(--text-color, #f5f5f5);
     box-sizing: border-box;
     resize: none;
+}
 
+.sex-scrollbar {
     overflow-y: scroll;
     overflow-x: hidden;
-    scrollbar-width: thin;
-    /* Тонкий скроллбар для Firefox */
-    scrollbar-color: gray transparent;
-    /* Серый бегунок, прозрачный фон для Firefox */
+    scrollbar-width: thin; /* Тонкий скроллбар для Firefox */
+    scrollbar-color: gray transparent; /* Серый бегунок, прозрачный фон для Firefox */
 }
 
-/* Стилизация скроллбара для WebKit-браузеров (Chrome, Safari) */
-#textOutput::-webkit-scrollbar {
-    width: 8px;
-    /* Ширина скроллбара */
+.sex-scrollbar::-webkit-scrollbar {
+    width: 8px; /* Ширина скроллбара */
 }
 
-#textOutput::-webkit-scrollbar-track {
-    background: transparent;
-    /* Прозрачный фон */
+.sex-scrollbar::-webkit-scrollbar-track {
+    background: transparent; /* Прозрачный фон */
 }
 
-#textOutput::-webkit-scrollbar-thumb {
-    background-color: gray;
-    /* Цвет бегунка */
-    border-radius: var(--small-radius);
-    /* Радиус углов бегунка */
+.sex-scrollbar::-webkit-scrollbar-thumb {
+    background-color: gray; /* Цвет бегунка */
+    border-radius: var(--small-radius); /* Радиус углов бегунка */
 }
-
 
 /* .island button {
     padding: 10px;
@@ -688,4 +682,19 @@ canvas {
 body {
     font-size: 14px;
     font-family: var(--PtMono);
+}
+
+.scroll-container {
+    overflow-y: scroll;
+    overflow-x: hidden;
+    height: 100%;
+    padding-right: 10px;
+}
+
+#title {
+    white-space: nowrap;
+}
+
+#title-container {
+    overflow-x: auto;
 }

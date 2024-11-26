@@ -1,3 +1,4 @@
+import "./pageScale.js";
 import "./rainbowTitle.js";
 import "./themeSwitch.js";
 import "./inputHandler.js";
