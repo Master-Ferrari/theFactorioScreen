@@ -706,6 +706,11 @@ export default class ImageProcessor {
         }
         else {
             alert('Файл не загружен или содержит ошибки.');
+            console.log("this.myGif", this.myGif);
+            console.log("this.myGif.frames.length", this.myGif?.frames.length);
+            console.log("this.myPngSequence", this.myPngSequence);
+            console.log("this.myPngSequence.frames.length", this.myPngSequence?.frames.length);
+            console.log("this.myPng", this.myPng);
         }
         this.method?.update({
             frameCount: parseInt(this.frameCountInput.value, 10),

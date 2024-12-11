@@ -54,13 +54,17 @@ export class factorioEntities {
             always_on: true
         };
     }
-    static rgbLamp(index: number, x: number, y: number, names: RgbSignalsNames, options?: { entityStartPos?: Order }): any {
+    static rgbLamp(index: number, x: number, y: number, names: RgbSignalsNames, options?: { entityStartPos?: Order, testNumber?: number }): any {
         return {
             entity_number: index,
             name: "small-lamp",
             position: sizeAdapter(x, y, 1, 1, Dir.south, options?.entityStartPos ?? "normal"),
 
             control_behavior: {
+                "circuit_condition": {
+                    "constant": options?.testNumber ?? 0,
+                    "comparator": "<"
+                },
                 use_colors: true,
                 red_signal: {
                     ...(getTypeByName(names.rName) && { type: "virtual" }), // это конечно нормально бы оптимизировать. лишний поиск по сигналам. индекс можно пробрасывать вместе с именем.
@@ -266,8 +270,38 @@ export class CoordinateCursor {
         }
     }
 
-    checkLampsRestriction(lookX: number = 0): boolean { //-2 +2
-        return this.restrictedColumns.includes(this._x + lookX - 4) && this.restrictedRows.includes(this._y - 2);
+    checkLampsRestriction(lookX: number = 0, width: number): boolean { //-2 +2
+        let checkX = this._x + lookX;
+        const checkY = this._y - 2;
+
+        const newRestrictions = this.restrictedColumns.map(x => -x - 2);
+
+        console.log("\ntest43-1",
+            "\nвот такие у нас рестрикции:", newRestrictions,
+            "\nширина кстати у на:", width,
+            "\nкорректируем её на:", (-checkX),
+            "\nа вот наша координата (this._x):", this._x,
+            "\nа вот lookX:", lookX,
+            "\nи проверяем вхождение", newRestrictions.includes(-checkX));
+
+
+        if (width < -checkX) { // чек выхода за границу экрана
+            return false;
+        }
+
+        console.log("test44", -checkX, lookX);
+
+        // checkX = -(width ?? 0) - checkX; // расчёт относительно правого края
+
+
+        return newRestrictions.includes(-checkX) && this.restrictedRows.includes(checkY);
+    }
+
+    checkLampsHole(): boolean {
+        let checkX = this._x - 4; //почему тут -4 нам неизвестно
+        const checkY = this._y - 2;
+
+        return this.restrictedColumns.includes(checkX) && this.restrictedRows.includes(checkY);
     }
 
     addRestrictedColumns(columns: number[]) {

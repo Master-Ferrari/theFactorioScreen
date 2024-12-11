@@ -41,6 +41,7 @@ export default class tight3to4Method extends Method {
 
     private firstFrameClipInput: HTMLInputElement | null = null;
     private lastFrameClipInput: HTMLInputElement | null = null;
+    private generationButton: HTMLDivElement | null = null;
 
     private gridIsEnabled: boolean = false;
     private gridGap: number = gapsSizes[0];
@@ -223,11 +224,11 @@ export default class tight3to4Method extends Method {
 
         this.tight3to4CanvasManager = Tight3to4CanvasManager.getInstance(canvas, mainCanvas);
 
-        const button = Html.createButton("generate blueprint!", () => {
+        this.generationButton = Html.createButton("generate blueprint!", () => {
             console.log("LoL")
             this.exportJson(this.makeJson());
         });
-        methodContainer.appendChild(button);
+        methodContainer.appendChild(this.generationButton);
 
         while (this.optionsContainer.firstChild) {
             this.optionsContainer.removeChild(this.optionsContainer.firstChild);
@@ -301,7 +302,17 @@ export default class tight3to4Method extends Method {
         ii.shift(1);
 
 
-        for (let y = 0; y < preparedGifData.rows.length; y++) { // строчки всего вместе
+        for (let y = 0; y < preparedGifData.rows.length; y++) { // строчки всего вместе/
+
+
+            if (this.generationButton) {
+                const percent: string = Math.ceil(y / preparedGifData.rows.length * 100) + "%";
+                console.log("test41-percent", percent);
+                this.generationButton.innerText = "generation.. " + percent;
+            }
+
+
+
             const rowData = preparedGifData.rows[y];
             const oldCC = cc.xy;
 
@@ -333,6 +344,11 @@ export default class tight3to4Method extends Method {
             if (mainClockWire) {
                 blueprint.addWires([[mainClockWire[0], Wire.redIn, mainClockWire[1], Wire.redOut]]);
             }
+        }
+
+
+        if (this.generationButton) {
+            this.generationButton.innerText = "generate blueprint!";
         }
 
         return blueprint.json();
@@ -759,6 +775,7 @@ export default class tight3to4Method extends Method {
         block.push(f.arithmeticCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, arithmeticShiftByte, { entityStartPos: "reverse" }));
         wires.push([ii.i, Wire.greenIn, ii.look(1), Wire.greenIn]);
 
+        cc.checkRestrictionAndMove(2);
         block.push(f.arithmeticCombinator(ii.next(), cc.px(-2), cc.y, Dir.east, arithmeticGetByte, { entityStartPos: "reverse" }));
         wires.push([ii.i, Wire.greenIn, ii.look(2), Wire.greenOut]);
 
@@ -804,27 +821,35 @@ export default class tight3to4Method extends Method {
         }
 
         for (let i = width - 1; i >= 0; i--) {
-            const packIndex = Math.floor(i / 4);
+            function getPackIndex(x: number): number {
+                return Math.floor(x / 4);
+            }
+            const packIndex = getPackIndex(i);
 
-            if (!cc.checkLampsRestriction()) {
-                let look = 4; // чек дырки в соседе слева
-                if (cc.checkLampsRestriction(-4)) {
-                    look = 6;
-                    // cc.dx(-1);
-                    // continue;
-                }
+            if (!cc.checkLampsHole()) {
 
-                if (cc.checkLampsRestriction(-2)) {
+                let look = 4; // чек дырки в соседе слева. переменная - тот с кем здороваемся
+
+
+                // if (cc.x + lookX <= width){}
+
+                if (cc.checkLampsRestriction(-4, width)) {
                     look = 2;
                 }
+                else if (cc.checkLampsRestriction(-6, width)) {
+                    look = 6;
+                }
 
+                console.log("test45", i, look);
 
-                block.push(f.rgbLamp(ii.next(), cc.px(-1), cc.y, signalNamesRgbGroups[packIndex], { entityStartPos: "reverse" }));
+                const overthrowCase = i < 8 && look == 6;
+                const linkToCombinator = i < 4 || overthrowCase;
 
+                block.push(f.rgbLamp(ii.next(), cc.px(-1), cc.y, signalNamesRgbGroups[packIndex], { entityStartPos: "reverse", testNumber: overthrowCase ? 1 : 0 }));
 
-                if (packIndex == 0) { // если коннект не к лампе
+                if (linkToCombinator) { // если коннект не к лампе
                     wires.push([ii.i, Wire.greenIn, ii.look(look), Wire.greenOut]);
-                } else {
+                } else { // если к лампе
                     wires.push([ii.i, Wire.greenIn, ii.look(look), Wire.greenIn]);
                 }
 

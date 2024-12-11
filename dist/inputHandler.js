@@ -149,8 +149,18 @@ export default class InputHandler {
                 });
             }
             else if (mode === 'pngSequence') {
-                // Чтение нескольких PNG-файлов
-                readFilesAsArrayBuffers(files).then(arrayBuffers => {
+                // Преобразование FileList в массив и сортировка по имени
+                const sortedFilesArray = Array.from(files).sort((a, b) => a.name.localeCompare(b.name));
+                // Функция для создания объекта FileList
+                function createFileList(filesArray) {
+                    const dataTransfer = new DataTransfer();
+                    filesArray.forEach(file => dataTransfer.items.add(file));
+                    return dataTransfer.files;
+                }
+                // Конвертируем массив обратно в FileList
+                const sortedFileList = createFileList(sortedFilesArray);
+                // Чтение нескольких PNG-файлов из отсортированного списка
+                readFilesAsArrayBuffers(sortedFileList).then(arrayBuffers => {
                     self.canvasManager.loader({ mode, arrayBuffers });
                 }).catch(error => {
                     console.error('Ошибка при чтении файлов', error);

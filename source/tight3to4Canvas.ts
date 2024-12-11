@@ -136,9 +136,9 @@ export class Tight3to4CanvasManager {
                     drawer.clear();
                 }
 
-                if (i < 4 && gap !== null && gap >= 3) {
-                    this.gridAlert = true;
-                }
+                // if (i < 4 && gap !== null && gap >= 3) {
+                //     this.gridAlert = true;
+                // }
             }
             decoderGaps = this.intermediateCanvas.width - this.mainCanvas.width - 26;
             oscilatorGap = this.isNeedGap(3, gridGap, gridOffset) ?? 0;
@@ -322,7 +322,7 @@ export class Tight3to4CanvasManager {
 
 
             const leftImageBorderDistance = this.intermediateCanvas.width - this.mainCanvas.width - point.x
-            if (leftImageBorderDistance >= -1 && leftImageBorderDistance <= 1) { // один из двух самых левых пикселей, то алерт. алертXOffset сделать свойством класса.
+            if (leftImageBorderDistance >= 0 && leftImageBorderDistance <= 1) { // один из двух самых левых пикселей, то алерт. алертXOffset сделать свойством класса.
                 // drawer.drawSquare(point.x, point.y, 2, 2, "rgb(255, 38, 0)");
                 this.gridAlert = true;
             }
