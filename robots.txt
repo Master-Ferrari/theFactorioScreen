@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://master-ferrari.github.io/theFactorioScreen/sitemap.xml

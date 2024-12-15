@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <title>theFactorioScreen</title>
+    <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Online Factorio lamp screen generator. Create custom screens from lamps in Factorio with ease.">
+    <meta name="keywords" content="Factorio, lamp screen generator, Factorio tools, Factorio mods, online screen maker, Factorio custom designs">
+    <meta name="author" content="Master Ferrari">
+    <link rel="canonical" href="https://master-ferrari.github.io/theFactorioScreen/">
+    <meta name="google-site-verification" content="fiDTD0DFcG6fsOJI3Cl9_IBhBb1vLuV057ZbFqoGFUI" />
+</head>
+
+<body>
+
+    <h1 style="display: none;">Factorio Lamp Screen Generator</h1>
+    <p style="display: none;">Create custom lamp screens for Factorio with this online tool. Perfect for modders and builders!</p>
+  
+    <div class="container" id="mainContainer">
+        <div id="title" class="rainbow-text">
+
+        </div>
+
+
+        <div class="main-content" id="mainContent" style="position: relative;">
+
+            <div class="theme-toggle">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="themeSwitch" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="support-info">
+                <div class="">page in development ..</div>
+                <a href="https://ko-fi.com/baroriba" target="_blank" rel="noopener noreferrer" class="pure-link">
+                    <div class="ko-fi-link">
+                        <span style="white-space: pre-wrap;">support me on ko-fi ! </span>
+                        <svg xmlns="http://www.w3.org/2000/svg" id="ko-fi-svg" display="block" fill="none"
+                            viewBox="0 0 24 24" stroke="white" style="width: 26px; height: 24px; ">
+                            <path
+                                d="M23.881 8.948c-.773-4.085-4.859-4.593-4.859-4.593H.723c-.604 0-.679.798-.679.798s-.082 7.324-.022 11.822c.164 2.424 2.586 2.672 2.586 2.672s8.267-.023 11.966-.049c2.438-.426 2.683-2.566 2.658-3.734 4.352.24 7.422-2.831 6.649-6.916zm-11.062 3.511c-1.246 1.453-4.011 3.976-4.011 3.976s-.121.119-.31.023c-.076-.057-.108-.09-.108-.09-.443-.441-3.368-3.049-4.034-3.954-.709-.965-1.041-2.7-.091-3.71.951-1.01 3.005-1.086 4.363.407 0 0 1.565-1.782 3.468-.963 1.904.82 1.832 3.011.723 4.311zm6.173.478c-.928.116-1.682.028-1.682.028V7.284h1.77s1.971.551 1.971 2.638c0 1.913-.985 2.667-2.059 3.015z">
+                            </path>
+                        </svg>
+                    </div>
+                </a>
+            </div>
+
+            <div class="island">
+                <label for="fileInput" class="custom-file-upload">
+                    <div id="fileNameLabel">file select</div>
+                </label>
+                <input type="file" id="fileInput" accept=".gif,.png" style="display: none;" multiple>
+
+                <div id="mainControls" class="controls-grid" style="display: none;">
+                    <label class="control-title" for="frameInput" id="frameLabel">frame index</label>
+                    <input type="number" class="inputs" id="frameInput" min="0" value="0">
+
+                    <label class="control-title" for="frameCountInput" id="frameCountLabel">frame count</label>
+                    <input type="number" class="inputs" id="frameCountInput" min="1" value="1">
+
+                    <label class="control-title" for="autoPlayCheckbox" id="autoPlayLabel">autoplay</label>
+                    <div class="control-toggle inputs" id="autoPlayContainer">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="autoPlayCheckbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <label class="control-title" for="frameRateInput" id="frameRateLabel">
+                        <span id="frameRateDisplay" style="white-space: pre;">_4 ticks/frame (FPS 15)</span>
+                    </label>
+                    <div class="inputs" style="width: 100%;" id="frameRateContainer">
+                        <input type="range" id="frameRateInput" class="range" min="1" max="60" value="4">
+
+                    </div>
+
+                    <label class="control-title" for="resolution">resolution</label>
+                    <div class="resolution-inputs inputs">
+                        <input type="number" id="widthInput" min="1" placeholder="width">
+                        <span style="margin: 0px auto;">x</span>
+                        <input type="number" id="heightInput" min="1" placeholder="height">
+                    </div>
+
+                    <label class="control-title" for="preserveAspectCheckbox">original proportions</label>
+                    <div class="control-toggle inputs">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="preserveAspectCheckbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+
+                </div>
+                <div id="alert" style="display:none">for animation, it is recommended to reduce the size or number of
+                    frames.
+                </div>
+
+            </div>
+            <!-- Right panel with canvas and controls -->
+            <div class="island" style="justify-content: flex-end;">
+                <canvas id="canvas" width="330" height="330"></canvas>
+                <div id="canvasControls" class="canvas-controls">
+                    <div id="scaleCanvas" class="icon-button custom-button">
+
+                        <svg xmlns="http://www.w3.org/2000/svg" id="scalePlusSVG" display="block" fill="none"
+                            viewBox="0 0 24 24" stroke="white" style="width: 24px; height: 24px; " class="icons">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+
+                        <svg xmlns="http://www.w3.org/2000/svg" id="scaleMinusSVG" display="none" fill="none"
+                            viewBox="0 0 24 24" stroke="white" style="width: 24px; height: 24px;" class="icons">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                        </svg>
+
+                    </div>
+
+                    <div id="mirrorCanvas" class="icon-button custom-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"
+                            style="width: 24px; height: 24px;" class="icons">
+                            <path d="M7.75735 12L16.2426 12" stroke="#ffffff" stroke-linecap="round"></path>
+                            <rect x="3" y="3" width="18" height="18" rx="3" stroke="#ffffff" stroke-linecap="round"
+                                stroke-linejoin="round"></rect>
+                        </svg>
+                    </div>
+
+                    <div id="rotateCounterClockwise" class="icon-button custom-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"
+                            style="width: 24px; height: 24px;" class="icons">
+                            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                            <g id="SVGRepo_iconCarrier">
+                                <path d="M5.06697 5.91046L5.65392 1.99997" stroke="#ffffff" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" data-darkreader-inline-stroke=""
+                                    style="--darkreader-inline-stroke: #9e9b96;"></path>
+                                <path d="M5.06697 5.91046L8.80751 7.19296" stroke="#ffffff" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" data-darkreader-inline-stroke=""
+                                    style="--darkreader-inline-stroke: #9e9b96;"></path>
+                                <path
+                                    d="M3 12.0609C3 17.0314 7.02944 21.0609 12 21.0609C16.9706 21.0609 21 17.0314 21 12.0609C21 7.09029 16.9706 3.06085 12 3.06085C9.92877 3.06085 8.02095 3.76052 6.5 4.9364"
+                                    stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    data-darkreader-inline-stroke="" style="--darkreader-inline-stroke: #9e9b96;">
+                                </path>
+                            </g>
+                        </svg>
+                    </div>
+
+                    <div id="rotateClockwise" class="icon-button custom-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white"
+                            style="width: 24px; height: 24px;" class="icons">
+                            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                            <g id="SVGRepo_iconCarrier">
+                                <path d="M18.933 5.91052L18.3461 2.00003" stroke="#ffffff" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" data-darkreader-inline-stroke=""
+                                    style="--darkreader-inline-stroke: #9e9b96;"></path>
+                                <path d="M18.933 5.91052L15.1925 7.19302" stroke="#ffffff" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" data-darkreader-inline-stroke=""
+                                    style="--darkreader-inline-stroke: #9e9b96;"></path>
+                                <path
+                                    d="M21 12.0609C21 17.0315 16.9706 21.0609 12 21.0609C7.02944 21.0609 3 17.0315 3 12.0609C3 7.09035 7.02944 3.06091 12 3.06091C14.0712 3.06091 15.9791 3.76058 17.5 4.93646"
+                                    stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    data-darkreader-inline-stroke="" style="--darkreader-inline-stroke: #9e9b96;">
+                                </path>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="island">
+
+                <div id="methodSelect" class="dropdown-select hidden">
+                </div>
+
+                <div class="separation-line"></div>
+
+
+                <div id="blueprintOptions" class=""></div>
+
+            </div>
+
+            <div class="island">
+                <textarea id="textOutput" class="sex-scrollbar"readonly></textarea>
+                <div id="copyButton" class="control-margin-top-2 custom-button script-button hidden"
+                    style="margin-top: 10px; margin-bottom: 0px;">copy to clipboard</div>
+            </div>
+        </div>
+
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
+    <script type="module" src="index.js"></script>
+
+    <!-- 100% privacy-first analytics --> <!-- so they told me -->
+    <scriptasyncdefersrc="https://scripts.simpleanalyticscdn.com/latest.js"></script>
+    <noscript><imgsrc="https://queue.simpleanalyticscdn.com/noscript.gif"alt=""referrerpolicy="no-referrer-when-downgrade" /></noscript>
+
+</body>
+
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Name Extractor</title>
+</head>
+<body>
+    <h1>JSON Name Extractor</h1>
+    <p>Введите JSON в левое поле, и нажмите "Извлечь имена". Результат появится справа.</p>
+
+    <textarea id="inputJson" rows="20" cols="50" placeholder="Введите JSON здесь..."></textarea>
+    <textarea id="outputJson" rows="20" cols="50" placeholder="Массив строк с именами появится здесь..." readonly></textarea>
+    <br>
+    <button onclick="extractNames()">Извлечь имена</button>
+
+    <script>
+        function extractNames() {
+            let inputJson;
+            try {
+                inputJson = JSON.parse(document.getElementById("inputJson").value);
+            } catch (error) {
+                alert("Ошибка: Введён некорректный JSON.");
+                return;
+            }
+
+            let names = [];
+
+            function findNames(obj) {
+                // Проверяем, что структура соответствует sections -> sections -> filters
+                if (obj.sections && Array.isArray(obj.sections)) {
+                    obj.sections.forEach(section => {
+                        if (section.filters && Array.isArray(section.filters)) {
+                            section.filters.forEach(filter => {
+                                if ('name' in filter) {
+                                    names.push(filter.name);
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    // Рекурсивно обходим все вложенные объекты, если не находим искомую структуру
+                    for (let key in obj) {
+                        if (obj[key] !== null && typeof obj[key] === 'object') {
+                            findNames(obj[key]);
+                        }
+                    }
+                }
+            }
+
+            findNames(inputJson);
+
+            document.getElementById("outputJson").value = JSON.stringify(names, null, 2);
+        }
+    </script>
+</body>
+</html>

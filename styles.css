@@ -1,0 +1,700 @@
+/* Light and Dark themes */
+:root {
+    --background-color: #1e1e1e;
+    --text-color: #f5f5f5;
+    --back-text-color: #b5b5b5;
+    ;
+    --button-text-color: #f5f5f5;
+    --button-text-color-deactivated: #a7a7a7;
+    --button-bg: #454545;
+    --button-color: #fff;
+    --button-hover: #888;
+    --border-color: #444;
+    --container-bg: #2e2e2e;
+    --slider-bg-checked: #ccc;
+
+
+    --input-bg: #333;
+    --slider-bg: #555;
+}
+
+.light-theme {
+    --background-color: #f5f5f5;
+    --text-color: #333;
+    --back-text-color: #464646;
+    --button-text-color: #f5f5f5;
+    --button-text-color-deactivated: #a7a7a7;
+    --input-bg: #fff;
+    --button-bg: #858585;
+    --button-color: #fff;
+    --button-hover: #444;
+    --border-color: #ccc;
+    --container-bg: #fff;
+    --slider-bg: #ccc;
+    --slider-bg-checked: #666;
+}
+
+:root {
+    --small-radius: 5px;
+    --large-radius: 20px;
+    --border-size: 5px;
+
+    --control-width: 90px;
+    --control-height: 35px;
+    --island-margin: 10px;
+
+    --control-margin: 5px;
+
+    --PlayBold: Play-Bold;
+    --Play: Play-Regular;
+    --PtMono: Pt Mono;
+    --Signika: Signika;
+}
+
+@font-face {
+    font-family: 'Play-Bold';
+    src: url('misc/Play-Bold.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Play-Regular';
+    src: url('misc/Play-Regular.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Pt Mono';
+    src: url('misc/PtMono-Regular.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Signika';
+    src: url('misc/Signika.ttf') format('truetype');
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding-top: 20px;
+    transition: background-color 0.3s, color 0.3s;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.support-info {
+    color: var(--back-text-color);
+    stroke: var(--back-text-color);
+    position: absolute;
+    top: calc(-1* var(--control-height) - var(--island-margin) + 3px);
+    left: calc(var(--island-margin) + 2px);
+}
+
+.ko-fi-link {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+#ko-fi-svg {
+    stroke: var(--back-text-color);
+    stroke-width: 1.3px;
+}
+
+.pure-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.icons path,
+.icons rect {
+    /* stroke: var(--back-text-color); */
+    stroke-width: 1px;
+}
+
+.theme-toggle {
+    position: absolute;
+    top: calc(-1* var(--control-height) - var(--island-margin));
+    right: calc(var(--island-margin) + 2px);
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    height: var(--control-height);
+}
+
+.toggle-switch input {
+    display: none;
+}
+
+#blueprintOptions {
+    width: 100%;
+    height: 100%;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    background-color: #666;
+    border-radius: var(--large-radius);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transition: background-color 0.4s;
+    width: inherit;
+    border: var(--border-color) 1px solid;
+
+    /* box-sizing: border-box; */
+    height: var(--control-height);
+}
+
+/* рычажок выкл */
+.slider:before {
+    content: "";
+    position: absolute;
+    height: 15px;
+    width: 15px;
+    border-radius: var(--large-radius);
+    background-color: var(--button-bg);
+    left: 9px;
+    bottom: 9px;
+    transition: transform 0.4s;
+}
+
+/* неясно 
+input:checked+.slider {
+    background-color: rgb(128, 0, 0);
+}
+
+ рычажок вкл  */
+input:checked+.slider:before {
+    background-color: var(--button-bg);
+    transform: translateX(calc(var(--control-width) - var(--control-height)));
+}
+
+/* 
+ фон вкл 
+.toggle-switch input:checked+.slider {
+    background-color: var(--container-bg);
+}
+
+ фон выкл */
+.toggle-switch .slider {
+    background-color: var(--input-bg);
+}
+
+/* 
+ фон вкл навестись 
+input:checked+.slider:hover {
+    background-color: rgb(0, 0, 128);
+}
+
+ .slider:hover {
+    background-color: #666;
+} */
+
+/* рычажок выкл с наведением */
+.slider:hover:before {
+    background-color: var(--button-hover);
+    /* Выберите цвет для состояния "выкл" при наведении */
+}
+
+/* рычажок вкл с наведением */
+input:checked+.slider:hover:before {
+    background-color: var(--button-hover);
+    /* Выберите цвет для состояния "вкл" при наведении */
+}
+
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    /* max-width: 1500px; */
+}
+
+.rainbow-text {
+    display: inline-block;
+    color: #000;
+    margin-bottom: 50px;
+    letter-spacing: 5px;
+    text-align: center;
+    margin-top: 15px;
+}
+
+.letter {
+    display: inline-block;
+    animation: wave 2s infinite ease-in-out;
+}
+
+@keyframes wave {
+    0% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-20px);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
+
+.main-content {
+    display: flex;
+    justify-content: space-between;
+    /* width: 100%; */
+    flex-wrap: wrap;
+    justify-content: center;
+    width: fit-content;
+}
+
+.island {
+    background-color: var(--container-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--large-radius);
+    padding: 20px;
+    margin: var(--island-margin);
+    flex: 1 1 calc(33.33% - 40px);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    max-width: 450px;
+    min-width: 450px;
+    /* width: 100%; */
+    /* margin-bottom: 10px; */
+    min-height: 450px;
+    height: 450px;
+    max-height: 450px;
+}
+
+
+.island input[type="file"] {
+    display: none;
+}
+
+.custom-file-upload {
+    border: 1px solid var(--border-color);
+    display: inline-block;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: var(--large-radius);
+    background-color: var(--button-bg);
+    color: var(--button-color);
+    text-align: center;
+    transition: background-color 0.3s, color 0.3s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.inputs {
+    margin: var(--control-margin) 0;
+    height: 35px;
+}
+
+.resolution-inputs {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.resolution-inputs input[type="number"] {
+    width: var(--control-width);
+    /* margin: 0 5px; */
+}
+
+/* .resolution-inputs span {
+    margin: 0 5px;
+} */
+
+.resolution-inputs label {
+    flex: 1;
+}
+
+
+/* Стили самого ползунка */
+.range {
+    -webkit-appearance: none;
+    /* Убирает стандартный стиль для WebKit-браузеров */
+    width: var(--control-width);
+    background-color: var(--input-bg);
+    margin: 0px;
+}
+
+.custom-button,
+input[type="number"],
+input[type="range"] {
+    padding: 10px;
+    border-radius: var(--large-radius);
+    border: 1px solid var(--border-color);
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+button {
+    color: var(--button-text-color);
+}
+
+.custom-button {
+    border: 0px;
+    background-color: var(--button-bg);
+    color: var(--button-color);
+    cursor: pointer;
+}
+
+canvas {
+    border: 1px solid var(--border-color);
+    border-radius: var(--large-radius);
+    margin-top: 20px;
+    /* max-width: 336px;
+    max-height: 336px; */
+    height: 100%;
+    image-rendering: pixelated;
+}
+
+.method-canvas {
+    /* width: 330px;
+    height: 330px; */
+
+}
+
+.method-canvas-container {
+    display: flex;
+    align-items: center;
+    justify-self: flex-start;
+}
+
+#textOutput {
+    flex-grow: 1;
+    padding: 10px;
+    border-radius: var(--small-radius);
+    border: 1px solid var(--border-color);
+    background-color: var(--input-bg);
+    color: var(--text-color, #f5f5f5);
+    box-sizing: border-box;
+    resize: none;
+}
+
+.sex-scrollbar {
+    overflow-y: scroll;
+    overflow-x: hidden;
+    scrollbar-width: thin; /* Тонкий скроллбар для Firefox */
+    scrollbar-color: gray transparent; /* Серый бегунок, прозрачный фон для Firefox */
+}
+
+.sex-scrollbar::-webkit-scrollbar {
+    width: 8px; /* Ширина скроллбара */
+}
+
+.sex-scrollbar::-webkit-scrollbar-track {
+    background: transparent; /* Прозрачный фон */
+}
+
+.sex-scrollbar::-webkit-scrollbar-thumb {
+    background-color: gray; /* Цвет бегунка */
+    border-radius: var(--small-radius); /* Радиус углов бегунка */
+}
+
+/* .island button {
+    padding: 10px;
+    border-radius: var(--large-radius);
+    border: none;
+    background-color: var(--button-bg, #454545);
+    color: var(--button-color, #fff);
+    cursor: pointer;
+}
+
+.island button:hover {
+    background-color: var(--button-hover, #888);
+} */
+
+/* Responsive design */
+@media (max-width: 800px) {
+    .main-content {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .island {
+        flex: none;
+        width: 90%;
+        margin: var(--island-margin) 0;
+    }
+}
+
+/* Styles for custom toggle switches in controls */
+.control-toggle {
+    display: flex;
+    align-items: center;
+}
+
+.control-margin-top-2 {
+    margin-top: calc(2 * var(--control-margin));
+}
+
+.control-toggle label {
+    margin: 0;
+    cursor: pointer;
+    flex: 1;
+}
+
+.control-toggle,
+.toggle-switch,
+.slider {
+    flex-shrink: 0;
+    width: var(--control-width);
+}
+
+.icon-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.controls-grid {
+    display: grid;
+    margin-top: var(--control-margin);
+    grid-template-columns: 50% 50%;
+    justify-items: start;
+    align-items: center;
+}
+
+.stroke-text {
+    position: absolute;
+    color: transparent;
+    -webkit-text-stroke: 5px var(--container-bg);
+    -webkit-text-fill-color: transparent;
+}
+
+.fill-text {
+    position: absolute;
+    color: var(--text-color);
+    user-select: none;
+}
+
+.stroke-text-container {
+    position: absolute;
+    width: -webkit-fill-available;
+}
+
+.control-title {
+    align-content: space-evenly;
+    height: 45px;
+}
+
+#canvasControls {
+    margin-top: 10px;
+    display: none;
+    flex-direction: row;
+}
+
+#canvasControls button {
+    width: 100%;
+    margin: 0px 10px;
+}
+
+#canvas {
+    margin: auto;
+    border-radius: var(--small-radius);
+    /* max-width: 330px;
+    max-height: 330px; */
+}
+
+/* Стили для бегунка */
+.range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    background-color: var(--button-bg);
+    cursor: pointer;
+    border-radius: 50%;
+    /* Закругление бегунка */
+    transition: background-color 0.3s;
+}
+
+.range::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    background-color: var(--button-bg);
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+}
+
+/* Подсветка бегунка при наведении на весь элемент range */
+.range:hover::-webkit-slider-thumb {
+    background-color: var(--button-hover);
+    /* Цвет подсветки бегунка при наведении */
+}
+
+.range:hover::-moz-range-thumb {
+    background-color: var(--button-hover);
+    /* Цвет подсветки бегунка при наведении */
+}
+
+.separation-line {
+    width: 100%;
+    height: 1px;
+    margin-top: var(--island-margin);
+    background-color: var(--border-color);
+}
+
+/* 
+.script-button {
+    margin-bottom: 15px;
+} */
+
+/* 
+#makeVideoBlueprint {
+} */
+
+/* Hide controls until a file is loaded */
+.hidden {
+    display: none;
+}
+
+#alert {
+    position: relative;
+    margin-top: auto;
+    color: white;
+    background: #da3324;
+    width: 100%;
+    /* font-weight: bold; */
+    text-align: center;
+    align-content: center;
+    border-radius: var(--small-radius);
+    padding: 3px 2px;
+    height: var(--control-height);
+    box-sizing: border-box;
+}
+
+#fileNameLabel {
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.canvas-controls {
+    gap: 15px;
+}
+
+.dropdown-select {
+    position: relative;
+    width: 100%;
+    /* border-radius: 10px; */
+}
+
+.dropdown-select-trigger {
+    display: block;
+    width: 100%;
+    /* padding: 10px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 10px; */
+    cursor: pointer;
+    user-select: none;
+    box-sizing: border-box;
+}
+
+.dropdown-options {
+    z-index: 100;
+
+    position: absolute;
+    top: auto;
+    left: 0;
+
+    border-radius: var(--large-radius);
+    background-color: var(--button-bg);
+
+    /* margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background: #fff;
+    max-height: 200px;
+    overflow-y: auto; */
+    display: none;
+    /* z-index: 99; */
+    width: 100%;
+    box-sizing: content-box;
+
+    border: var(--container-bg) var(--border-size) solid;
+    transform: translate(calc(-1* var(--border-size)), 0px);
+
+    display: flex;
+    flex-direction: column;
+}
+
+.dropdown-option,
+.dropdown-option-deactivated {
+    padding: 10px;
+    cursor: pointer;
+    background-color: var(--button-bg);
+    user-select: none;
+    border: 0px;
+
+
+    border-radius: var(--large-radius);
+    width: 100%;
+}
+
+.dropdown-option-deactivated {
+    cursor: default;
+    color: var(--button-text-color-deactivated);
+    text-decoration: line-through;
+}
+
+.custom-button:hover,
+.custom-file-upload:hover,
+.icon-button:hover,
+.dropdown-option:hover {
+    background-color: var(--button-hover);
+}
+
+.custom-button,
+.custom-file-upload,
+.icon-button,
+.dropdown-option {
+    height: var(--control-height);
+    text-align: center;
+}
+
+
+.rainbow-text {
+    font-size: 48px;
+    font-weight: bold;
+    font-family: var(--Signika);
+}
+
+.custom-button,
+.custom-file-upload,
+.icon-button,
+.dropdown-option,
+body {
+    font-size: 14px;
+    font-family: var(--PtMono);
+}
+
+.scroll-container {
+    overflow-y: scroll;
+    overflow-x: hidden;
+    height: 100%;
+    padding-right: 10px;
+}
+
+#title {
+    white-space: nowrap;
+}
+
+#title-container {
+    overflow-x: auto;
+}
