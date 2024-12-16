@@ -130,7 +130,6 @@ export class factorioEntities {
             qualityName = quality;
         }
 
-        console.log(quality, qualityName);
         return {
             entity_number: index,
             name: "substation",
@@ -260,9 +259,7 @@ export class CoordinateCursor {
         let magic = -5;
         if (width == 1) { magic = -4; }
         for (let w = 0; w < width; w++) {
-            console.log("test3 ", this._x, this.restrictedColumns.includes(this._x + w));
             if (this.restrictedColumns.includes(this._x + w + magic)) {
-                console.log("test3 ===== -1 ");
                 this._x--;
                 this.checkRestrictionAndMove(width);
                 break;
@@ -276,20 +273,18 @@ export class CoordinateCursor {
 
         const newRestrictions = this.restrictedColumns.map(x => -x - 2);
 
-        console.log("\ntest43-1",
-            "\nвот такие у нас рестрикции:", newRestrictions,
-            "\nширина кстати у на:", width,
-            "\nкорректируем её на:", (-checkX),
-            "\nа вот наша координата (this._x):", this._x,
-            "\nа вот lookX:", lookX,
-            "\nи проверяем вхождение", newRestrictions.includes(-checkX));
+        // console.log("\ntest43-1",
+        //     "\nвот такие у нас рестрикции:", newRestrictions,
+        //     "\nширина кстати у на:", width,
+        //     "\nкорректируем её на:", (-checkX),
+        //     "\nа вот наша координата (this._x):", this._x,
+        //     "\nа вот lookX:", lookX,
+        //     "\nи проверяем вхождение", newRestrictions.includes(-checkX));
 
 
         if (width < -checkX) { // чек выхода за границу экрана
             return false;
         }
-
-        console.log("test44", -checkX, lookX);
 
         // checkX = -(width ?? 0) - checkX; // расчёт относительно правого края
 
@@ -306,7 +301,6 @@ export class CoordinateCursor {
 
     addRestrictedColumns(columns: number[]) {
         for (const column of columns) {
-            console.log("test4-restricted", column);
             if (!this.restrictedColumns.includes(column - 2)) {
                 this.restrictedColumns.push(column - 2);
             }
@@ -315,7 +309,6 @@ export class CoordinateCursor {
 
     addRestrictedRows(rows: number[]) {
         for (const row of rows) {
-            console.log("test4-restricted", row);
             if (!this.restrictedRows.includes(row - 2)) {
                 this.restrictedRows.push(row - 2);
             }

@@ -56,19 +56,13 @@ export class CanvasDrawer {
         // Восстанавливаем существующее содержимое с учетом смещения
         this.context.putImageData(imageData, dx, dy);
 
-        // // Устанавливаем цвет заливки или оставляем прозрачный, если color = null
-        // if (options.color !== null) {
-            this.context.fillStyle = options.color;
-        // } else {
-        //     this.context.fillStyle = 'rgba(0, 0, 0, 0)'; // Прозрачный цвет
-        // }
+        this.context.fillStyle = options.color;
 
         const lenghtOrZero = options.lenght ?? 0;
         const lenghtOrNull = options.lenght;
         const start = (options.offsetFrom ?? "start") == "start";
         const offset = options.offset ?? 0;
 
-        // console.log("start ? offset : canvas.height - lenght - offset", start ? offset : canvas.height - lenghtOrNull - offset);
         // Заполняем новую область заданным цветом
         if (direction === "left") {
             this.context.fillRect(
@@ -94,12 +88,12 @@ export class CanvasDrawer {
 
     }
 
-    drawSquare(x: number, y: number, width: number, height: number, color: string){
+    drawSquare(x: number, y: number, width: number, height: number, color: string) {
         this.context.fillStyle = color;
         this.context.fillRect(x, y, width, height);
     }
 
-    clearSquare(x: number, y: number, width: number, height: number){
+    clearSquare(x: number, y: number, width: number, height: number) {
         this.context.clearRect(x, y, width, height);
     }
 }

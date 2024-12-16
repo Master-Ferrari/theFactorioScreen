@@ -4,8 +4,8 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "mkdir": "mkdir \"dist\\misc\"",
-    "copy": "npm run mkdir && copy source\\*.html dist && copy source\\*.css dist && copy source\\misc\\*.ttf dist\\misc && copy source\\*.txt dist  && copy source\\*.xml dist ",
+    "mkdir": "mkdir \"dist\\misc\" && mkdir \"dist\\misc\\icon\"",
+    "copy": "npm run mkdir && copy source\\*.html dist && copy source\\*.css dist && copy source\\misc\\*.ttf dist\\misc && copy source\\misc\\icon\\*.png dist\\misc\\icon && copy source\\misc\\icon\\*.svg dist\\misc\\icon && copy source\\misc\\icon\\*.ico dist\\misc\\icon && copy source\\misc\\icon\\*.webmanifest dist\\misc\\icon && copy source\\*.txt dist && copy source\\*.xml dist",
     "build": "npx rimraf ./dist && npx tsc && npm run copy"
   },
   "author": "",

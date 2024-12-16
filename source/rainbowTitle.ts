@@ -1,12 +1,13 @@
-const titleOptions = ["theFactorioScreen", "Приколюха", "Смішняка"];
+const titleOptions = ["theFactorioScreen", "Приколдэс", "Смішняка", "Srandičkaka"];
 let titleIndex = 0;
 
 const titleElement = document.getElementById('title') as HTMLElement;
 
-
 function updateTitleText() {
     titleElement.innerHTML = '';
     const currentText = titleOptions[titleIndex];
+
+    document.title = currentText;
 
     currentText.split('').forEach((letter, index) => {
         const span = document.createElement('span');

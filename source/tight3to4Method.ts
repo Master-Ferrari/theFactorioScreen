@@ -225,7 +225,6 @@ export default class tight3to4Method extends Method {
         this.tight3to4CanvasManager = Tight3to4CanvasManager.getInstance(canvas, mainCanvas);
 
         this.generationButton = Html.createButton("generate blueprint!", () => {
-            console.log("LoL")
             this.exportJson(this.makeJson());
         });
         methodContainer.appendChild(this.generationButton);
@@ -290,8 +289,6 @@ export default class tight3to4Method extends Method {
         // electric grid
         if (this.gridIsEnabled) {
             const oldXY = cc.xy;
-            console.log("sadsdfsd", cc.xy);
-            // cc.sxy({ x: (this.gridOffset.x) % this.gridGap - 1, y: (this.gridOffset.y) % this.gridGap });
             cc.sxy({ x: -1, y: 0 });
             const electricGrid = this.makeElectricGrid(ii, cc);
             blueprint.addEntitiesAndWires(electricGrid);
@@ -307,7 +304,6 @@ export default class tight3to4Method extends Method {
 
             if (this.generationButton) {
                 const percent: string = Math.ceil(y / preparedGifData.rows.length * 100) + "%";
-                console.log("test41-percent", percent);
                 this.generationButton.innerText = "generation.. " + percent;
             }
 
@@ -326,7 +322,6 @@ export default class tight3to4Method extends Method {
         }
 
         const frameDecidersPairs = ii.getpairs("frame decider combinator"); // вертикальный проводочек
-        console.log("test20-frameDecidersPairs", frameDecidersPairs);
         frameDecidersPairs.forEach(pair => {
             blueprint.addWires([[pair[0], Wire.redIn, pair[1], Wire.redIn]]);
         })
@@ -334,7 +329,6 @@ export default class tight3to4Method extends Method {
 
         if (!this.onlyFrame) {
             const framesCount = preparedGifData.rows[0].frames.length; // секвенсер
-            console.log("test6-this.sequencerStartXY", this.sequencerStartXY);
             cc.sxy(this.sequencerStartXY); cc.dx(2);
             cc.checkRestrictionAndMove(4);
             const Sequencer = this.makeSequencer(ii, cc, gifData.tpf, framesCount);
@@ -370,13 +364,10 @@ export default class tight3to4Method extends Method {
 
         const startC = cc.xy;
 
-        console.log("test30-gridData", gridData);
-
         gridData.y.forEach(dataY => {
             const y = startC.y + dataY;
             gridData.x.forEach(dataX => {
                 const x = startC.x + dataX - gridData.totalWidth + 2;
-                console.log("test30-x", x);
 
                 if (!this.disableSubstations) {
                     block.push(f.substation(ii.next(), cc.sx(x), cc.sy(y), this.substationsQuality));
@@ -393,9 +384,6 @@ export default class tight3to4Method extends Method {
 
 
         });
-
-
-        console.log("test31-restricted", cc.restrictedColumns, cc.restrictedRows);
 
 
 
@@ -625,15 +613,11 @@ export default class tight3to4Method extends Method {
 
             const antiIndex = frames.length - 1 - index;
             if (antiIndex < this.firstFrameClip || antiIndex >= this.lastFrameClip) {
-                console.log("test36-index-firstFrameClip-lastFrameClip", index, this.firstFrameClip, this.lastFrameClip);
-                console.log("test36-cc.x    до", cc.x);
 
                 cc.checkRestrictionAndMove(2);
                 cc.px(-2);
                 cc.checkRestrictionAndMove(1);
                 cc.px(-1);
-
-                console.log("test36-cc.x после", cc.x);
 
                 ii.next();
                 ii.next();
@@ -830,17 +814,12 @@ export default class tight3to4Method extends Method {
 
                 let look = 4; // чек дырки в соседе слева. переменная - тот с кем здороваемся
 
-
-                // if (cc.x + lookX <= width){}
-
                 if (cc.checkLampsRestriction(-4, width)) {
                     look = 2;
                 }
                 else if (cc.checkLampsRestriction(-6, width)) {
                     look = 6;
                 }
-
-                console.log("test45", i, look);
 
                 const overthrowCase = i < 8 && look == 6;
                 const linkToCombinator = i < 4 || overthrowCase;
