@@ -149,7 +149,6 @@ export default class tight3to4Method extends Method {
         methodContainer.appendChild(canvasContainer);
         this.tight3to4CanvasManager = Tight3to4CanvasManager.getInstance(canvas, mainCanvas);
         this.generationButton = Html.createButton("generate blueprint!", () => {
-            console.log("LoL");
             this.exportJson(this.makeJson());
         });
         methodContainer.appendChild(this.generationButton);
@@ -198,8 +197,6 @@ export default class tight3to4Method extends Method {
         // electric grid
         if (this.gridIsEnabled) {
             const oldXY = cc.xy;
-            console.log("sadsdfsd", cc.xy);
-            // cc.sxy({ x: (this.gridOffset.x) % this.gridGap - 1, y: (this.gridOffset.y) % this.gridGap });
             cc.sxy({ x: -1, y: 0 });
             const electricGrid = this.makeElectricGrid(ii, cc);
             blueprint.addEntitiesAndWires(electricGrid);
@@ -209,7 +206,6 @@ export default class tight3to4Method extends Method {
         for (let y = 0; y < preparedGifData.rows.length; y++) { // строчки всего вместе/
             if (this.generationButton) {
                 const percent = Math.ceil(y / preparedGifData.rows.length * 100) + "%";
-                console.log("test41-percent", percent);
                 this.generationButton.innerText = "generation.. " + percent;
             }
             const rowData = preparedGifData.rows[y];
@@ -221,13 +217,11 @@ export default class tight3to4Method extends Method {
             cc.sxy({ x: oldCC.x, y: oldCC.y + 1 });
         }
         const frameDecidersPairs = ii.getpairs("frame decider combinator"); // вертикальный проводочек
-        console.log("test20-frameDecidersPairs", frameDecidersPairs);
         frameDecidersPairs.forEach(pair => {
             blueprint.addWires([[pair[0], Wire.redIn, pair[1], Wire.redIn]]);
         });
         if (!this.onlyFrame) {
             const framesCount = preparedGifData.rows[0].frames.length; // секвенсер
-            console.log("test6-this.sequencerStartXY", this.sequencerStartXY);
             cc.sxy(this.sequencerStartXY);
             cc.dx(2);
             cc.checkRestrictionAndMove(4);
@@ -253,12 +247,10 @@ export default class tight3to4Method extends Method {
         // ii.shift(-1);
         const gridData = this.tight3to4CanvasManager?.gridArray ?? defaultDridData;
         const startC = cc.xy;
-        console.log("test30-gridData", gridData);
         gridData.y.forEach(dataY => {
             const y = startC.y + dataY;
             gridData.x.forEach(dataX => {
                 const x = startC.x + dataX - gridData.totalWidth + 2;
-                console.log("test30-x", x);
                 if (!this.disableSubstations) {
                     block.push(f.substation(ii.next(), cc.sx(x), cc.sy(y), this.substationsQuality));
                     if (dataX != gridData.xMax)
@@ -273,7 +265,6 @@ export default class tight3to4Method extends Method {
             });
             cc.addRestrictedRows([(y), (y + 1)]);
         });
-        console.log("test31-restricted", cc.restrictedColumns, cc.restrictedRows);
         // for (let yi = 0; yi < yim; yi++) {
         //     const y = startC.y + this.gridPlus * yi;
         //     for (let xi = 0; xi < xim; xi++) {
@@ -464,13 +455,10 @@ export default class tight3to4Method extends Method {
         for (let index = frames.length - 1; index >= 0; index--) {
             const antiIndex = frames.length - 1 - index;
             if (antiIndex < this.firstFrameClip || antiIndex >= this.lastFrameClip) {
-                console.log("test36-index-firstFrameClip-lastFrameClip", index, this.firstFrameClip, this.lastFrameClip);
-                console.log("test36-cc.x    до", cc.x);
                 cc.checkRestrictionAndMove(2);
                 cc.px(-2);
                 cc.checkRestrictionAndMove(1);
                 cc.px(-1);
-                console.log("test36-cc.x после", cc.x);
                 ii.next();
                 ii.next();
                 continue;
@@ -625,14 +613,12 @@ export default class tight3to4Method extends Method {
             const packIndex = getPackIndex(i);
             if (!cc.checkLampsHole()) {
                 let look = 4; // чек дырки в соседе слева. переменная - тот с кем здороваемся
-                // if (cc.x + lookX <= width){}
                 if (cc.checkLampsRestriction(-4, width)) {
                     look = 2;
                 }
                 else if (cc.checkLampsRestriction(-6, width)) {
                     look = 6;
                 }
-                console.log("test45", i, look);
                 const overthrowCase = i < 8 && look == 6;
                 const linkToCombinator = i < 4 || overthrowCase;
                 block.push(f.rgbLamp(ii.next(), cc.px(-1), cc.y, signalNamesRgbGroups[packIndex], { entityStartPos: "reverse", testNumber: overthrowCase ? 1 : 0 }));

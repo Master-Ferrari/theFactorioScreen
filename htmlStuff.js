@@ -12,7 +12,6 @@ export class HtmlCreator {
         input.type = 'number';
         input.className = 'inputs';
         input.id = id;
-        console.log("test2", min);
         if (min !== undefined) {
             input.min = min.toString();
         }
@@ -124,7 +123,6 @@ export class HtmlCreator {
             slaveElement.style.top = `${targetRect.top + offset.top}px`;
             slaveElement.style.left = `${targetRect.left + offset.left}px`;
             if (transferWidth) {
-                console.log("test33", targetRect.width);
                 slaveElement.style.width = `${targetRect.width}px`;
             }
         }

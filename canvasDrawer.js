@@ -33,17 +33,11 @@ export class CanvasDrawer {
         }
         // Восстанавливаем существующее содержимое с учетом смещения
         this.context.putImageData(imageData, dx, dy);
-        // // Устанавливаем цвет заливки или оставляем прозрачный, если color = null
-        // if (options.color !== null) {
         this.context.fillStyle = options.color;
-        // } else {
-        //     this.context.fillStyle = 'rgba(0, 0, 0, 0)'; // Прозрачный цвет
-        // }
         const lenghtOrZero = options.lenght ?? 0;
         const lenghtOrNull = options.lenght;
         const start = (options.offsetFrom ?? "start") == "start";
         const offset = options.offset ?? 0;
-        // console.log("start ? offset : canvas.height - lenght - offset", start ? offset : canvas.height - lenghtOrNull - offset);
         // Заполняем новую область заданным цветом
         if (direction === "left") {
             this.context.fillRect(0, start ? offset : canvas.height - lenghtOrZero - offset, stripeWidth, lenghtOrNull ?? canvas.height);

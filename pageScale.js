@@ -2,7 +2,6 @@
 function adjustScale() {
     const desiredWidth = 500;
     const currentWidth = Math.min(screen.width, window.innerWidth);
-    console.log(`Current width: ${currentWidth}px`);
     if (currentWidth <= desiredWidth) {
         let scale = Math.pow(currentWidth / desiredWidth, 1.1);
         scale = scale < 0.33 ? 0.33 : scale;

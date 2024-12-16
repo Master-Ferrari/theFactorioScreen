@@ -76,7 +76,6 @@ export class Tight3to4CanvasManager {
         this.resetInterToMain(); // бновить промежуток
         const drawer = new CanvasDrawer(this.intermediateContext); // рисуем
         let oscilatorGap = 0;
-        console.log("test34", firstFrameClip, lastFrameClip);
         if (gridIsEnabled) {
             let gap = null;
             for (let i = 0; i < 13; i++) {
@@ -164,19 +163,6 @@ export class Tight3to4CanvasManager {
         }
         return null;
     }
-    // private checkLeftSideOnGridIntersection(gridGap: number, gridOffset: { x: number, y: number }, width: number): number {
-    //     // const checkStripe = this.intermediateCanvas.width + gridGap * 2;
-    //     let neededOffset = 0;
-    //     const offset = gridOffset.x % gridGap;
-    //     for (let wX = 0; wX < width; wX++) {
-    //         const rCount = Math.floor((this.intermediateCanvas.width) / gridGap);
-    //         console.log("offset - wX - gridGap * rCount", offset - wX - gridGap * rCount);
-    //         if (offset - wX - gridGap * rCount == -this.intermediateCanvas.width) {
-    //             neededOffset = wX;
-    //         }
-    //     }
-    //     return neededOffset;
-    // }
     getSize() {
         return { width: this.intermediateSize.width ?? 0, height: this.intermediateSize.height ?? 0 };
     }
@@ -185,7 +171,6 @@ export class Tight3to4CanvasManager {
             this._gridArray = defaultDridData;
             return;
         }
-        // const color = disableSubstations ? "rgba(0, 0, 0, 0)" : "rgb(120, 220, 120)"; //60, 200, 20
         this._gridArray = defaultDridData;
         this._gridArray.x = new Set();
         this._gridArray.y = new Set();
@@ -232,16 +217,8 @@ export class Tight3to4CanvasManager {
                 this.gridAlert = true;
             }
         });
-        console.log("test32-rowLenght", this._gridArray.rowLenght);
         this._gridArray.xMax = Array.from(this._gridArray.x).pop() ?? 0;
         this._gridArray.yMax = Array.from(this._gridArray.y).pop() ?? 0;
         this._gridArray.totalWidth = this.intermediateCanvas.width;
-        // shit generator use case:
-        // kakashkaGenerator();
-        // drawer.drawSquare(x + gridOffset.x, y + gridOffset.y, 2, 2, "rgb(255, 38, 0)");
-        // console.log("test7-x-widrh", -x, this.mainCanvas.width);
-        // if (-x == this.mainCanvas.width) { // один из двух самых левых пикселей, то алерт. алертXOffset сделать свойством класса.
-        //     this.gridAlert = true;
-        // }
     }
 }
