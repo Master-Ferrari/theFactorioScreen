@@ -64,7 +64,7 @@
 
 @font-face {
     font-family: 'Pt Mono';
-    src: url('misc/PtMono-Regular.ttf') format('truetype');
+    src: url('misc/PTMono-Regular.ttf') format('truetype');
 }
 
 @font-face {
@@ -326,6 +326,7 @@ input:checked+.slider:hover:before {
 /* Стили самого ползунка */
 .range {
     -webkit-appearance: none;
+    appearance: none;
     /* Убирает стандартный стиль для WebKit-браузеров */
     width: var(--control-width);
     background-color: var(--input-bg);
@@ -365,12 +366,12 @@ canvas {
     height: 100%;
     image-rendering: pixelated;
 }
-
+/* 
 .method-canvas {
-    /* width: 330px;
-    height: 330px; */
-
-}
+    width: 330px;
+    height: 330px; 
+} 
+*/
 
 .method-canvas-container {
     display: flex;
